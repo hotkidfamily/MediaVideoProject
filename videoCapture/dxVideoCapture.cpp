@@ -700,6 +700,26 @@ HRESULT dxVideoCapture::start()
 {
 	HRESULT hr = E_FAIL;
 
+	AM_MEDIA_TYPE   mt;
+	hr = m_sampleGrabber->GetConnectedMediaType(&mt);
+	if (hr == S_OK){
+		BITMAPINFOHEADER *pBmp;
+		REFERENCE_TIME AvgTimePerFrame;
+		if (mt.formattype == FORMAT_VideoInfo){
+			pBmp = &(reinterpret_cast<VIDEOINFOHEADER*>(mt.pbFormat)->bmiHeader);
+			AvgTimePerFrame = reinterpret_cast<VIDEOINFOHEADER*>(mt.pbFormat)->AvgTimePerFrame;
+		}
+		else{
+			pBmp = &(reinterpret_cast<VIDEOINFOHEADER2*>(mt.pbFormat)->bmiHeader);
+			AvgTimePerFrame = reinterpret_cast<VIDEOINFOHEADER2*>(mt.pbFormat)->AvgTimePerFrame;
+		}
+
+		log.log(1, TEXT("open camera with %dx%d, %f fps.\n"), pBmp->biWidth, abs(pBmp->biHeight), 10000000.0 / AvgTimePerFrame);
+
+		FreeMediaType(mt);
+	}else if (hr == VFW_E_NOT_CONNECTED){
+		log.log(1, TEXT("filter have not connected.\n"));
+	}
 
 	hr = m_mediaControl->Run();
 
