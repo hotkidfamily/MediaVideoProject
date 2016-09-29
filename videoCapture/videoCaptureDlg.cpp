@@ -187,7 +187,7 @@ void CvideoCaptureDlg::OnBnClickedButtonOpen()
 	else{
 		IBaseFilter *capture = NULL;
 		capture = m_devicesList->getDevice(m_devicesCombox.GetCurSel());
-		//m_videoCap->showFilterPropertyPages(capture);
+		//	m_videoCap->showFilterPropertyPages(capture);
 		
 		m_videoCap->buildGraph(capture);
 		m_videoCap->start();

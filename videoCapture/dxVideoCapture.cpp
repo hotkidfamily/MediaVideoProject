@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "dxVideoCapture.h"
+
 #include <Dvdmedia.h>
 
 #define CAPTURE_FILTER_NAME (TEXT("CAPTURE"))
@@ -668,15 +669,11 @@ HRESULT dxVideoCapture::buildGraph(IBaseFilter* captureFilter)
 	selectMostSuiltableOutputFormat(captureFilter);
 
 	hr = m_captureGraphBuilder->RenderStream(&PIN_CATEGORY_PREVIEW, &MEDIATYPE_Video, captureFilter, NULL, NULL);
-	if (S_OK != hr){
-		goto done;
-	}
 
 	hr = m_captureGraphBuilder->RenderStream(&PIN_CATEGORY_CAPTURE, &MEDIATYPE_Video, captureFilter, m_sampleGrabberFilter, m_nullRenderFilter);
 	if (FAILED(hr)){
 		goto done;
 	}
-
 
 done:
 	return hr;
@@ -684,6 +681,7 @@ done:
 
 STDMETHODIMP dxVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 {
+	statics.appendDataSize(1);
 	return S_OK;
 }
 
@@ -723,6 +721,8 @@ HRESULT dxVideoCapture::start()
 
 	hr = m_mediaControl->Run();
 
+	statics.reset(5000);
+
 done:
 	return hr;
 }
@@ -759,6 +759,8 @@ HRESULT dxVideoCapture::removeFilters()
 HRESULT dxVideoCapture::stop()
 {
 	removeFilters();
+
+	log.log(1, TEXT("capture %f fps\n"), statics.frequencyPerSecond());
 
 	return S_OK;
 }

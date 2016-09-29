@@ -4,6 +4,7 @@
 #include "ISampleGrabber.h"
 #include "logger.h"
 #include "ISampleGrabberCBImpl.h"
+#include "SlidingWindowCalc.h"
 
 class dxVideoCapture : public ISampleGrabberCBImpl
 {
@@ -42,5 +43,7 @@ private:
 	ISampleGrabber *m_sampleGrabber;
 
 	logger &log;
+
+	CSlidingWindowCalc statics;
 };
 
