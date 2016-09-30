@@ -453,6 +453,8 @@ FOURCCSTRING supportFourCCList[] = {
 
 dxVideoCapture::dxVideoCapture(logger &log)
 	: log(log)
+	, m_pVM(NULL)
+	, m_hWnd(NULL)
 {
 }
 
@@ -486,9 +488,14 @@ TCHAR *dxVideoCapture::fourCCStr(DWORD fourCC)
 	return idstr->fourCCName;
 }
 
-HRESULT dxVideoCapture::initGraph()
+HRESULT dxVideoCapture::initGraph(HWND hWnd)
 {
 	HRESULT hr = S_OK;
+	if (!IsWindow(hWnd)){
+		goto done;
+	}
+
+	m_hWnd = hWnd;
 
 	hr = CoCreateInstance(CLSID_FilterGraph, NULL, CLSCTX_INPROC_SERVER, IID_IGraphBuilder, (void**)&m_filterGraph);
 	if (hr != S_OK){
@@ -500,7 +507,7 @@ HRESULT dxVideoCapture::initGraph()
 		goto done;
 	}
 
-	hr = m_filterGraph->QueryInterface(IID_IMediaEvent, (void**)&m_MediaEvent);
+	hr = m_filterGraph->QueryInterface(IID_IMediaEventEx, (void**)&m_MediaEvent);
 	if (hr != S_OK){
 		goto done;
 	}
@@ -514,6 +521,13 @@ HRESULT dxVideoCapture::initGraph()
 	if (hr != S_OK){
 		goto done;
 	}
+
+	hr = m_filterGraph->QueryInterface(IID_IVideoWindow, (LPVOID *)&m_pVM);
+	if (FAILED(hr)){
+		goto done;
+	}
+
+	hr = m_MediaEvent->SetNotifyWindow((OAHWND)m_hWnd, WM_GRAPHNOTIFY, 0);
 
 	m_captureGraphBuilder->SetFiltergraph(m_filterGraph);
 done:
@@ -675,6 +689,8 @@ HRESULT dxVideoCapture::buildGraph(IBaseFilter* captureFilter)
 		goto done;
 	}
 
+	SetupVideoWindow();
+
 done:
 	return hr;
 }
@@ -727,6 +743,49 @@ done:
 	return hr;
 }
 
+void dxVideoCapture::ResizeVideoWindow(void)
+{
+	// Resize the video preview window to match owner window size
+	if (m_pVM)
+	{
+		RECT rc;
+
+		// Make the preview video fill our window
+		GetClientRect(m_hWnd, &rc);
+		m_pVM->SetWindowPosition(0, 0, rc.right, rc.bottom);
+	}
+}
+
+HRESULT dxVideoCapture::SetupVideoWindow(void)
+{
+	HRESULT hr;
+
+	// Set the video window to be a child of the main window
+	hr = m_pVM->put_Owner((OAHWND)m_hWnd);
+	if (FAILED(hr)){
+		goto done;
+	}
+
+	// Set video window style
+	hr = m_pVM->put_WindowStyle(WS_CHILD | WS_CLIPCHILDREN);
+	if (FAILED(hr)){
+		goto done;
+	}
+
+	// Use helper function to position video window in client rect 
+	// of main application window
+	ResizeVideoWindow();
+
+	// Make the video window visible, now that it is properly positioned
+	hr = m_pVM->put_Visible(OATRUE);
+	if (FAILED(hr)){
+		goto done;
+	}
+
+done:		
+	return hr;
+}
+
 HRESULT dxVideoCapture::removeFilters()
 {
 	HRESULT hr;
@@ -737,8 +796,11 @@ HRESULT dxVideoCapture::removeFilters()
 	}
 
 	/* must stop before remove from filter graph */
-	m_mediaControl->Pause();
-	m_mediaControl->Stop();
+	m_mediaControl->StopWhenReady();
+	if (m_pVM){
+		m_pVM->put_Visible(OAFALSE);
+		m_pVM->put_Owner(NULL);
+	}
 
 	IEnumFilters *filterEnum;
 	hr = m_filterGraph->EnumFilters(&filterEnum);
@@ -763,4 +825,29 @@ HRESULT dxVideoCapture::stop()
 	log.log(1, TEXT("capture %f fps\n"), statics.frequencyPerSecond());
 
 	return S_OK;
+}
+
+
+HRESULT dxVideoCapture::HandleGraphEvent(void)
+{
+	LONG evCode;
+	LONG_PTR evParam1, evParam2;
+	HRESULT hr = S_OK;
+
+	if (!m_MediaEvent)
+		return E_POINTER;
+
+	while (SUCCEEDED(m_MediaEvent->GetEvent(&evCode, &evParam1, &evParam2, 0)))
+	{
+		//
+		// Free event parameters to prevent memory leaks associated with
+		// event parameter data.  While this application is not interested
+		// in the received events, applications should always process them.
+		//
+		hr = m_MediaEvent->FreeEventParams(evCode, evParam1, evParam2);
+
+		// Insert event processing code here, if desired
+	}
+
+	return hr;
 }

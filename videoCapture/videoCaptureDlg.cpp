@@ -58,6 +58,7 @@ void CvideoCaptureDlg::DoDataExchange(CDataExchange* pDX)
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_COMBO_DEIVCES, m_devicesCombox);
 	DDX_Control(pDX, IDC_BUTTON_OPEN, m_openButton);
+	DDX_Control(pDX, IDC_VIDEO_VIEW, m_videoWindow);
 }
 
 BEGIN_MESSAGE_MAP(CvideoCaptureDlg, CDialogEx)
@@ -66,6 +67,7 @@ BEGIN_MESSAGE_MAP(CvideoCaptureDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_WM_DESTROY()
 	ON_BN_CLICKED(IDC_BUTTON_OPEN, &CvideoCaptureDlg::OnBnClickedButtonOpen)
+	ON_WM_SIZE()
 END_MESSAGE_MAP()
 
 
@@ -114,7 +116,7 @@ BOOL CvideoCaptureDlg::OnInitDialog()
 	log = new logger(TEXT("c:\\this.txt"));
 
 	m_videoCap = new dxVideoCapture(*log);
-	m_videoCap->initGraph();
+	m_videoCap->initGraph(m_videoWindow.m_hWnd);
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -194,4 +196,12 @@ void CvideoCaptureDlg::OnBnClickedButtonOpen()
 		m_openButton.SetWindowTextW(TEXT("Close"));
 	}
 
+}
+
+
+void CvideoCaptureDlg::OnSize(UINT nType, int cx, int cy)
+{
+	// TODO:  在此处添加消息处理程序代码
+	if (m_videoCap->isRuning())
+		m_videoCap->ResizeVideoWindow();
 }

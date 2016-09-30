@@ -45,4 +45,6 @@ public:
 	afx_msg void OnDestroy();
 	afx_msg void OnBnClickedButtonOpen();
 	CButton m_openButton;
+	CStatic m_videoWindow;
+	afx_msg void OnSize(UINT nType, int cx, int cy);
 };
