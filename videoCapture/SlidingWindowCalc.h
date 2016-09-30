@@ -12,7 +12,7 @@ public:
 	void reset();
 	void reset(uint32_t durationInMS);
 	uint32_t sizePerSecond() const;
-	float frequencyPerSecond() const;
+	double frequencyPerSecond() const;
 	int appendDataSize(uint32_t size);
 
 	uint32_t getMaxSize() const;

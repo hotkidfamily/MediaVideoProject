@@ -1,12 +1,21 @@
 #pragma once
 
 #include <dshow.h>
+#include <vector>
+#include <windef.h>
 #include "ISampleGrabber.h"
 #include "logger.h"
 #include "ISampleGrabberCBImpl.h"
 #include "SlidingWindowCalc.h"
 
 #define WM_GRAPHNOTIFY WM_APP+1
+
+typedef struct tagOutputInfo
+{
+	SIZE OutputSize;
+	LONGLONG MinFrameInterval;
+	LONGLONG MaxFrameInterval;
+}OutputFormat;
 
 class dxVideoCapture : public ISampleGrabberCBImpl
 {
@@ -29,7 +38,7 @@ public:
 	STDMETHODIMP ISampleGrabberCBImpl::SampleCB(double SampleTime, IMediaSample *pSample);
 
 protected:
-	HRESULT selectMostSuiltableOutputFormat(IBaseFilter* captureFilter);
+	HRESULT enumOutputFormat(IBaseFilter* captureFilter);
 	TCHAR *guid2str(GUID id);
 	TCHAR *fourCCStr(DWORD fourCC);
 	void FreeMediaType(AM_MEDIA_TYPE& mt);
@@ -55,5 +64,7 @@ private:
 	logger &log;
 
 	CSlidingWindowCalc statics;
+
+	std::vector<OutputFormat> outputRes;
 };
 

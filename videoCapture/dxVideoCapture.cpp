@@ -547,6 +547,7 @@ HRESULT dxVideoCapture::openSampleGrabber()
 		goto done;
 	}
 
+	/* set media type */
 	AM_MEDIA_TYPE   mt;
 	ZeroMemory(&mt, sizeof(AM_MEDIA_TYPE));
 	mt.majortype = MEDIATYPE_Video;
@@ -578,7 +579,7 @@ void dxVideoCapture::FreeMediaType(AM_MEDIA_TYPE& mt)
 	}
 }
 
-HRESULT dxVideoCapture::selectMostSuiltableOutputFormat(IBaseFilter* captureFilter)
+HRESULT dxVideoCapture::enumOutputFormat(IBaseFilter* captureFilter)
 {
 	HRESULT hr = S_OK;
 	IAMStreamConfig *cfg = NULL;
@@ -601,25 +602,35 @@ HRESULT dxVideoCapture::selectMostSuiltableOutputFormat(IBaseFilter* captureFilt
 			cfg->GetStreamCaps(i, &pmt, pCaps);
 			VIDEO_STREAM_CONFIG_CAPS *pscc = (VIDEO_STREAM_CONFIG_CAPS*)pCaps;
 
-			log.log(1, TEXT("\t%d, %s, %s, %s, res %dx%d ~ %dx%d, fps: %f ~ %f\n"), i, guid2str(pmt->majortype), guid2str(pmt->subtype), guid2str(pmt->formattype),
+			log.log(1, TEXT("\t%d, %s, %s, %s, res %dx%d ~ %dx%d, Xgranularity %d Ygranularity %d fps: %f ~ %f\n"), i, guid2str(pmt->majortype), guid2str(pmt->subtype), guid2str(pmt->formattype),
 				pscc->MinOutputSize.cx, pscc->MinOutputSize.cy, pscc->MaxOutputSize.cx, pscc->MaxOutputSize.cy,
+				pscc->OutputGranularityX, pscc->OutputGranularityY,
 				10000000.0 / pscc->MaxFrameInterval, 10000000.0 / pscc->MinFrameInterval);
-			
-// 			if ((pmt->majortype != MEDIATYPE_Video)
-// 				|| (pmt->subtype != MEDIASUBTYPE_RGB24)){
-// 				continue;
-// 			}
-			if ((pmt->formattype == FORMAT_VideoInfo)
-				&& (pmt->cbFormat >= sizeof(VIDEOINFOHEADER))){
+
+			if ((pmt->majortype != MEDIATYPE_Video)
+				|| (pmt->subtype != MEDIASUBTYPE_RGB24)
+				|| (pmt->formattype != FORMAT_VideoInfo)){
+				continue;
+			}
+
+			OutputFormat format;
+			format.MaxFrameInterval = pscc->MaxFrameInterval;
+			format.MinFrameInterval = pscc->MinFrameInterval;
+
+			if(pmt->cbFormat >= sizeof(VIDEOINFOHEADER)){
 				VIDEOINFOHEADER *pVih = reinterpret_cast<VIDEOINFOHEADER*>(pmt->pbFormat);	
 				log.log(1, TEXT("\t\t res %dx%d, fps %f, %s\n"), pVih->bmiHeader.biWidth, abs(pVih->bmiHeader.biHeight), 10000000.0 / pVih->AvgTimePerFrame, fourCCStr(pVih->bmiHeader.biCompression));
+				format.OutputSize.cx = pVih->bmiHeader.biWidth;
+				format.OutputSize.cy = pVih->bmiHeader.biHeight;
 			}
-			else if ((pmt->formattype == FORMAT_VideoInfo2)
-				&& (pmt->cbFormat >= sizeof(VIDEOINFOHEADER2))){
+			else if (pmt->cbFormat >= sizeof(VIDEOINFOHEADER2)){
 				VIDEOINFOHEADER2 *pVih = reinterpret_cast<VIDEOINFOHEADER2*>(pmt->pbFormat);
 				log.log(1, TEXT("\t\t res %dx%d, fps %f, %s\n"), pVih->bmiHeader.biWidth, abs(pVih->bmiHeader.biHeight), 10000000.0 / pVih->AvgTimePerFrame, fourCCStr(pVih->bmiHeader.biCompression));
+				format.OutputSize.cx = pVih->bmiHeader.biWidth;
+				format.OutputSize.cy = pVih->bmiHeader.biHeight;
 			}
 			
+			outputRes.push_back(format);
 			FreeMediaType(*pmt);
 		}
 
@@ -667,6 +678,8 @@ HRESULT dxVideoCapture::buildGraph(IBaseFilter* captureFilter)
 		goto done;
 	}
 
+	enumOutputFormat(captureFilter);
+
 	hr = m_filterGraph->AddFilter(m_nullRenderFilter, RENDER_FILTER_NAME);
 	if (S_OK != hr){
 		goto done;
@@ -679,17 +692,6 @@ HRESULT dxVideoCapture::buildGraph(IBaseFilter* captureFilter)
 	if (S_OK != hr){
 		goto done;
 	}
-
-	selectMostSuiltableOutputFormat(captureFilter);
-
-	hr = m_captureGraphBuilder->RenderStream(&PIN_CATEGORY_PREVIEW, &MEDIATYPE_Video, captureFilter, NULL, NULL);
-
-	hr = m_captureGraphBuilder->RenderStream(&PIN_CATEGORY_CAPTURE, &MEDIATYPE_Video, captureFilter, m_sampleGrabberFilter, m_nullRenderFilter);
-	if (FAILED(hr)){
-		goto done;
-	}
-
-	SetupVideoWindow();
 
 done:
 	return hr;
@@ -713,8 +715,43 @@ bool dxVideoCapture::isRuning()
 HRESULT dxVideoCapture::start()
 {
 	HRESULT hr = E_FAIL;
-
+	AM_MEDIA_TYPE   *pmt = NULL;
 	AM_MEDIA_TYPE   mt;
+	IBaseFilter* captureFilter = NULL;
+	REFERENCE_TIME *rt = NULL;
+	BITMAPINFOHEADER *pvh = NULL;
+
+	hr = m_filterGraph->FindFilterByName(CAPTURE_FILTER_NAME, &captureFilter);
+	if (SUCCEEDED(hr)){
+		hr = m_captureGraphBuilder->RenderStream(&PIN_CATEGORY_PREVIEW, &MEDIATYPE_Video, captureFilter, NULL, NULL);
+
+		hr = m_captureGraphBuilder->RenderStream(&PIN_CATEGORY_CAPTURE, &MEDIATYPE_Video, captureFilter, m_sampleGrabberFilter, m_nullRenderFilter);
+		if (FAILED(hr)){
+			goto done;
+		}
+		IAMStreamConfig *streamCfg = NULL;
+		hr = m_captureGraphBuilder->FindInterface(&PIN_CATEGORY_CAPTURE, &MEDIATYPE_Video, captureFilter, IID_IAMStreamConfig, (void**)&streamCfg);
+		streamCfg->GetFormat(&pmt);
+		if (pmt->formattype == FORMAT_VideoInfo){
+			if (pmt->cbFormat)
+				pvh = &(reinterpret_cast<VIDEOINFOHEADER*>(pmt->pbFormat)->bmiHeader);
+			rt = &(reinterpret_cast<VIDEOINFOHEADER*>(pmt->pbFormat)->AvgTimePerFrame);
+		}
+		else if (pmt->formattype == FORMAT_VIDEOINFO2){
+			pvh = &(reinterpret_cast<VIDEOINFOHEADER2*>(pmt->pbFormat)->bmiHeader);
+			rt = &(reinterpret_cast<VIDEOINFOHEADER2*>(pmt->pbFormat)->AvgTimePerFrame);
+		}
+
+		if (pvh){
+			pvh->biWidth = 1280;
+			pvh->biHeight = 720;
+			*rt = (REFERENCE_TIME)(10000000 / 15);
+		}
+		streamCfg->SetFormat(pmt);
+	}
+
+	SetupVideoWindow();
+
 	hr = m_sampleGrabber->GetConnectedMediaType(&mt);
 	if (hr == S_OK){
 		BITMAPINFOHEADER *pBmp;

@@ -46,7 +46,7 @@ int CSlidingWindowCalc::appendDataSize(uint32_t size)
 	return 0;
 }
 
-float CSlidingWindowCalc::frequencyPerSecond() const
+double CSlidingWindowCalc::frequencyPerSecond() const
 {
 	return (totalInCalcSamples()*1000.0 / totalInCalcDuration());
 }
@@ -124,10 +124,12 @@ uint64_t CSlidingWindowCalc::totalDuration() const
 
 uint64_t CSlidingWindowCalc::totalInCalcDuration() const
 {
-	const RateSample &firstSample = *m_sampleList.begin();
-	const RateSample &lastSample = *m_sampleList.rbegin();
+	uint64_t durationTime = 1;
+	if (m_sampleList.size()){
+		const RateSample &firstSample = *m_sampleList.begin();
+		const RateSample &lastSample = *m_sampleList.rbegin();
 
-	uint64_t durationTime = lastSample.timestamp - firstSample.timestamp;
-
+		durationTime = lastSample.timestamp - firstSample.timestamp;
+	}
 	return durationTime;
 }
