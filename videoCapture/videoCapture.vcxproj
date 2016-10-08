@@ -104,6 +104,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DeviceList.h" />
+    <ClInclude Include="dxUtils.h" />
     <ClInclude Include="dxVideoCapture.h" />
     <ClInclude Include="ISampleGrabber.h" />
     <ClInclude Include="ISampleGrabberCBImpl.h" />
@@ -117,6 +118,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DeviceList.cpp" />
+    <ClCompile Include="dxUtils.cpp" />
     <ClCompile Include="dxVideoCapture.cpp" />
     <ClCompile Include="ISampleGrabberCBImpl.cpp" />
     <ClCompile Include="logger.cpp" />

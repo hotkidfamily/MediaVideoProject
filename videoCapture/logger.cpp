@@ -10,6 +10,7 @@ logger::logger(STRING filePath)
 
 logger::~logger()
 {
+	
 }
 
 
@@ -22,4 +23,6 @@ void logger::log(int level, const TCHAR *format, ...)
 	va_end(vp);
 
 	logfile << buffer;
+	logfile.flush();
+	
 }

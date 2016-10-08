@@ -68,6 +68,7 @@ BEGIN_MESSAGE_MAP(CvideoCaptureDlg, CDialogEx)
 	ON_WM_DESTROY()
 	ON_BN_CLICKED(IDC_BUTTON_OPEN, &CvideoCaptureDlg::OnBnClickedButtonOpen)
 	ON_WM_SIZE()
+	ON_CBN_SELCHANGE(IDC_COMBO_DEIVCES, &CvideoCaptureDlg::OnCbnSelchangeComboDeivces)
 END_MESSAGE_MAP()
 
 
@@ -204,4 +205,11 @@ void CvideoCaptureDlg::OnSize(UINT nType, int cx, int cy)
 	// TODO:  在此处添加消息处理程序代码
 	if (m_videoCap->isRuning())
 		m_videoCap->ResizeVideoWindow();
+}
+
+
+void CvideoCaptureDlg::OnCbnSelchangeComboDeivces()
+{
+	// TODO:  在此添加控件通知处理程序代码
+
 }

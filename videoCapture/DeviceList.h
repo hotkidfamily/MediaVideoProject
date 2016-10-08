@@ -3,14 +3,21 @@
 #include "stdafx.h"
 #include <vector>
 #include <string>
+#include <map>
 #include <dshow.h>
 #include "logger.h"
+#include "dxUtils.h"
+
+typedef struct tagDevCaptureOutputFormat{
+	int type;
+	SIZE outputRes;
+	REFERENCE_TIME minFrameInterval;
+	REFERENCE_TIME maxFrameInterval;
+}DEVCAPOUTPUTFMT;
 
 typedef struct tagDevDesc{
 	STRING name;
 	STRING path;
-	int nOutput;
-	void *outputs;
 }DEVINFO;
 
 class DeviceList
@@ -22,9 +29,14 @@ public:
 	size_t count() const { return m_devices.size(); }
 	DEVINFO *getDevices() { return m_devices.data(); }
 	HRESULT enumDevices();
+	DEVCAPOUTPUTFMT* getDevicesSupportOutputFormat(int index);
 	IBaseFilter * getDevice(int index);
 
 private:
+	HRESULT enumPins(IBaseFilter *captureFilter);
+	void addOutputFormat(BITMAPINFOHEADER *pvh, VIDEO_STREAM_CONFIG_CAPS* pcaps);
+
 	std::vector<DEVINFO> m_devices;
+	std::vector<DEVCAPOUTPUTFMT> devOutputFormats;
 };
 

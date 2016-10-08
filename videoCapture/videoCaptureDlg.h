@@ -47,4 +47,5 @@ public:
 	CButton m_openButton;
 	CStatic m_videoWindow;
 	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnCbnSelchangeComboDeivces();
 };

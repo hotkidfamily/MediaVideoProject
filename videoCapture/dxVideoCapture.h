@@ -7,6 +7,7 @@
 #include "logger.h"
 #include "ISampleGrabberCBImpl.h"
 #include "SlidingWindowCalc.h"
+#include "dxUtils.h"
 
 #define WM_GRAPHNOTIFY WM_APP+1
 
@@ -38,10 +39,8 @@ public:
 	STDMETHODIMP ISampleGrabberCBImpl::SampleCB(double SampleTime, IMediaSample *pSample);
 
 protected:
-	HRESULT enumOutputFormat(IBaseFilter* captureFilter);
-	TCHAR *guid2str(GUID id);
-	TCHAR *fourCCStr(DWORD fourCC);
-	void FreeMediaType(AM_MEDIA_TYPE& mt);
+	HRESULT enumPins(IBaseFilter *captureFilter);
+
 	HRESULT removeFilters();
 	HRESULT openSampleGrabber();
 	
