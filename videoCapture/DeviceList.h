@@ -34,7 +34,7 @@ public:
 
 private:
 	HRESULT enumPins(IBaseFilter *captureFilter);
-	void addOutputFormat(BITMAPINFOHEADER *pvh, VIDEO_STREAM_CONFIG_CAPS* pcaps);
+	void addOutputFormat(AM_MEDIA_TYPE *pvh, VIDEO_STREAM_CONFIG_CAPS* pcaps);
 
 	std::vector<DEVINFO> m_devices;
 	std::vector<DEVCAPOUTPUTFMT> devOutputFormats;

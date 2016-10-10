@@ -424,25 +424,26 @@ GUIDSTRING supportList[] = {
 typedef struct tagFourCCStr {
 	DWORD fourCC;
 	TCHAR *fourCCName;
+	VIDEOFORMAT type;
 }FOURCCSTRING;
 
 FOURCCSTRING supportFourCCList[] = {
 	UNUSED_FOURCC_SUPPORT,
-	{ BI_RGB, TEXT("RGB") },
-	{ '2BGR', TEXT("RGB2") },
-	{ '4BGR', TEXT("RGB4") },
-	{ 'ABGR', TEXT("RGBA") },
-	{ '024I', TEXT("I420") },
-	{ 'VUYI', TEXT("IYUV") },
-	{ '21VY', TEXT("YV12") },
-	{ 'UYVY', TEXT("YVYU") },
-	{ '2YUY', TEXT("YUY2") },
-	{ 'YVYU', TEXT("UYVY") },
-	{ 'CYDH', TEXT("HDYC") },
-	{ 'V4PM', TEXT("MP4V") },
-	{ '2S4M', TEXT("M4S2") },
-	{ '462H', TEXT("H264") },
-	{ 'GPJM', TEXT("MJPG") },
+	{ BI_RGB, TEXT("RGB"), VideoOutputType_RGB24 },
+	{ '2BGR', TEXT("RGB2"), VideoOutputType_None },
+	{ '4BGR', TEXT("RGB4"), VideoOutputType_None },
+	{ 'ABGR', TEXT("RGBA"), VideoOutputType_None },
+	{ '024I', TEXT("I420"), VideoOutputType_I420 },
+	{ 'VUYI', TEXT("IYUV"), VideoOutputType_None },
+	{ '21VY', TEXT("YV12"), VideoOutputType_YV12 },
+	{ 'UYVY', TEXT("YVYU"), VideoOutputType_YVYU },
+	{ '2YUY', TEXT("YUY2"), VideoOutputType_YUY2 },
+	{ 'YVYU', TEXT("UYVY"), VideoOutputType_UYVY },
+	{ 'CYDH', TEXT("HDYC"), VideoOutputType_HDYC },
+	{ 'V4PM', TEXT("MP4V"), VideoOutputType_None },
+	{ '2S4M', TEXT("M4S2"), VideoOutputType_None },
+	{ '462H', TEXT("H264"), VideoOutputType_H264 },
+	{ 'GPJM', TEXT("MJPG"), VideoOutputType_MJPG },
 };
 #undef UNUSED_FOURCC
 
@@ -547,7 +548,34 @@ void dxUtils::FreeMediaType(AM_MEDIA_TYPE& mt)
 	}
 }
 
+VIDEOFORMAT dxUtils::getVideoTypeByFourCC(DWORD fourCC)
+{
+	VIDEOFORMAT format = VideoOutputType_None;
+	for (int i = 0; i < ARRAYSIZE(supportFourCCList); i++){
+		if (supportFourCCList[i].fourCC == fourCC){
+			format = supportFourCCList[i].type;
+		}
+	}
+	return format;
+}
+
+VIDEOFORMAT dxUtils::getVideoTypeByGuid(GUID id)
+{
+	VIDEOFORMAT format = VideoOutputType_None;
+	format = getVideoTypeByFourCC(id.Data1);
+
+	return format;
+}
+
 VIDEOFORMAT dxUtils::getVideoType(AM_MEDIA_TYPE *mt)
 {
-	
+	VIDEOFORMAT format = VideoOutputType_None;
+	BITMAPINFOHEADER *pVh = dxUtils::getBmpHeader(mt);
+
+	if (mt->subtype == MEDIASUBTYPE_None && pVh)
+		format = getVideoTypeByFourCC(pVh->biCompression);
+	else 
+		format = getVideoTypeByGuid(mt->subtype);
+
+	return format;
 }

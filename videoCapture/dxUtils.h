@@ -3,7 +3,7 @@
 #include <dshow.h>
 #include <dvdmedia.h>
 
-#define UNUSED_FOURCC_SUPPORT {'ffff', TEXT("ffff")}
+#define UNUSED_FOURCC_SUPPORT {'ffff', TEXT("ffff"), VideoOutputType_None}
 #define UNUSED_FOURCC_CODE (0xffff)
 
 typedef enum tagVideoOutputFormat{

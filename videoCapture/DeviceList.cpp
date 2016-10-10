@@ -11,11 +11,12 @@ DeviceList::~DeviceList()
 	CoUninitialize();
 }
 
-void DeviceList::addOutputFormat(BITMAPINFOHEADER *pvh, VIDEO_STREAM_CONFIG_CAPS *pCaps)
+void DeviceList::addOutputFormat(AM_MEDIA_TYPE *pmt, VIDEO_STREAM_CONFIG_CAPS *pCaps)
 {
 	DEVCAPOUTPUTFMT output;
+	BITMAPINFOHEADER *pvh = dxUtils::getBmpHeader(pmt);
 
-	output.type = dxUtils::get;
+	output.type = dxUtils::getVideoType(pmt);
 
 	output.outputRes.cx = pvh->biWidth;
 	output.outputRes.cy = abs(pvh->biHeight);
@@ -68,9 +69,7 @@ HRESULT DeviceList::enumPins(IBaseFilter *captureFilter)
 				for (int i = 0; i < count; i++){
 					AM_MEDIA_TYPE *pmt = NULL;
 					if (streamCfg->GetStreamCaps(i, &pmt, (BYTE*)pCaps) == S_OK){
-						BITMAPINFOHEADER * pvh = dxUtils::getBmpHeader(pmt);
-
-						addOutputFormat(pvh, pCaps);
+						addOutputFormat(pmt, pCaps);
 
 						dxUtils::FreeMediaType(*pmt);
 					}
