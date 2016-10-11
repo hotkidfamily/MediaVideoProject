@@ -39,6 +39,7 @@ public:
 private:
 	DeviceList *m_devicesList;
 	dxVideoCapture *m_videoCap;
+	IBaseFilter *captureFilter;
 	logger *log;
 
 public:
@@ -48,4 +49,8 @@ public:
 	CStatic m_videoWindow;
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnCbnSelchangeComboDeivces();
+	CComboBox m_videoOutputFormatCombox;
+	CComboBox m_videoResCombox;
+	CComboBox m_videoFpsCombox;
+	afx_msg void OnCbnSelchangeComboDataformat();
 };

@@ -444,8 +444,17 @@ FOURCCSTRING supportFourCCList[] = {
 	{ '2S4M', TEXT("M4S2"), VideoOutputType_None },
 	{ '462H', TEXT("H264"), VideoOutputType_H264 },
 	{ 'GPJM', TEXT("MJPG"), VideoOutputType_MJPG },
+	{ 0xe436eb78, TEXT("RGB1"), VideoOutputType_None },
+	{ 0xe436eb79, TEXT("RGB4"), VideoOutputType_None },
+	{ 0xe436eb7a, TEXT("RGB8"), VideoOutputType_None },
+	{ 0xe436eb7b, TEXT("RGB565"), VideoOutputType_None },
+	{ 0xe436eb7c, TEXT("RGB555"), VideoOutputType_None },
+	{ 0xe436eb7d, TEXT("RGB24"), VideoOutputType_RGB24 },
+	{ 0xe436eb7e, TEXT("RGB32"), VideoOutputType_RGB32 },
 };
 #undef UNUSED_FOURCC
+
+
 
 dxUtils::dxUtils()
 {
@@ -548,12 +557,22 @@ void dxUtils::FreeMediaType(AM_MEDIA_TYPE& mt)
 	}
 }
 
+void dxUtils::DeleteMediaType(AM_MEDIA_TYPE *pmt)
+{
+	if (pmt != NULL)
+	{
+		FreeMediaType(*pmt);
+		CoTaskMemFree(pmt);
+	}
+}
+
 VIDEOFORMAT dxUtils::getVideoTypeByFourCC(DWORD fourCC)
 {
 	VIDEOFORMAT format = VideoOutputType_None;
 	for (int i = 0; i < ARRAYSIZE(supportFourCCList); i++){
 		if (supportFourCCList[i].fourCC == fourCC){
 			format = supportFourCCList[i].type;
+			break;
 		}
 	}
 	return format;

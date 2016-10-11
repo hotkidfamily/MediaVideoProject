@@ -39,8 +39,6 @@ public:
 	STDMETHODIMP ISampleGrabberCBImpl::SampleCB(double SampleTime, IMediaSample *pSample);
 
 protected:
-	HRESULT enumPins(IBaseFilter *captureFilter);
-
 	HRESULT removeFilters();
 	HRESULT openSampleGrabber();
 	

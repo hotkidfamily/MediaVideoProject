@@ -23,7 +23,7 @@ typedef struct tagDevDesc{
 class DeviceList
 {
 public:
-	DeviceList();
+	DeviceList(logger &log);
 	~DeviceList();
 
 	HRESULT enumDevices();
@@ -31,13 +31,17 @@ public:
 	DEVDESCRIPT *getDevicesDesc(size_t &count);
 
 	IBaseFilter * getDevice(int index);
-	DEVCAPOUTPUTFMT* getDeviceSupportOutputFormat(size_t &count);
+	std::map<int, std::vector<DEVCAPOUTPUTFMT>> getDeviceSupportOutputFormat();
 
 private:
 	HRESULT enumPins(IBaseFilter *captureFilter);
+	HRESULT queryPinOutputFormat(IPin *pin);
 	void addOutputFormat(AM_MEDIA_TYPE *pvh, VIDEO_STREAM_CONFIG_CAPS* pcaps);
 
 	std::vector<DEVDESCRIPT> m_devices;
-	std::vector<DEVCAPOUTPUTFMT> devOutputFormats;
+	std::map<int, std::vector<DEVCAPOUTPUTFMT>> m_pinOutputMap;
+
+private:
+	logger &log;
 };
 

@@ -44,6 +44,7 @@ public:
 	static REFERENCE_TIME *getFrameInterval(AM_MEDIA_TYPE *pmt);
 	static TCHAR* getInfo(GUID id, DWORD fourCC);
 	static void FreeMediaType(AM_MEDIA_TYPE& mt);
+	static void DeleteMediaType(AM_MEDIA_TYPE *pmt);
 	static VIDEOFORMAT getVideoType(AM_MEDIA_TYPE *mt);
 
 private:

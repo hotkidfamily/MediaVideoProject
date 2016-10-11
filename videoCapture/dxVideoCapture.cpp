@@ -133,73 +133,9 @@ HRESULT dxVideoCapture::showFilterPropertyPages(IBaseFilter *filter)
 	return hr;
 }
 
-HRESULT dxVideoCapture::enumPins(IBaseFilter *captureFilter)
-{
-	HRESULT hr = E_FAIL;
-	ULONG ulCnt = 0;
-
-	IEnumPins *pEnum = NULL;
-	IPin *pPins = NULL;
-
-	int pinCnt = 0;
-	
-	hr = captureFilter->EnumPins(&pEnum);
-	if (FAILED(hr)){
-		goto done;
-	}
-
-	while (pEnum->Next(1, &pPins, &ulCnt) == S_OK){
-		PIN_INFO pinInfo = { 0 };
-
-		if (pPins->QueryPinInfo(&pinInfo) == S_OK){
-			log.log(1, TEXT("pin %d,  %s\n"), pinCnt++, pinInfo.dir == PINDIR_INPUT ? TEXT("INPUT") : TEXT("OUTPUT"));
-				
-			IAMStreamConfig *streamCfg = NULL;
-			hr = pPins->QueryInterface(IID_IAMStreamConfig, (void**)&streamCfg);
-			if (SUCCEEDED(hr)){
-				int count = 0;
-				int size = 0;
-				VIDEO_STREAM_CONFIG_CAPS *pCaps = NULL;
-
-				hr = streamCfg->GetNumberOfCapabilities(&count, &size);
-				if (hr != S_OK){
-					continue;
-				}
-				if (size != sizeof(VIDEO_STREAM_CONFIG_CAPS)){
-					continue;
-				}
-
-				pCaps = new VIDEO_STREAM_CONFIG_CAPS;
-				int idx = 0;
-				for (int i = 0; i < count; i++){
-					AM_MEDIA_TYPE *pmt = NULL;
-					if (streamCfg->GetStreamCaps(i, &pmt, (BYTE*)pCaps) == S_OK){
-						BITMAPINFOHEADER * pvh = dxUtils::getBmpHeader(pmt);
-						log.log(1, TEXT("\t\t %3d %4dx%4d fps: %f ~ %f (%s,%s,%s)\n"), idx++, pvh->biWidth, abs(pvh->biHeight),
-							dxUtils::calcFps(pCaps->MaxFrameInterval), dxUtils::calcFps(pCaps->MinFrameInterval), dxUtils::getInfo(pmt->majortype, UNUSED_FOURCC_CODE),
-							dxUtils::getInfo(pmt->subtype, pvh->biCompression), dxUtils::getInfo(pmt->formattype, UNUSED_FOURCC_CODE));
-						dxUtils::FreeMediaType(*pmt);
-					}					
-				}
-				delete pCaps;
-				streamCfg->Release(); 
-			}else{
-				log.log(1, TEXT("\n"));
-			}
-		}
-		pPins->Release();
-	}
-	pEnum->Release();
-
-done:
-	return hr;
-}
-
 HRESULT dxVideoCapture::buildGraph(IBaseFilter* captureFilter)
 {
 	HRESULT hr = S_OK;
-
-	enumPins(captureFilter);
 
 	hr = m_filterGraph->AddFilter(m_nullRenderFilter, RENDER_FILTER_NAME);
 	if (S_OK != hr){
