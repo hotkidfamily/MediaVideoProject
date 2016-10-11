@@ -18,7 +18,7 @@ typedef struct tagDevCaptureOutputFormat{
 typedef struct tagDevDesc{
 	STRING name;
 	STRING path;
-}DEVINFO;
+}DEVDESCRIPT;
 
 class DeviceList
 {
@@ -26,17 +26,18 @@ public:
 	DeviceList();
 	~DeviceList();
 
-	size_t count() const { return m_devices.size(); }
-	DEVINFO *getDevices() { return m_devices.data(); }
 	HRESULT enumDevices();
-	DEVCAPOUTPUTFMT* getDevicesSupportOutputFormat(int index);
+
+	DEVDESCRIPT *getDevicesDesc(size_t &count);
+
 	IBaseFilter * getDevice(int index);
+	DEVCAPOUTPUTFMT* getDeviceSupportOutputFormat(size_t &count);
 
 private:
 	HRESULT enumPins(IBaseFilter *captureFilter);
 	void addOutputFormat(AM_MEDIA_TYPE *pvh, VIDEO_STREAM_CONFIG_CAPS* pcaps);
 
-	std::vector<DEVINFO> m_devices;
+	std::vector<DEVDESCRIPT> m_devices;
 	std::vector<DEVCAPOUTPUTFMT> devOutputFormats;
 };
 

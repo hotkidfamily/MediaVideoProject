@@ -107,9 +107,10 @@ BOOL CvideoCaptureDlg::OnInitDialog()
 
 	m_devicesList = new DeviceList;
 	m_devicesList->enumDevices();
-	DEVINFO *ppdevices = m_devicesList->getDevices();
+	size_t deviceCnt = 0;
+	DEVDESCRIPT *ppdevices = m_devicesList->getDevicesDesc(deviceCnt);
 
-	for (int i = 0; i < m_devicesList->count(); i++){
+	for (int i = 0; i < deviceCnt; i++){
 		m_devicesCombox.AddString(ppdevices[i].name.c_str());
 	}
 	m_devicesCombox.SetCurSel(0);
@@ -189,7 +190,10 @@ void CvideoCaptureDlg::OnBnClickedButtonOpen()
 	}
 	else{
 		IBaseFilter *capture = NULL;
+		size_t supportCnt = 0;
+		DEVCAPOUTPUTFMT * pFmt;
 		capture = m_devicesList->getDevice(m_devicesCombox.GetCurSel());
+		pFmt = m_devicesList->getDeviceSupportOutputFormat(supportCnt);
 		//	m_videoCap->showFilterPropertyPages(capture);
 		
 		m_videoCap->buildGraph(capture);

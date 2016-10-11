@@ -22,6 +22,7 @@ void DeviceList::addOutputFormat(AM_MEDIA_TYPE *pmt, VIDEO_STREAM_CONFIG_CAPS *p
 	output.outputRes.cy = abs(pvh->biHeight);
 	output.minFrameInterval = pCaps->MinFrameInterval;
 	output.maxFrameInterval = pCaps->MaxFrameInterval;
+
 	devOutputFormats.push_back(output);
 }
 
@@ -47,6 +48,14 @@ HRESULT DeviceList::enumPins(IBaseFilter *captureFilter)
 			if (pinInfo.dir != PINDIR_OUTPUT){
 				pPins->Release();
 				continue;
+			}
+
+			IEnumMediaTypes *pMediaTypeEnum;
+			pPins->EnumMediaTypes(&pMediaTypeEnum);
+
+			AM_MEDIA_TYPE *pType;
+			while(pMediaTypeEnum->Next(1, &pType, NULL) == S_OK){
+				//log.
 			}
 
 			IAMStreamConfig *streamCfg = NULL;
@@ -86,10 +95,10 @@ done:
 	return hr;
 }
 
-DEVCAPOUTPUTFMT* DeviceList::getDevicesSupportOutputFormat(int index)
+DEVCAPOUTPUTFMT* DeviceList::getDeviceSupportOutputFormat(size_t& index)
 {
-	HRESULT hr = E_FAIL;
-	return NULL;
+	index = devOutputFormats.size();
+	return devOutputFormats.data();
 }
 
 HRESULT DeviceList::enumDevices()
@@ -122,7 +131,7 @@ HRESULT DeviceList::enumDevices()
 		
 		hr = pDeviceInfo->BindToStorage(NULL, NULL, IID_IPropertyBag, (void**)&propertysInfo);
 		if (hr == S_OK){
-			DEVINFO dev;
+			DEVDESCRIPT dev;
 			hr = propertysInfo->Read(TEXT("FriendlyName"), &friendlyName, 0);
 			if (SUCCEEDED(hr)){
 				dev.name = friendlyName.bstrVal;
@@ -153,17 +162,21 @@ done:
 	return hr;
 }
 
+DEVDESCRIPT *DeviceList::getDevicesDesc(size_t &count) {
+	count = m_devices.size();
+	return m_devices.data();
+}
+
 IBaseFilter* DeviceList::getDevice(int index)
 {
 	IBaseFilter * requestFilter = NULL;
 
-
 	HRESULT hr = S_OK;
 	ICreateDevEnum *pSystemEnum = NULL;
 	IEnumMoniker *pEnumMoniker = NULL;
-	DEVINFO requestDev;
+	DEVDESCRIPT requestDev;
 
-	if (index > count()){
+	if (index > m_devices.size()){
 		goto done;
 	}
 
@@ -193,7 +206,7 @@ IBaseFilter* DeviceList::getDevice(int index)
 
 		hr = pDeviceInfo->BindToStorage(NULL, NULL, IID_IPropertyBag, (void**)&propertysInfo);
 		if (hr == S_OK){
-			DEVINFO dev;
+			DEVDESCRIPT dev;
 			hr = propertysInfo->Read(TEXT("FriendlyName"), &friendlyName, 0);
 			if (SUCCEEDED(hr)){
 				dev.name = friendlyName.bstrVal;
