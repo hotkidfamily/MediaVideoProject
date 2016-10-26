@@ -12,65 +12,45 @@ DeviceList::~DeviceList()
 	CoUninitialize();
 }
 
-void DeviceList::addOutputFormat(AM_MEDIA_TYPE *pmt, VIDEO_STREAM_CONFIG_CAPS *pCaps)
+bool DeviceList::isCapturePin(IPin *pPin)
 {
-	DEVCAPOUTPUTFMT output;
-	BITMAPINFOHEADER *pvh = dxUtils::getBmpHeader(pmt);
+	IKsPropertySet *pKs = NULL;
+	HRESULT hr;
+	DWORD cbReturned = 0;
+	GUID pinCat = {0};
 
-	output.type = dxUtils::getVideoType(pmt);
-	if (output.type == VideoOutputType_None){
-		return;
+	if (SUCCEEDED(hr = pPin->QueryInterface(IID_PPV_ARGS(&pKs)))){
+		hr = pKs->Get(AMPROPSETID_Pin, AMPROPERTY_PIN_CATEGORY, NULL, 0,
+			&pinCat, sizeof(GUID), &cbReturned);
+		pKs->Release();
 	}
 
-	output.outputRes.cx = pvh->biWidth;
-	output.outputRes.cy = abs(pvh->biHeight);
-	if (pCaps){
-		output.minFrameInterval = pCaps->MinFrameInterval;
-		output.maxFrameInterval = pCaps->MaxFrameInterval;
-	}else{
-		output.minFrameInterval = output.maxFrameInterval = *(dxUtils::getFrameInterval(pmt));
-	}
-
-	m_pinOutputMap[output.type].push_back(output);
+	return (pinCat == PIN_CATEGORY_CAPTURE);
 }
 
-HRESULT DeviceList::queryPinOutputFormat(IPin *pin)
+
+HRESULT DeviceList::showPinPorpertyPages(IPin *pin)
 {
-	HRESULT hr = E_FAIL;
-	IEnumMediaTypes *pMediaTypeEnum = NULL;
-	VIDEO_STREAM_CONFIG_CAPS *pCaps = NULL;
-	IAMStreamConfig *streamCfg = NULL;
-	AM_MEDIA_TYPE *pmt = NULL;
-	int idx = 0;
+	HRESULT hr;
+	ISpecifyPropertyPages *pSpec;
+	CAUUID cauuid;
+	IAMStreamConfig *pSC = NULL;
 
-	//pin->Disconnect();
-	if (SUCCEEDED(hr = pin->QueryInterface(IID_IAMStreamConfig, (void**)&streamCfg))){
-		int count = 0, size = 0;
-		if (SUCCEEDED(hr = streamCfg->GetNumberOfCapabilities(&count, &size))){
-			pCaps = new VIDEO_STREAM_CONFIG_CAPS;
+	if (isCapturePin(pin)){
+		if (SUCCEEDED(hr = pin->QueryInterface(IID_IAMStreamConfig, (void**)&pSC))){
+			
+			if (SUCCEEDED(hr = pSC->QueryInterface(IID_ISpecifyPropertyPages, (void **)&pSpec))){
+				hr = pSpec->GetPages(&cauuid);
+				hr = OleCreatePropertyFrame(NULL, 30, 30, NULL, 1,
+					(IUnknown **)&pSC, cauuid.cElems,
+					(GUID *)cauuid.pElems, 0, 0, NULL);
 
-			for (int i = 0; i < count; i++){
-				if (streamCfg->GetStreamCaps(i, &pmt, (BYTE*)pCaps) == S_OK){
-					addOutputFormat(pmt, pCaps);
-					BITMAPINFOHEADER * pvh = dxUtils::getBmpHeader(pmt);
-					log.log(1, TEXT("\t\t %3d %4dx%4d fps: %f ~ %f (%s,%s,%s)\n"), idx++, pvh->biWidth, abs(pvh->biHeight),
-						dxUtils::calcFps(pCaps->MaxFrameInterval), dxUtils::calcFps(pCaps->MinFrameInterval), dxUtils::getInfo(pmt->majortype, UNUSED_FOURCC_CODE),
-						dxUtils::getInfo(pmt->subtype, pvh->biCompression), dxUtils::getInfo(pmt->formattype, UNUSED_FOURCC_CODE));
-					dxUtils::FreeMediaType(*pmt);
-				}
+				CoTaskMemFree(cauuid.pElems);
+				pSpec->Release();
 			}
-			delete pCaps;
-		}
 
-		streamCfg->Release();
-	}else if (SUCCEEDED(hr = pin->EnumMediaTypes(&pMediaTypeEnum))){
-		while (pMediaTypeEnum->Next(1, &pmt, NULL) == S_OK){
-			//log.
-			addOutputFormat(pmt, pCaps);
-			dxUtils::DeleteMediaType(pmt);
+			pSC->Release();
 		}
-
-		pMediaTypeEnum->Release();
 	}
 
 	return hr;
@@ -98,8 +78,6 @@ HRESULT DeviceList::enumPins(IBaseFilter *captureFilter)
 				pPins->Release();
 				continue;
 			}
-
-			queryPinOutputFormat(pPins);
 		}
 		pPins->Release();
 	}
@@ -107,11 +85,6 @@ HRESULT DeviceList::enumPins(IBaseFilter *captureFilter)
 
 done:
 	return hr;
-}
-
-std::map<int, std::vector<DEVCAPOUTPUTFMT>> DeviceList::getDeviceSupportOutputFormat()
-{
-	return m_pinOutputMap;
 }
 
 HRESULT DeviceList::enumDevices()

@@ -40,22 +40,24 @@ public:
 
 protected:
 	HRESULT removeFilters();
-	HRESULT openSampleGrabber();
-	
+	HRESULT selectSuitablePin(IBaseFilter *filter);
+	HRESULT configSampleGrabber();
+	HRESULT setCaptureFormat();
+	HRESULT getCaptureFormat();
 	HRESULT SetupVideoWindow(void);
 	
 private:
-	IGraphBuilder *m_filterGraph;
-	IMediaControl *m_mediaControl;
-	IMediaEventEx *m_MediaEvent;
-	ICaptureGraphBuilder2 *m_captureGraphBuilder;
+	IGraphBuilder *mFilterGraph;
+	IMediaControl *mFilterGraphMediaControl;
+	IMediaEventEx *mFilterGraphMediaEvent;
+	ICaptureGraphBuilder2 *mFilterGraphBuilder;
 	
-	IBaseFilter *m_nullRenderFilter;
+	IBaseFilter *mNullRenderFilter;
 
-	IBaseFilter *m_sampleGrabberFilter;
-	ISampleGrabber *m_sampleGrabber;
+	IBaseFilter *mSampleGrabberFilter;
+	ISampleGrabber *mSampleGrabber;
 
-	IVideoWindow  * m_pVM;
+	IVideoWindow  * mFilterGraphVideoWindow;
 	HWND m_hWnd;
 
 	logger &log;

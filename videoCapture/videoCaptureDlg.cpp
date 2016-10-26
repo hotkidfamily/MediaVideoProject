@@ -180,6 +180,9 @@ HCURSOR CvideoCaptureDlg::OnQueryDragIcon()
 
 void CvideoCaptureDlg::OnDestroy()
 {
+	if (m_videoCap->isRuning()){
+		m_videoCap->stop();
+	}
 	CDialogEx::OnDestroy();
 	delete m_devicesList;
 	// TODO:  在此处添加消息处理程序代码
@@ -216,27 +219,27 @@ void CvideoCaptureDlg::OnCbnSelchangeComboDeivces()
 {
 	std::map<int, std::vector<DEVCAPOUTPUTFMT>> pFmt;
 	captureFilter = m_devicesList->getDevice(m_devicesCombox.GetCurSel());
-	pFmt = m_devicesList->getDeviceSupportOutputFormat();
+	//pFmt = m_devicesList->getDeviceSupportOutputFormat();
 	int count = 0;
 
 	m_videoOutputFormatCombox.ResetContent();
 	m_videoResCombox.ResetContent();
 	m_videoFpsCombox.ResetContent();
 
-	std::map<int, std::vector<DEVCAPOUTPUTFMT>>::reverse_iterator iterator;
-	for (iterator = pFmt.rbegin(); iterator != pFmt.rend(); iterator++){
-		CString str;
-		str.Format(TEXT("%d"), count++);
-		m_videoOutputFormatCombox.AddString(str);
-		std::vector<DEVCAPOUTPUTFMT>::iterator it;
-		for (it = iterator->second.begin(); it != iterator->second.end(); it++){
-			CString res, fps;
-			res.Format(TEXT("%dx%d"), it->outputRes.cx, it->outputRes.cy);
-			fps.Format(TEXT("%fx%f"), dxUtils::calcFps(it->maxFrameInterval), dxUtils::calcFps(it->minFrameInterval));
-			m_videoResCombox.AddString(res);
-			m_videoFpsCombox.AddString(fps);
-		}
-	}
+// 	std::map<int, std::vector<DEVCAPOUTPUTFMT>>::reverse_iterator iterator;
+// 	for (iterator = pFmt.rbegin(); iterator != pFmt.rend(); iterator++){
+// 		CString str;
+// 		str.Format(TEXT("%d"), count++);
+// 		m_videoOutputFormatCombox.AddString(str);
+// 		std::vector<DEVCAPOUTPUTFMT>::iterator it;
+// 		for (it = iterator->second.begin(); it != iterator->second.end(); it++){
+// 			CString res, fps;
+// 			res.Format(TEXT("%dx%d"), it->outputRes.cx, it->outputRes.cy);
+// 			fps.Format(TEXT("%fx%f"), dxUtils::calcFps(it->maxFrameInterval), dxUtils::calcFps(it->minFrameInterval));
+// 			m_videoResCombox.AddString(res);
+// 			m_videoFpsCombox.AddString(fps);
+// 		}
+// 	}
 
 	m_videoOutputFormatCombox.SetCurSel(0);
 	m_videoResCombox.SetCurSel(0);

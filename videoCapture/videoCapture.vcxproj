@@ -106,9 +106,11 @@
     <ClInclude Include="DeviceList.h" />
     <ClInclude Include="dxUtils.h" />
     <ClInclude Include="dxVideoCapture.h" />
+    <ClInclude Include="Filter.h" />
     <ClInclude Include="ISampleGrabber.h" />
     <ClInclude Include="ISampleGrabberCBImpl.h" />
     <ClInclude Include="logger.h" />
+    <ClInclude Include="Pins.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SlidingWindowCalc.h" />
     <ClInclude Include="stdafx.h" />
@@ -120,8 +122,10 @@
     <ClCompile Include="DeviceList.cpp" />
     <ClCompile Include="dxUtils.cpp" />
     <ClCompile Include="dxVideoCapture.cpp" />
+    <ClCompile Include="Filter.cpp" />
     <ClCompile Include="ISampleGrabberCBImpl.cpp" />
     <ClCompile Include="logger.cpp" />
+    <ClCompile Include="Pins.cpp" />
     <ClCompile Include="SlidingWindowCalc.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

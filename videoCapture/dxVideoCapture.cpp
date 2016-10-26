@@ -9,7 +9,7 @@
 
 dxVideoCapture::dxVideoCapture(logger &log)
 	: log(log)
-	, m_pVM(NULL)
+	, mFilterGraphVideoWindow(NULL)
 	, m_hWnd(NULL)
 {
 }
@@ -20,7 +20,7 @@ dxVideoCapture::~dxVideoCapture()
 }
 
 
-HRESULT dxVideoCapture::initGraph(HWND hWnd)
+HRESULT dxVideoCapture::getDSInterfaces(HWND hWnd)
 {
 	HRESULT hr = S_OK;
 	if (!IsWindow(hWnd)){
@@ -29,45 +29,43 @@ HRESULT dxVideoCapture::initGraph(HWND hWnd)
 
 	m_hWnd = hWnd;
 
-	hr = CoCreateInstance(CLSID_FilterGraph, NULL, CLSCTX_INPROC_SERVER, IID_IGraphBuilder, (void**)&m_filterGraph);
+	hr = CoCreateInstance(CLSID_FilterGraph, NULL, CLSCTX_INPROC_SERVER, IID_IGraphBuilder, (void**)&mFilterGraph);
 	if (hr != S_OK){
 		goto done;
 	}
 
-	hr = m_filterGraph->QueryInterface(IID_IMediaControl, (void**)&m_mediaControl);
+	hr = CoCreateInstance(CLSID_CaptureGraphBuilder2, NULL, CLSCTX_INPROC_SERVER, IID_ICaptureGraphBuilder2, (void**)&mFilterGraphBuilder);
 	if (hr != S_OK){
 		goto done;
 	}
 
-	hr = m_filterGraph->QueryInterface(IID_IMediaEventEx, (void**)&m_MediaEvent);
+	hr = mFilterGraph->QueryInterface(IID_IMediaControl, (void**)&mFilterGraphMediaControl);
 	if (hr != S_OK){
 		goto done;
 	}
 
-	hr = CoCreateInstance(CLSID_CaptureGraphBuilder2, NULL, CLSCTX_INPROC_SERVER, IID_ICaptureGraphBuilder2, (void**)&m_captureGraphBuilder);
+	hr = mFilterGraph->QueryInterface(IID_IMediaEventEx, (void**)&mFilterGraphMediaEvent);
 	if (hr != S_OK){
 		goto done;
 	}
 
-	hr = CoCreateInstance(CLSID_NullRenderer, NULL, CLSCTX_INPROC_SERVER, IID_IBaseFilter, (void**)&m_nullRenderFilter);
+	hr = CoCreateInstance(CLSID_NullRenderer, NULL, CLSCTX_INPROC_SERVER, IID_IBaseFilter, (void**)&mNullRenderFilter);
 	if (hr != S_OK){
 		goto done;
 	}
 
-	hr = m_filterGraph->QueryInterface(IID_IVideoWindow, (LPVOID *)&m_pVM);
+	hr = mFilterGraph->QueryInterface(IID_IVideoWindow, (LPVOID *)&mFilterGraphVideoWindow);
 	if (FAILED(hr)){
 		goto done;
 	}
 
-	hr = m_MediaEvent->SetNotifyWindow((OAHWND)m_hWnd, WM_GRAPHNOTIFY, 0);
-
-	hr = m_captureGraphBuilder->SetFiltergraph(m_filterGraph);
+	hr = CoCreateInstance(CLSID_SampleGrabber, NULL, CLSCTX_INPROC_SERVER, IID_ISampleGrabber, (void**)&mSampleGrabber);
 	if (hr != S_OK){
 		goto done;
 	}
 
-	hr = openSampleGrabber();
-	if (FAILED(hr)){
+	hr = mSampleGrabber->QueryInterface(IID_IBaseFilter, (void**)&mSampleGrabberFilter);
+	if (hr != S_OK){
 		goto done;
 	}
 
@@ -75,35 +73,120 @@ done:
 	return hr;
 }
 
-HRESULT dxVideoCapture::openSampleGrabber()
+HRESULT dxVideoCapture::configSampleGrabber()
 {
 	HRESULT hr = S_OK;
-	hr = CoCreateInstance(CLSID_SampleGrabber, NULL, CLSCTX_INPROC_SERVER, IID_ISampleGrabber, (void**)&m_sampleGrabber);
-	if (hr != S_OK){
-		goto done;
-	}
-
-	hr = m_sampleGrabber->QueryInterface(IID_IBaseFilter, (void**)&m_sampleGrabberFilter);
-	if (hr != S_OK){
-		goto done;
-	}
-
-	/* set media type */
 	AM_MEDIA_TYPE   mt;
+
 	ZeroMemory(&mt, sizeof(AM_MEDIA_TYPE));
 	mt.majortype = MEDIATYPE_Video;
 	mt.subtype = MEDIASUBTYPE_RGB24;
-	m_sampleGrabber->SetMediaType(&mt);
+	hr = mSampleGrabber->SetMediaType(&mt);
+	if (!SUCCEEDED(hr)){
+		goto done;
+	}
 
-	m_sampleGrabber->SetOneShot(FALSE);
-	m_sampleGrabber->SetBufferSamples(FALSE);
+	mSampleGrabber->SetOneShot(FALSE);
+	mSampleGrabber->SetBufferSamples(FALSE);
 
-	m_sampleGrabber->SetCallback(this, 0);
+	mSampleGrabber->SetCallback(this, 0);
 
 done:
 	return hr;
 }
 
+HRESULT dxVideoCapture::setCaptureFormat()
+{
+	HRESULT hr = 0;
+
+	//mFilterGraphBuilder->QueryInterface(PIN_CATEGORY_CAPTURE, )
+	return hr;
+}
+
+HRESULT dxVideoCapture::getCaptureFormat()
+{
+	HRESULT hr = S_OK;
+	AM_MEDIA_TYPE Type;
+	BITMAPINFOHEADER * pVh;
+	REFERENCE_TIME* rt;
+
+	hr = mSampleGrabber->GetConnectedMediaType(&Type);
+	if (hr == S_OK){
+		pVh = dxUtils::getBmpHeader(&Type);
+		rt = dxUtils::getFrameInterval(&Type);
+		log.log(1, TEXT("Capture video in %dx%d, %f fps\n"), pVh->biWidth, pVh->biHeight, dxUtils::calcFps(*rt));
+		dxUtils::FreeMediaType(Type);
+	}
+	else if (VFW_E_NOT_CONNECTED == hr ){
+		log.log(1, TEXT("Grabber have not connected.\n"));
+	}
+	else {
+		log.log(1, TEXT("Can not get connected media type..\n"));
+	}
+
+	return hr;
+}
+
+HRESULT dxVideoCapture::selectSuitablePin(IBaseFilter *filter)
+{
+	HRESULT hr = S_OK;
+
+
+
+	return hr;
+}
+
+HRESULT dxVideoCapture::buildGraph(IBaseFilter* captureFilter)
+{
+	HRESULT hr = S_OK;
+	AM_MEDIA_TYPE   mt;
+
+	hr = mFilterGraphMediaEvent->SetNotifyWindow((OAHWND)m_hWnd, WM_GRAPHNOTIFY, 0);
+
+	hr = mFilterGraphBuilder->SetFiltergraph(mFilterGraph);
+	if (hr != S_OK){
+		goto done;
+	}
+
+	ZeroMemory(&mt, sizeof(AM_MEDIA_TYPE));
+	mt.majortype = MEDIATYPE_Video;
+	mt.subtype = MEDIASUBTYPE_RGB24;
+	hr = mSampleGrabber->SetMediaType(&mt);
+	if (!SUCCEEDED(hr)){
+		goto done;
+	}
+
+	mSampleGrabber->SetOneShot(FALSE);
+	mSampleGrabber->SetBufferSamples(FALSE);
+	mSampleGrabber->SetCallback(this, 0);
+
+	hr = mFilterGraph->AddFilter(captureFilter, CAPTURE_FILTER_NAME);
+	if (S_OK != hr){
+		goto done;
+	}
+
+	hr = mFilterGraph->AddFilter(mSampleGrabberFilter, GRABBER_FILTER_NAME);
+	if (S_OK != hr){
+		goto done;
+	}
+
+	hr = mFilterGraph->AddFilter(mNullRenderFilter, RENDER_FILTER_NAME);
+	if (S_OK != hr){
+		goto done;
+	}
+
+	
+	setCaptureFormat();
+
+done:
+	return hr;
+}
+
+STDMETHODIMP dxVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
+{
+	statics.appendDataSize(1);
+	return S_OK;
+}
 
 HRESULT dxVideoCapture::showFilterPropertyPages(IBaseFilter *filter)
 {
@@ -133,38 +216,11 @@ HRESULT dxVideoCapture::showFilterPropertyPages(IBaseFilter *filter)
 	return hr;
 }
 
-HRESULT dxVideoCapture::buildGraph(IBaseFilter* captureFilter)
-{
-	HRESULT hr = S_OK;
-
-	hr = m_filterGraph->AddFilter(m_nullRenderFilter, RENDER_FILTER_NAME);
-	if (S_OK != hr){
-		goto done;
-	}
-	hr = m_filterGraph->AddFilter(m_sampleGrabberFilter, GRABBER_FILTER_NAME);
-	if (S_OK != hr){
-		goto done;
-	}
-	hr = m_filterGraph->AddFilter(captureFilter, CAPTURE_FILTER_NAME);
-	if (S_OK != hr){
-		goto done;
-	}
-
-done:
-	return hr;
-}
-
-STDMETHODIMP dxVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
-{
-	statics.appendDataSize(1);
-	return S_OK;
-}
-
 bool dxVideoCapture::isRuning()
 {
 	OAFilterState state = State_Stopped;
-	if (m_mediaControl)
-		m_mediaControl->GetState(INFINITE, &state);
+	if (mFilterGraphMediaControl)
+		mFilterGraphMediaControl->GetState(INFINITE, &state);
 
 	return state != State_Stopped;
 }
@@ -172,60 +228,26 @@ bool dxVideoCapture::isRuning()
 HRESULT dxVideoCapture::start()
 {
 	HRESULT hr = E_FAIL;
-	AM_MEDIA_TYPE   *pmt = NULL;
-	AM_MEDIA_TYPE   mt;
 	IBaseFilter* captureFilter = NULL;
 	REFERENCE_TIME *rt = NULL;
 	BITMAPINFOHEADER *pvh = NULL;
 
-	hr = m_filterGraph->FindFilterByName(CAPTURE_FILTER_NAME, &captureFilter);
+	hr = mFilterGraph->FindFilterByName(CAPTURE_FILTER_NAME, &captureFilter);
 	if (SUCCEEDED(hr)){
-		hr = m_captureGraphBuilder->RenderStream(&PIN_CATEGORY_PREVIEW, &MEDIATYPE_Video, captureFilter, NULL, NULL);
+		hr = mFilterGraphBuilder->RenderStream(&PIN_CATEGORY_PREVIEW, &MEDIATYPE_Video, captureFilter, NULL, NULL);
 
-		hr = m_captureGraphBuilder->RenderStream(&PIN_CATEGORY_CAPTURE, &MEDIATYPE_Video, captureFilter, m_sampleGrabberFilter, m_nullRenderFilter);
+		hr = mFilterGraphBuilder->RenderStream(&PIN_CATEGORY_CAPTURE, &MEDIATYPE_Video, captureFilter, mSampleGrabberFilter, mNullRenderFilter);
 		if (FAILED(hr)){
 			goto done;
 		}
-		IAMStreamConfig *streamCfg = NULL;
-		hr = m_captureGraphBuilder->FindInterface(&PIN_CATEGORY_CAPTURE, &MEDIATYPE_Video, captureFilter, IID_IAMStreamConfig, (void**)&streamCfg);
-		if (hr != S_OK){
-			goto done;
-		}
-		streamCfg->GetFormat(&pmt);
-		pvh = dxUtils::getBmpHeader(pmt);
-		rt = dxUtils::getFrameInterval(pmt);
 
-		if (pvh){
-			pvh->biWidth = 1280;
-			pvh->biHeight = 720;
-			*rt = (REFERENCE_TIME)(10000000 / 15);
-		}
-		hr = streamCfg->SetFormat(pmt);
-		if (FAILED(hr)){
-			log.log(1, TEXT("can not config camera .\n"));
-		}
-
-		dxUtils::FreeMediaType(*pmt);
+		captureFilter->Release();
 	}
 
+	getCaptureFormat();
 	SetupVideoWindow();
 
-	hr = m_sampleGrabber->GetConnectedMediaType(&mt);
-	if (hr == S_OK){
-		BITMAPINFOHEADER *pBmp = NULL;
-		REFERENCE_TIME *AvgTimePerFrame = NULL;
-
-		pBmp = dxUtils::getBmpHeader(pmt);
-		AvgTimePerFrame = dxUtils::getFrameInterval(pmt);
-		if (pBmp && AvgTimePerFrame)
-			log.log(1, TEXT("open camera with %dx%d, %f fps.\n"), pBmp->biWidth, abs(pBmp->biHeight), dxUtils::calcFps(*AvgTimePerFrame));
-
-		dxUtils::FreeMediaType(mt);
-	}else if (hr == VFW_E_NOT_CONNECTED){
-		log.log(1, TEXT("filter have not connected.\n"));
-	}
-
-	hr = m_mediaControl->Run();
+	hr = mFilterGraphMediaControl->Run();
 
 	statics.reset(5000);
 
@@ -236,13 +258,13 @@ done:
 void dxVideoCapture::ResizeVideoWindow(void)
 {
 	// Resize the video preview window to match owner window size
-	if (m_pVM)
+	if (mFilterGraphVideoWindow)
 	{
 		RECT rc;
 
 		// Make the preview video fill our window
 		GetClientRect(m_hWnd, &rc);
-		m_pVM->SetWindowPosition(0, 0, rc.right, rc.bottom);
+		mFilterGraphVideoWindow->SetWindowPosition(0, 0, rc.right, rc.bottom);
 	}
 }
 
@@ -251,13 +273,13 @@ HRESULT dxVideoCapture::SetupVideoWindow(void)
 	HRESULT hr;
 
 	// Set the video window to be a child of the main window
-	hr = m_pVM->put_Owner((OAHWND)m_hWnd);
+	hr = mFilterGraphVideoWindow->put_Owner((OAHWND)m_hWnd);
 	if (FAILED(hr)){
 		goto done;
 	}
 
 	// Set video window style
-	hr = m_pVM->put_WindowStyle(WS_CHILD | WS_CLIPCHILDREN);
+	hr = mFilterGraphVideoWindow->put_WindowStyle(WS_CHILD | WS_CLIPCHILDREN);
 	if (FAILED(hr)){
 		goto done;
 	}
@@ -267,7 +289,7 @@ HRESULT dxVideoCapture::SetupVideoWindow(void)
 	ResizeVideoWindow();
 
 	// Make the video window visible, now that it is properly positioned
-	hr = m_pVM->put_Visible(OATRUE);
+	hr = mFilterGraphVideoWindow->put_Visible(OATRUE);
 	if (FAILED(hr)){
 		goto done;
 	}
@@ -280,25 +302,25 @@ HRESULT dxVideoCapture::removeFilters()
 {
 	HRESULT hr;
 	IBaseFilter *filter = NULL;
-	hr = m_filterGraph->FindFilterByName(CAPTURE_FILTER_NAME, &filter);
+	hr = mFilterGraph->FindFilterByName(CAPTURE_FILTER_NAME, &filter);
 	if (SUCCEEDED(hr)){
 		filter->Stop();
 	}
 
 	/* must stop before remove from filter graph */
-	m_mediaControl->StopWhenReady();
-	if (m_pVM){
-		m_pVM->put_Visible(OAFALSE);
-		m_pVM->put_Owner(NULL);
+	mFilterGraphMediaControl->StopWhenReady();
+	if (mFilterGraphVideoWindow){
+		mFilterGraphVideoWindow->put_Visible(OAFALSE);
+		mFilterGraphVideoWindow->put_Owner(NULL);
 	}
 
 	IEnumFilters *filterEnum;
-	hr = m_filterGraph->EnumFilters(&filterEnum);
+	hr = mFilterGraph->EnumFilters(&filterEnum);
 	if (SUCCEEDED(hr)){
 		while (filterEnum->Next(1, &filter, NULL) == S_OK){
 			FILTER_INFO info;
 			filter->QueryFilterInfo(&info);
-			m_filterGraph->RemoveFilter(filter);
+			mFilterGraph->RemoveFilter(filter);
 			filterEnum->Reset();
 			filter->Release();
 		}
@@ -324,17 +346,17 @@ HRESULT dxVideoCapture::HandleGraphEvent(void)
 	LONG_PTR evParam1, evParam2;
 	HRESULT hr = S_OK;
 
-	if (!m_MediaEvent)
+	if (!mFilterGraphMediaEvent)
 		return E_POINTER;
 
-	while (SUCCEEDED(m_MediaEvent->GetEvent(&evCode, &evParam1, &evParam2, 0)))
+	while (SUCCEEDED(mFilterGraphMediaEvent->GetEvent(&evCode, &evParam1, &evParam2, 0)))
 	{
 		//
 		// Free event parameters to prevent memory leaks associated with
 		// event parameter data.  While this application is not interested
 		// in the received events, applications should always process them.
 		//
-		hr = m_MediaEvent->FreeEventParams(evCode, evParam1, evParam2);
+		hr = mFilterGraphMediaEvent->FreeEventParams(evCode, evParam1, evParam2);
 
 		// Insert event processing code here, if desired
 	}
