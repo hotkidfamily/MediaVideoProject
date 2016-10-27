@@ -11,12 +11,19 @@ public:
 	DShowVideoCapture();
 	~DShowVideoCapture();
 	HRESULT GetDShowInterfaces();
+	HRESULT ReleaseDShowInterfaces();
 	HRESULT BuildGraph();
 	HRESULT EnumCaptureDevices();
 
 private:
+	void dshowInfo(HRESULT);
+
+private:
 	IGraphBuilder *mGraph;
 	ICaptureGraphBuilder2 *mGraphBuiler;
+	IMediaControl *mMediaControl;
+	IMediaEventEx *mMediaEventEx;
+	IVideoWindow *mVideoWindow;
 	IBaseFilter *mRenderFiler;
 	IBaseFilter *mCaptureFilter;
 
