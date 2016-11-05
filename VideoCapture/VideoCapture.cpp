@@ -14,7 +14,7 @@ void IVideoCaptureDelegate::RegisterVideoCaptureCallback(VideoCaptureCallback *c
 	mCaptureCallback = cb;
 }
 
-HRESULT IVideoCaptureDelegate::GetDeviceList(std::list<CAMERADESC> &)
+HRESULT IVideoCaptureDelegate::GetDeviceList(std::vector<char*> &)
 {
 	HRESULT hr = S_OK;
 	return hr;

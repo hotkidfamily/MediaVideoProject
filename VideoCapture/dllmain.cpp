@@ -1,5 +1,7 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include "stdafx.h"
+#include "IVideoCapture.h"
+#include "VideoCapture.h"
 
 BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
@@ -17,3 +19,19 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	return TRUE;
 }
 
+IVideoCapture *GetVideoCaptureObj()
+{
+	IVideoCaptureDelegate *pCapture = new IVideoCaptureDelegate;
+	if (pCapture){
+		return static_cast<IVideoCapture*>(pCapture);
+	}else{
+		return NULL;
+	}
+}
+
+void ReleaseVideoCaptureObj(IVideoCapture * pCapture)
+{
+	IVideoCaptureDelegate *pCap = static_cast<IVideoCaptureDelegate*>(pCapture);
+	if (pCap)
+		delete pCap;
+}

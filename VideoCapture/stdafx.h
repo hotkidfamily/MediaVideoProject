@@ -21,6 +21,8 @@
 
 #include "stdint.h"
 
-
-
-// TODO: reference additional headers your program requires here
+#ifdef UNICODE
+#define STRING std::wstring
+#else
+#define STRING std::string
+#endif
