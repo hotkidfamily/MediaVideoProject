@@ -6,13 +6,14 @@
 #include "dshowVideoCapture.h"
 #include "mediafoundationVideoCapture.h"
 
+
 class IVideoCaptureDelegate : 
 	public IVideoCapture
 {
 public:
 	virtual ~IVideoCaptureDelegate();
 	virtual void RegisterCallback(VideoCaptureCallback *);
-	virtual HRESULT GetDeviceList(std::vector<const TCHAR*> &);
+	virtual HRESULT GetDeviceList(VECT &);
 	virtual HRESULT StartCaptureWithParam(OPEN_DEVICE_PARAM );
 	virtual HRESULT StopCapture();
 	virtual HRESULT ShowPropertyWindow(HWND parentWindowHandle);

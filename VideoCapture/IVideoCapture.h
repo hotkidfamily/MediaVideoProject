@@ -14,6 +14,7 @@
 // 
 //
 //---------------------------------------------------------
+typedef std::vector<const TCHAR*> VECT;
 
 typedef struct tagDevParam{
 	int32_t index;
@@ -64,7 +65,7 @@ public:
 	// step 0. register call back function, free call back yourself
 	virtual void RegisterCallback(VideoCaptureCallback *) = 0;
 	// step 1, get device list
-	virtual HRESULT GetDeviceList(std::vector<const TCHAR*> &) = 0;
+	virtual HRESULT GetDeviceList(VECT &) = 0;
 	// step 2, start capture
 	virtual HRESULT StartCaptureWithParam(OPEN_DEVICE_PARAM) = 0;
 	

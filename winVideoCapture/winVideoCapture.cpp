@@ -2,7 +2,10 @@
 //
 
 #include "stdafx.h"
+#include "assert.h"
 #include "winVideoCapture.h"
+#include <windowsx.h>
+
 
 #define MAX_LOADSTRING 100
 
@@ -10,12 +13,35 @@
 HINSTANCE hInst;								// current instance
 TCHAR szTitle[MAX_LOADSTRING];					// The title bar text
 TCHAR szWindowClass[MAX_LOADSTRING];			// the main window class name
+HWND hWnd;
+IVideoCapture *pVideoSdk;
 
 // Forward declarations of functions included in this code module:
 ATOM				MyRegisterClass(HINSTANCE hInstance);
 BOOL				InitInstance(HINSTANCE, int);
 LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
+
+void AddDevicesToMenu()
+{
+	HMENU hMenuSub;
+	hMenuSub = GetSubMenu(GetMenu(hWnd), 3);
+	int menuCnt = GetMenuItemCount(hMenuSub);
+
+	VECT camlist;
+	pVideoSdk->GetDeviceList(camlist);
+	VECT::iterator it;
+	int index = 0;
+
+	if (menuCnt > 0){
+		//clean menu
+	}
+
+	for (it = camlist.begin(); it != camlist.end(); it++){
+		AppendMenu(hMenuSub, MF_STRING, index++, *it);
+	}
+	
+}
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
                      HINSTANCE hPrevInstance,
@@ -41,6 +67,10 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	}
 
 	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_WINVIDEOCAPTURE));
+
+	pVideoSdk = GetVideoCaptureObj();
+	assert(pVideoSdk);
+	AddDevicesToMenu();
 
 	// Main message loop:
 	while (GetMessage(&msg, NULL, 0, 0))
@@ -103,8 +133,6 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 //
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-   HWND hWnd;
-
    hInst = hInstance; // Store instance handle in our global variable
 
    hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,

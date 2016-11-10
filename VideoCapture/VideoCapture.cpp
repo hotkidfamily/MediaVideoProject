@@ -36,7 +36,7 @@ void IVideoCaptureDelegate::RegisterCallback(VideoCaptureCallback *cb)
 	mDShowCapture->RegisterCallback(mcb);
 }
 
-HRESULT IVideoCaptureDelegate::GetDeviceList(std::vector<const TCHAR*> &camNames)
+HRESULT IVideoCaptureDelegate::GetDeviceList(VECT &camNames)
 {
 	HRESULT hr = S_OK;
 	hr = mDShowCapture->EnumCaptureDevices();

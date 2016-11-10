@@ -223,7 +223,7 @@ done:
 	return hr;
 }
 
-HRESULT DShowVideoCapture::GetDevicesName(std::vector<const TCHAR*> cameNames)
+HRESULT DShowVideoCapture::GetDevicesName(VECT &cameNames)
 {
 	HRESULT hr = E_FAIL;
 
@@ -296,7 +296,7 @@ HRESULT DShowVideoCapture::EnumCaptureDevices()
 
 	CHECK_HR(hr = CoCreateInstance(CLSID_SystemDeviceEnum,
 		NULL, CLSCTX_INPROC_SERVER, IID_ICreateDevEnum, (void**)&pDevEnum));
-	CHECK_HR(hr = pDevEnum->QueryInterface(CLSID_VideoInputDeviceCategory, (void**)&pDevEnumMoniker));
+	CHECK_HR(hr = pDevEnum->CreateClassEnumerator(CLSID_VideoInputDeviceCategory, &pDevEnumMoniker, 0));
 
 	pDevEnumMoniker->Reset();
 	while (hr = pDevEnumMoniker->Next(1, &pM, NULL) == S_OK){
@@ -315,10 +315,10 @@ HRESULT DShowVideoCapture::EnumCaptureDevices()
 		VariantClear(&name);
 		VariantClear(&path);
 		index++;
+		pM.Release();
 	}
 
 done:
-	pM.Release();
 	pDevEnumMoniker.Release();
 	pDevEnum.Release();
 	return hr;

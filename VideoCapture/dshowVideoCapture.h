@@ -54,7 +54,7 @@ public:
 	HRESULT Stop();
 	HRESULT Start(OPEN_DEVICE_PARAM);
 	HRESULT EnumCaptureDevices();
-	HRESULT GetDevicesName(std::vector<const TCHAR*> );
+	HRESULT GetDevicesName(VECT &);
 	HRESULT Repaint(HDC hdc);
 	HRESULT UpdateVideoWindow(HWND hWnd, const LPRECT prc);
 	HRESULT ShowCapturePropertyWindow();
