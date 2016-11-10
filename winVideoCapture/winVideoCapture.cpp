@@ -48,6 +48,11 @@ void AddDevicesToMenu()
 	EnableMenuItem(hMenuSub, 0, MF_ENABLED);
 }
 
+bool CreateWorkThread()
+{
+
+}
+
 int APIENTRY _tWinMain(HINSTANCE hInstance,
                      HINSTANCE hPrevInstance,
                      LPTSTR    lpCmdLine,
@@ -76,6 +81,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	pVideoSdk = GetVideoCaptureObj();
 	assert(pVideoSdk);
 	AddDevicesToMenu();
+	CreateWorkThread();
 
 	// Main message loop:
 	while (GetMessage(&msg, NULL, 0, 0))
