@@ -216,6 +216,8 @@ HRESULT DShowVideoCapture::BuildGraph()
 	mediaType.subtype = MEDIASUBTYPE_RGB24;
 
 	mGrabber->SetMediaType(&mediaType);
+	mGrabber->SetCallback(this, 0);
+	mGrabber->SetOneShot(FALSE);
 
 done:
 	return hr;
