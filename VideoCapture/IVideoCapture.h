@@ -6,6 +6,10 @@
 #else
 #define VIDEOCAPTURE_API __declspec(dllimport)
 #endif
+
+#include <stdint.h>
+#include <vector>
+
 //---------------------------------------------------------
 // 
 //
@@ -16,6 +20,12 @@ typedef struct tagDevParam{
 	int32_t width;
 	int32_t height;
 	LONGLONG avgFrameIntervalInNs;
+	HWND parentWindow;
+	HWND attachWindow;
+
+	tagDevParam(){
+		ZeroMemory(this, sizeof(struct tagDevParam));
+	}
 }OPEN_DEVICE_PARAM;
 
 //---------------------------------------------------------
@@ -44,18 +54,26 @@ public:
 //---------------------------------------------------------
 class IVideoCapture
 {
-public:
+protected:
 	virtual ~IVideoCapture(){};
-	// step 1. register call back function, free call back yourself
+
+public:	
+	// step 0. register call back function, free call back yourself
 	virtual void RegisterCallback(VideoCaptureCallback *) = 0;
-	// step 0 or 1, get device list
+	// step 1, get device list
 	virtual HRESULT GetDeviceList(std::vector<const TCHAR*> &) = 0;
 	// step 2, start capture
 	virtual HRESULT StartCaptureWithParam(OPEN_DEVICE_PARAM) = 0;
-	// last step, close capture
-	virtual HRESULT StopCapture() = 0;
-	// other feature support: show property setting window
+	
+	// step 3.0 repaint when window have been mask
+	virtual HRESULT Repaint(HDC hdc) = 0;
+	// step 3.1 update widow position when move window
+	virtual HRESULT UpdateVideoWindow(HWND hWnd, const LPRECT prc) = 0;
+	// step 3.2 other feature support: show property setting window
 	virtual HRESULT ShowPropertyWindow(HWND parentWindowHandle) = 0;
+
+	// step 4, close capture
+	virtual HRESULT StopCapture() = 0;
 };
 
 

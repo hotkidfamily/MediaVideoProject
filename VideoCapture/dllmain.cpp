@@ -21,6 +21,8 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 
 IVideoCapture *GetVideoCaptureObj()
 {
+	CoInitialize(NULL);
+
 	IVideoCaptureDelegate *pCapture = new IVideoCaptureDelegate;
 	if (pCapture){
 		return static_cast<IVideoCapture*>(pCapture);
@@ -34,4 +36,6 @@ void ReleaseVideoCaptureObj(IVideoCapture * pCapture)
 	IVideoCaptureDelegate *pCap = static_cast<IVideoCaptureDelegate*>(pCapture);
 	if (pCap)
 		delete pCap;
+
+	CoUninitialize();
 }

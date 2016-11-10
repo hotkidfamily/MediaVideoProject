@@ -15,6 +15,8 @@ public:
 	virtual HRESULT StartCaptureWithParam(OPEN_DEVICE_PARAM );
 	virtual HRESULT StopCapture();
 	virtual HRESULT ShowPropertyWindow(HWND parentWindowHandle);
+	virtual HRESULT Repaint(HDC hdc);
+	virtual HRESULT UpdateVideoWindow(HWND hWnd, const LPRECT prc);
 
 protected:
 
