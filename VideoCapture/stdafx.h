@@ -11,6 +11,7 @@
 // Windows Header Files:
 #include <windows.h>
 
+#include <tchar.h>
 
 #include <string>
 #include <list>
@@ -18,6 +19,8 @@
 
 #include <DShow.h>
 #include <dvdmedia.h>
+
+#include <atlbase.h>
 
 #include "stdint.h"
 

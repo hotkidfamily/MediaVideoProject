@@ -9,18 +9,19 @@ IVideoCaptureDelegate::~IVideoCaptureDelegate()
 
 }
 
-void IVideoCaptureDelegate::RegisterVideoCaptureCallback(VideoCaptureCallback *cb)
+void IVideoCaptureDelegate::RegisterCallback(VideoCaptureCallback *cb)
 {
 	mCaptureCallback = cb;
 }
 
-HRESULT IVideoCaptureDelegate::GetDeviceList(std::vector<char*> &)
+HRESULT IVideoCaptureDelegate::GetDeviceList(std::vector<const TCHAR*> &camNames)
 {
 	HRESULT hr = S_OK;
+	hr = mDShowCapture->GetDevices(camNames);
 	return hr;
 }
 
-HRESULT IVideoCaptureDelegate::StartCaptureByIndexWithResolutionAndFramerate(int, int, int, int)
+HRESULT IVideoCaptureDelegate::StartCaptureWithParam(OPEN_DEVICE_PARAM param)
 {
 	HRESULT hr = S_OK;
 	return hr;

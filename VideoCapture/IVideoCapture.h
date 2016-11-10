@@ -6,30 +6,52 @@
 #else
 #define VIDEOCAPTURE_API __declspec(dllimport)
 #endif
+//---------------------------------------------------------
+// 
+//
+//---------------------------------------------------------
 
-enum VideoCaptureEvent
+typedef struct tagDevParam{
+	int32_t index;
+	int32_t width;
+	int32_t height;
+	LONGLONG avgFrameIntervalInNs;
+}OPEN_DEVICE_PARAM;
+
+//---------------------------------------------------------
+// video call back interface
+//---------------------------------------------------------
+typedef enum tagEventIndex
 {
 	OPENSUCCESS_EVENT,
 	PLUGINOUT_EVENT,
-};
+}EVENT_INDEX;
+
+typedef struct tagEventParams{
+	void *param1;
+	void *param2;
+}EVENT_CONTEXT;
 
 class VideoCaptureCallback
 {
 public:
 	virtual void OnFrame(uint8_t *frame, int64_t frameSize, int64_t timestamp) = 0;
-	virtual void OnEvent(VideoCaptureEvent) = 0;
+	virtual void OnEvent(EVENT_INDEX, EVENT_CONTEXT) = 0;
 };
 
+//---------------------------------------------------------
+// capture interface 
+//---------------------------------------------------------
 class IVideoCapture
 {
 public:
 	virtual ~IVideoCapture(){};
-	// step 1. register call back function
-	virtual void RegisterVideoCaptureCallback(VideoCaptureCallback *) = 0;
+	// step 1. register call back function, free call back yourself
+	virtual void RegisterCallback(VideoCaptureCallback *) = 0;
 	// step 0 or 1, get device list
-	virtual HRESULT GetDeviceList(std::vector<char*> &) = 0;
+	virtual HRESULT GetDeviceList(std::vector<const TCHAR*> &) = 0;
 	// step 2, start capture
-	virtual HRESULT StartCaptureByIndexWithResolutionAndFramerate(int, int, int, int) = 0;
+	virtual HRESULT StartCaptureWithParam(OPEN_DEVICE_PARAM) = 0;
 	// last step, close capture
 	virtual HRESULT StopCapture() = 0;
 	// other feature support: show property setting window

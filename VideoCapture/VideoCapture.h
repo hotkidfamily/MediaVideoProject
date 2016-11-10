@@ -10,11 +10,13 @@ class IVideoCaptureDelegate: public IVideoCapture
 {
 public:
 	virtual ~IVideoCaptureDelegate();
-	virtual void RegisterVideoCaptureCallback(VideoCaptureCallback *);
-	virtual HRESULT GetDeviceList(std::vector<char*> &);
-	virtual HRESULT StartCaptureByIndexWithResolutionAndFramerate(int, int, int, int);
+	virtual void RegisterCallback(VideoCaptureCallback *);
+	virtual HRESULT GetDeviceList(std::vector<const TCHAR*> &);
+	virtual HRESULT StartCaptureWithParam(OPEN_DEVICE_PARAM );
 	virtual HRESULT StopCapture();
 	virtual HRESULT ShowPropertyWindow(HWND parentWindowHandle);
+
+protected:
 
 private:
 	VideoCaptureCallback *mCaptureCallback;
