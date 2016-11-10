@@ -12,12 +12,13 @@
 // types etc. Has same data members as the struct AM_MEDIA_TYPE defined
 // in the streams IDL file, but also has (non-virtual) functions
 
+#include "stdafx.h"
 //#include <streams.h>
 #include <DShow.h>
 #include <mmreg.h>
 #include <dvdmedia.h>
-#include "videoinputlog.h"
 #include "mtype.h"
+#include "logger.h"
 
 typedef struct tagGuidPair{
 	GUID id;
@@ -440,7 +441,7 @@ CMediaType::SetFormat(__in_bcount(cb) BYTE * pformat, ULONG cb)
     if (NULL == AllocFormatBuffer(cb))
 	return(FALSE);
 
-    assert(pbFormat);
+    ASSERT(pbFormat);
     memcpy(pbFormat, pformat, cb);
     return(TRUE);
 }
@@ -477,7 +478,7 @@ void CMediaType::ResetFormatBuffer()
 BYTE*
 CMediaType::AllocFormatBuffer(ULONG length)
 {
-    assert(length);
+    ASSERT(length);
 
     // do the types have the same buffer size
 
@@ -496,7 +497,7 @@ CMediaType::AllocFormatBuffer(ULONG length)
     // delete the old format
 
     if (cbFormat != 0) {
-        assert(pbFormat);
+        ASSERT(pbFormat);
         CoTaskMemFree((PVOID)pbFormat);
     }
 
@@ -514,7 +515,7 @@ CMediaType::AllocFormatBuffer(ULONG length)
 BYTE*
 CMediaType::ReallocFormatBuffer(ULONG length)
 {
-    assert(length);
+    ASSERT(length);
 
     // do the types have the same buffer size
 
@@ -534,7 +535,7 @@ CMediaType::ReallocFormatBuffer(ULONG length)
     // delete the old format and replace with the new one
 
     if (cbFormat != 0) {
-        assert(pbFormat);
+        ASSERT(pbFormat);
         memcpy(pNewFormat,pbFormat,min(length,cbFormat));
         CoTaskMemFree((PVOID)pbFormat);
     }
@@ -605,7 +606,7 @@ CMediaType::MatchesPartial(const CMediaType* ppartial) const
 
 AM_MEDIA_TYPE * WINAPI CreateMediaType(AM_MEDIA_TYPE const *pSrc)
 {
-    assert(pSrc);
+    ASSERT(pSrc);
 
     // Allocate a block of memory for the media type
 
@@ -633,10 +634,10 @@ HRESULT WINAPI CopyMediaType(__out AM_MEDIA_TYPE *pmtTarget, const AM_MEDIA_TYPE
 {
     //  We'll leak if we copy onto one that already exists - there's one
     //  case we can check like that - copying to itself.
-    assert(pmtSource != pmtTarget);
+    ASSERT(pmtSource != pmtTarget);
     *pmtTarget = *pmtSource;
     if (pmtSource->cbFormat != 0) {
-        assert(pmtSource->pbFormat != NULL);
+        ASSERT(pmtSource->pbFormat != NULL);
         pmtTarget->pbFormat = (PBYTE)CoTaskMemAlloc(pmtSource->cbFormat);
         if (pmtTarget->pbFormat == NULL) {
             pmtTarget->cbFormat = 0;
@@ -801,7 +802,7 @@ void CMediaType::PrintGUID(GUID id)
 	const uint16_t *w = (const uint16_t *) &id.Data2;
 	const uint8_t  *c = (const uint8_t  *) &id.Data4;
 
-	log(Info, "           \t0x%08x 0x%04x 0x%04x %02x%02x%02x%02x%02x%02x%02x%02x",
+	internel_log(Info, "           \t0x%08x 0x%04x 0x%04x %02x%02x%02x%02x%02x%02x%02x%02x",
 		d[0], w[0], w[1],
 		c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7]);
 }
@@ -833,7 +834,7 @@ CMediaType::PrintMessage(const char* format, ...)
 	vsprintf_s(buffer, 4096, format, vt);
 	va_end(vt);
 
-	log(Info, "%s", buffer);
+	internel_log(Info, "%s", buffer);
 }
 
 // eliminate very many spurious warnings from MS compiler

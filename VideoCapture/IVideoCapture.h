@@ -44,6 +44,9 @@ typedef struct tagEventParams{
 
 class VideoCaptureCallback
 {
+protected:
+	~VideoCaptureCallback(){};
+
 public:
 	virtual void OnFrame(uint8_t *frame, int64_t frameSize, int64_t timestamp) = 0;
 	virtual void OnEvent(EVENT_INDEX, EVENT_CONTEXT) = 0;
@@ -74,6 +77,8 @@ public:
 
 	// step 4, close capture
 	virtual HRESULT StopCapture() = 0;
+	// step 5, release callback
+	virtual HRESULT UnRegisterCallback() = 0;
 };
 
 

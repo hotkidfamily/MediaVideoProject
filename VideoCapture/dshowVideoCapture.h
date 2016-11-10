@@ -3,11 +3,13 @@
 
 #include <comdef.h>
 
-#include "IVideoCapture.h"
+#include "video.h"
 #include "dshowutil.h"
 #include "mtype.h"
 #include "ISampleGrabber.h"
-#include "video.h"
+#include "ISampleGrabberCBImpl.h"
+
+#include "IVideoCapture.h"
 
 typedef struct tagCameraDevDesc{
 	int32_t index;
@@ -35,7 +37,6 @@ typedef struct tagCameraDevDesc{
 	}
 
 	// true: equal
-	// false: not equal
 	bool operator ==(const struct tagCameraDevDesc &desc){
 		return !( (this->name.compare(desc.name))
 					&& (this->path.compare(desc.path)) );
@@ -44,7 +45,8 @@ typedef struct tagCameraDevDesc{
 
 typedef std::vector<CAMERADESC> CAMERALIST;
 
-class DShowVideoCapture
+class DShowVideoCapture : 
+	public ISampleGrabberCBImpl
 {
 public:
 	DShowVideoCapture();
@@ -52,10 +54,12 @@ public:
 	HRESULT Stop();
 	HRESULT Start(OPEN_DEVICE_PARAM);
 	HRESULT EnumCaptureDevices();
-	HRESULT GetDevices(std::vector<const TCHAR*> );
+	HRESULT GetDevicesName(std::vector<const TCHAR*> );
 	HRESULT Repaint(HDC hdc);
 	HRESULT UpdateVideoWindow(HWND hWnd, const LPRECT prc);
 	HRESULT ShowCapturePropertyWindow();
+	HRESULT RegisterCallback(VideoCaptureCallback *cb);
+	HRESULT UnregisterCallback();
 
 private:
 	void dshowInfo(HRESULT);
@@ -65,6 +69,7 @@ private:
 	HRESULT ReleaseDShowInterfaces();
 	HRESULT findFilterByIndex(int, IBaseFilter *&);
 	HRESULT BuildGraph();
+	STDMETHODIMP SampleCB(double SampleTime, IMediaSample *pSample);
 
 private:
 	IGraphBuilder *mGraph;
@@ -79,6 +84,7 @@ private:
 	IBaseFilter *mGrabberFiler;
 	ISampleGrabber *mGrabber;
 
+	VideoCaptureCallback *mcb;
 
 	OPEN_DEVICE_PARAM workParams;
 	CAMERALIST camlist;

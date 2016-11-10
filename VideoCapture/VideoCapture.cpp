@@ -8,16 +8,39 @@ IVideoCaptureDelegate::~IVideoCaptureDelegate()
 {
 }
 
+bool IVideoCaptureDelegate::InitContext()
+{
+	mDShowCapture = new DShowVideoCapture;
+	mMFCapture = new MediaFoundationVideoCapture; 
+
+	return (!mDShowCapture && !mMFCapture);
+}
+
+bool IVideoCaptureDelegate::UnInitContext()
+{
+	if (mDShowCapture){
+		delete mDShowCapture;
+		mDShowCapture = NULL;
+	}
+
+	if (mMFCapture){
+		delete mMFCapture;
+		mMFCapture = NULL;
+	}
+
+	return (!mDShowCapture && !mMFCapture);
+}
+
 void IVideoCaptureDelegate::RegisterCallback(VideoCaptureCallback *cb)
 {
-	mCaptureCallback = cb;
+	mDShowCapture->RegisterCallback(mcb);
 }
 
 HRESULT IVideoCaptureDelegate::GetDeviceList(std::vector<const TCHAR*> &camNames)
 {
 	HRESULT hr = S_OK;
 	hr = mDShowCapture->EnumCaptureDevices();
-	hr = mDShowCapture->GetDevices(camNames);
+	hr = mDShowCapture->GetDevicesName(camNames);
 	return hr;
 }
 
@@ -54,4 +77,10 @@ HRESULT IVideoCaptureDelegate::UpdateVideoWindow(HWND hWnd, const LPRECT pRC)
 	HRESULT hr = S_OK;
 	mDShowCapture->UpdateVideoWindow(hWnd, pRC);
 	return hr;
+}
+
+HRESULT IVideoCaptureDelegate::UnRegisterCallback()
+{
+	mDShowCapture->UnregisterCallback();
+	return S_OK;
 }

@@ -1,9 +1,8 @@
 #pragma once
-#include <dshow.h>
-#include "ISampleGrabber.h"
-#include "VideoCapture.h"
 
-class ISampleGrabberCBImpl :
+#include "ISampleGrabber.h"
+
+class ISampleGrabberCBImpl : 
 	public ISampleGrabberCB
 {
 public:

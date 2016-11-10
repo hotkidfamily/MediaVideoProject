@@ -11,6 +11,4 @@ enum LogLevel
 	NetIo,
 };
 
-
-
 void internel_log( int level, const char *fmt, ... );

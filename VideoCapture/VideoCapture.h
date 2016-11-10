@@ -2,11 +2,12 @@
 #define __VIDEOCAPTURE_H__
 
 #include "IVideoCapture.h"
+#include "logger.h"
 #include "dshowVideoCapture.h"
 #include "mediafoundationVideoCapture.h"
-#include "logger.h"
 
-class IVideoCaptureDelegate: public IVideoCapture
+class IVideoCaptureDelegate : 
+	public IVideoCapture
 {
 public:
 	virtual ~IVideoCaptureDelegate();
@@ -17,13 +18,17 @@ public:
 	virtual HRESULT ShowPropertyWindow(HWND parentWindowHandle);
 	virtual HRESULT Repaint(HDC hdc);
 	virtual HRESULT UpdateVideoWindow(HWND hWnd, const LPRECT prc);
+	virtual HRESULT UnRegisterCallback();
+
+	bool InitContext();
+	bool UnInitContext();
 
 protected:
 
 private:
-	VideoCaptureCallback *mCaptureCallback;
 	DShowVideoCapture *mDShowCapture;
 	MediaFoundationVideoCapture *mMFCapture;
+	VideoCaptureCallback *mcb;
 };
 
 #endif //__VIDEOCAPTURE_H__

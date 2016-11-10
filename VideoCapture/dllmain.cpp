@@ -25,6 +25,7 @@ IVideoCapture *GetVideoCaptureObj()
 
 	IVideoCaptureDelegate *pCapture = new IVideoCaptureDelegate;
 	if (pCapture){
+		pCapture->InitContext();
 		return static_cast<IVideoCapture*>(pCapture);
 	}else{
 		return NULL;
@@ -34,8 +35,10 @@ IVideoCapture *GetVideoCaptureObj()
 void ReleaseVideoCaptureObj(IVideoCapture * pCapture)
 {
 	IVideoCaptureDelegate *pCap = static_cast<IVideoCaptureDelegate*>(pCapture);
-	if (pCap)
+	if (pCap){
+		pCap->UnInitContext();
 		delete pCap;
-
+	}
+	
 	CoUninitialize();
 }

@@ -19,6 +19,18 @@ DShowVideoCapture::~DShowVideoCapture()
 {
 }
 
+HRESULT DShowVideoCapture::RegisterCallback(VideoCaptureCallback *cb)
+{
+	mcb = cb;
+	return S_OK;
+}
+
+HRESULT DShowVideoCapture::UnregisterCallback()
+{
+	mcb = NULL;
+	return S_OK;
+}
+
 HRESULT DShowVideoCapture::GetDShowInterfaces()
 {
 	HRESULT hr = S_OK;
@@ -65,6 +77,10 @@ HRESULT DShowVideoCapture::Start(OPEN_DEVICE_PARAM params)
 	ASSERT(mMediaControl);
 
 	workParams = params;
+
+	mRender = new VMR7();
+	ASSERT(mRender);
+
 	BuildGraph();
 
 	return mMediaControl->Run();
@@ -73,7 +89,39 @@ HRESULT DShowVideoCapture::Start(OPEN_DEVICE_PARAM params)
 HRESULT DShowVideoCapture::Stop()
 {
 	ASSERT(mMediaControl);
+
+	SAFE_DELETE(mRender);
+
 	return mMediaControl->Stop();
+}
+
+HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
+{
+	uint8_t *pBuffer = NULL;
+	REFERENCE_TIME ptsStart, ptsEnd = 0;
+	LONGLONG frameStartIndex = 0, frameEndIndex = 0;
+	long dataLength = 0;
+	HRESULT  hr = S_OK;
+
+	ASSERT(mcb);
+
+	CHECK_HR(hr = pSample->GetPointer(&pBuffer));
+	dataLength = pSample->GetActualDataLength();
+	hr = pSample->GetMediaTime(&frameStartIndex, &frameEndIndex);
+	hr = pSample->GetTime(&ptsStart, &ptsEnd);
+
+	if (FAILED(hr)){
+		ptsStart = timeGetTime();
+		ptsEnd = ptsStart + RefTimeToMsec(workParams.avgFrameIntervalInNs);
+	}
+
+done:
+	if (FAILED(hr)){
+		// drop frame
+		mcb->OnFrame(pBuffer, dataLength, ptsStart);
+	}
+
+	return hr;
 }
 
 HRESULT DShowVideoCapture::Repaint(HDC hdc)
@@ -150,6 +198,7 @@ HRESULT DShowVideoCapture::BuildGraph()
 {
 	HRESULT hr = E_FAIL;
 	CComPtr<IBaseFilter> pNullRenderFilter = NULL;
+	CMediaType mediaType;
 
 	CHECK_HR(CoCreateInstance(CLSID_NullRenderer, NULL,
 		CLSCTX_INPROC_SERVER, IID_IBaseFilter, (void**)&pNullRenderFilter));
@@ -160,15 +209,19 @@ HRESULT DShowVideoCapture::BuildGraph()
 	CHECK_HR(hr = mGraph->AddFilter(pNullRenderFilter, RENDER_FILTER_NAME_STR));
 	mGraphBuiler->RenderStream(&PIN_CATEGORY_CAPTURE, &MEDIATYPE_Video, mCaptureFilter, mGrabberFiler, pNullRenderFilter);
 
-	mRender = new VMR7();
 	mRender->AddToGraph(mGraph, workParams.parentWindow);
 	mRender->FinalizeGraph(mGraph);
+	
+	mediaType.majortype = MEDIATYPE_Video;
+	mediaType.subtype = MEDIASUBTYPE_RGB24;
+
+	mGrabber->SetMediaType(&mediaType);
 
 done:
 	return hr;
 }
 
-HRESULT DShowVideoCapture::GetDevices(std::vector<const TCHAR*> cameNames)
+HRESULT DShowVideoCapture::GetDevicesName(std::vector<const TCHAR*> cameNames)
 {
 	HRESULT hr = E_FAIL;
 
