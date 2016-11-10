@@ -247,7 +247,7 @@ HRESULT DShowVideoCapture::findFilterByIndex(int index, IBaseFilter * &filter)
 
 	CHECK_HR(hr = CoCreateInstance(CLSID_SystemDeviceEnum, 
 		NULL, CLSCTX_INPROC_SERVER, IID_ICreateDevEnum, (void**)&pDevEnum));
-	CHECK_HR(hr = pDevEnum->QueryInterface(CLSID_VideoInputDeviceCategory, (void**)&pDevEnumMoniker));
+	CHECK_HR(hr = pDevEnum->CreateClassEnumerator(CLSID_VideoInputDeviceCategory, &pDevEnumMoniker, 0));
 
 	pDevEnumMoniker->Reset();
 	while (hr = pDevEnumMoniker->Next(1, &pM, NULL) == S_OK){

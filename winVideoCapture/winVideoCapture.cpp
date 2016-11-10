@@ -25,22 +25,27 @@ INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
 void AddDevicesToMenu()
 {
 	HMENU hMenuSub;
-	hMenuSub = GetSubMenu(GetMenu(hWnd), 3);
-	int menuCnt = GetMenuItemCount(hMenuSub);
+	hMenuSub = GetSubMenu(GetMenu(hWnd), 1);
+	int iMenuItems = GetMenuItemCount(hMenuSub);
 
 	VECT camlist;
 	pVideoSdk->GetDeviceList(camlist);
 	VECT::iterator it;
 	int index = 0;
 
-	if (menuCnt > 0){
-		//clean menu
+	if (iMenuItems > 0){
+		for (int i = 0; i < iMenuItems; i++)
+		{
+			RemoveMenu(hMenuSub, 0, MF_BYPOSITION);
+		}
 	}
 
 	for (it = camlist.begin(); it != camlist.end(); it++){
 		AppendMenu(hMenuSub, MF_STRING, index++, *it);
 	}
-	
+
+	CheckMenuItem(hMenuSub, 0, MF_CHECKED);
+	EnableMenuItem(hMenuSub, 0, MF_ENABLED);
 }
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,

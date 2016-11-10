@@ -45,13 +45,13 @@ BEGIN
     BEGIN
         MENUITEM "E&xit",                       IDM_EXIT
     END
+    POPUP "&Device"
+    BEGIN
+        MENUITEM "Device1",                     ID_DEVICE_DEVICE3
+    END
     POPUP "&Help"
     BEGIN
         MENUITEM "&About ...",                  IDM_ABOUT
-    END
-    POPUP "&Device"
-    BEGIN
-        MENUITEM "Device1",                     ID_DEVICE_DEVICE1
     END
 END
 
