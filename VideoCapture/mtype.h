@@ -11,6 +11,11 @@
 #ifndef __MTYPE__
 #define __MTYPE__
 
+#ifndef ASSERT
+#define ASSERT assert
+#endif
+
+
 /* Helper class that derived pin objects can use to compare media
    types etc. Has same data members as the struct AM_MEDIA_TYPE defined
    in the streams IDL file, but also has (non-virtual) functions */
@@ -88,10 +93,10 @@ public:
 /* General purpose functions to copy and delete a task allocated AM_MEDIA_TYPE
    structure which is useful when using the IEnumMediaFormats interface as
    the implementation allocates the structures which you must later delete */
-#if 0
+
 void WINAPI FreeMediaType(__inout AM_MEDIA_TYPE& mt);
 void WINAPI DeleteMediaType(__inout_opt AM_MEDIA_TYPE *pmt);
-#endif
+
 AM_MEDIA_TYPE * WINAPI CreateMediaType(AM_MEDIA_TYPE const *pSrc);
 HRESULT WINAPI CopyMediaType(__out AM_MEDIA_TYPE *pmtTarget, const AM_MEDIA_TYPE *pmtSource);
 

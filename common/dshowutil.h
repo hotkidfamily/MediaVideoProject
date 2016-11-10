@@ -116,9 +116,9 @@ enum GraphDirection
 
 
 // Forward declares 
-
 void    _FreeMediaType(AM_MEDIA_TYPE& mt);
 void    _DeleteMediaType(AM_MEDIA_TYPE *pmt);
+
 HRESULT RemoveFiltersDownstream(IGraphBuilder *pGraph, IBaseFilter *pFilter);
 
 
@@ -2489,14 +2489,6 @@ inline void _DeleteMediaType(AM_MEDIA_TYPE *pmt)
         CoTaskMemFree(pmt);
     }
 }
-
-
-#ifndef __STREAMS__
-#define FreeMediaType _FreeMediaType
-#define DeleteMediaType _DeleteMediaType
-#endif
-
-
 
 #ifdef __IVMRWindowlessControl9_FWD_DEFINED__
 

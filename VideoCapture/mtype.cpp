@@ -13,12 +13,12 @@
 // in the streams IDL file, but also has (non-virtual) functions
 
 #include "stdafx.h"
-//#include <streams.h>
 #include <DShow.h>
 #include <mmreg.h>
 #include <dvdmedia.h>
 #include "mtype.h"
 #include "logger.h"
+#include <assert.h>
 
 typedef struct tagGuidPair{
 	GUID id;
@@ -654,7 +654,7 @@ HRESULT WINAPI CopyMediaType(__out AM_MEDIA_TYPE *pmtTarget, const AM_MEDIA_TYPE
     return S_OK;
 }
 
-#if 0
+
 // general purpose function to delete a heap allocated AM_MEDIA_TYPE structure
 // which is useful when calling IEnumMediaTypes::Next as the interface
 // implementation allocates the structures which you must later delete
@@ -687,48 +687,6 @@ void WINAPI FreeMediaType(__inout AM_MEDIA_TYPE& mt)
         mt.pUnk = NULL;
     }
 }
-
-
-//  Initialize a media type from a WAVEFORMATEX
-
-STDAPI CreateAudioMediaType(
-    const WAVEFORMATEX *pwfx,
-    __out AM_MEDIA_TYPE *pmt,
-    BOOL bSetFormat
-)
-{
-    pmt->majortype            = MEDIATYPE_Audio;
-    if (pwfx->wFormatTag == WAVE_FORMAT_EXTENSIBLE) {
-        pmt->subtype = ((PWAVEFORMATEXTENSIBLE)pwfx)->SubFormat;
-    } else {
-        pmt->subtype              = FOURCCMap(pwfx->wFormatTag);
-    }
-    pmt->formattype           = FORMAT_WaveFormatEx;
-    pmt->bFixedSizeSamples    = TRUE;
-    pmt->bTemporalCompression = FALSE;
-    pmt->lSampleSize          = pwfx->nBlockAlign;
-    pmt->pUnk                 = NULL;
-    if (bSetFormat) {
-        if (pwfx->wFormatTag == WAVE_FORMAT_PCM) {
-            pmt->cbFormat         = sizeof(WAVEFORMATEX);
-        } else {
-            pmt->cbFormat         = sizeof(WAVEFORMATEX) + pwfx->cbSize;
-        }
-        pmt->pbFormat             = (PBYTE)CoTaskMemAlloc(pmt->cbFormat);
-        if (pmt->pbFormat == NULL) {
-            return E_OUTOFMEMORY;
-        }
-        if (pwfx->wFormatTag == WAVE_FORMAT_PCM) {
-            CopyMemory(pmt->pbFormat, pwfx, sizeof(PCMWAVEFORMAT));
-            ((WAVEFORMATEX *)pmt->pbFormat)->cbSize = 0;
-        } else {
-            CopyMemory(pmt->pbFormat, pwfx, pmt->cbFormat);
-        }
-    }
-    return S_OK;
-}
-#endif
-
 
 void
 CMediaType::ShowAMMediaType()
