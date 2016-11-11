@@ -75,7 +75,7 @@ BOOL CSampleBufferManager::UnlockFrame(CSampleBuffer *buf)
 {
 	BOOL bRet = TRUE;
 
-	if (!buf){
+	if (buf){
 		emptyList.push_back(*buf);
 
 		BUFFLIST::iterator it = occupyList.begin();
