@@ -53,6 +53,7 @@ BOOL CSampleBufferManager::FillOneFrame(uint8_t* data, int32_t dataSize, int64_t
 			readyList.push_back(sample);
 		}
 	}
+
 	return bRet;
 }
 
@@ -74,8 +75,17 @@ BOOL CSampleBufferManager::UnlockFrame(CSampleBuffer *buf)
 {
 	BOOL bRet = TRUE;
 
-	emptyList.push_back(*buf);
-	//occupyBufferList.remove(buf);
+	if (!buf){
+		emptyList.push_back(*buf);
+
+		BUFFLIST::iterator it = occupyList.begin();
+		for (; it != occupyList.end(); it++){
+			if ((int32_t)(it->GetDataPtr()) == (int32_t)(*buf->GetDataPtr())){
+				break;
+			}
+		}
+		occupyList.erase(it);
+	}
 
 	return bRet;
 }
