@@ -8,9 +8,9 @@ CSampleBufferManager::CSampleBufferManager()
 {
 }
 
-
 CSampleBufferManager::~CSampleBufferManager()
 {
+	ReleaseMemory();
 }
 
 BOOL CSampleBufferManager::Reset(int32_t res, int32_t nbFrames)
@@ -30,8 +30,8 @@ BOOL CSampleBufferManager::Reset(int32_t res, int32_t nbFrames)
 		}
 	}
 
-	readyBufferList.resize(nbFrames);
-	for (it = readyBufferList.begin(); it != readyBufferList.end(); it++){
+	readyList.resize(nbFrames);
+	for (it = readyList.begin(); it != readyList.end(); it++){
 		it->Reset(mBufferPtr + index*buffSizePreFrame, buffSizePreFrame);
 	}
 
@@ -41,17 +41,16 @@ errRet:
 	return bRet;
 }
 
-
 BOOL CSampleBufferManager::FillOneFrame(uint8_t* data, int32_t dataSize, int64_t pts, int32_t pixelFormat)
 {
 	BOOL bRet = FALSE;
 
-	if (emptyBufferList.size()){
-		CSampleBuffer &sample = emptyBufferList.front();
+	if (emptyList.size()){
+		CSampleBuffer &sample = emptyList.front();
 		bRet = sample.FillData(data, dataSize, pts, pixelFormat);
 		if (bRet){
-			emptyBufferList.pop_front();
-			readyBufferList.push_back(sample);
+			emptyList.pop_front();
+			readyList.push_back(sample);
 		}
 	}
 	return bRet;
@@ -61,10 +60,10 @@ BOOL CSampleBufferManager::LockFrame(CSampleBuffer *buf)
 {
 	BOOL bRet = FALSE;
 
-	if (readyBufferList.size()){
-		CSampleBuffer &sample = readyBufferList.front();
+	if (readyList.size()){
+		CSampleBuffer &sample = readyList.front();
 		buf = &sample;
-		occupyBufferList.push_back(sample);
+		occupyList.push_back(sample);
 		bRet = TRUE;
 	}
 
@@ -75,7 +74,7 @@ BOOL CSampleBufferManager::UnlockFrame(CSampleBuffer *buf)
 {
 	BOOL bRet = TRUE;
 
-	emptyBufferList.push_back(*buf);
+	emptyList.push_back(*buf);
 	//occupyBufferList.remove(buf);
 
 	return bRet;
@@ -83,8 +82,8 @@ BOOL CSampleBufferManager::UnlockFrame(CSampleBuffer *buf)
 
 BOOL CSampleBufferManager::ReleaseMemory()
 {
-	readyBufferList.clear();
-	emptyBufferList.clear();
+	readyList.clear();
+	emptyList.clear();
 
 	if (mBufferPtr){
 		_aligned_free(mBufferPtr);

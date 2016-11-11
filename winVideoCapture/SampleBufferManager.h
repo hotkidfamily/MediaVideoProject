@@ -33,13 +33,13 @@ public:
 protected:
 	BOOL AllocMemoryBySizeInByte(int32_t);
 	BOOL ReleaseMemory();
-	int32_t GetFrameSizeByRes(int32_t res);
-	int32_t GetFrameSizePrePlannerByRes(int32_t res);
+	int32_t GetFrameSizeByRes(int32_t resOfFrames);
+	int32_t GetFrameSizePrePlannerByRes(int32_t resOfFrames);
 
 private:
-	BUFFLIST readyBufferList;
-	BUFFLIST emptyBufferList;
-	BUFFLIST occupyBufferList;
+	BUFFLIST readyList;
+	BUFFLIST emptyList;
+	BUFFLIST occupyList;
 
 	uint8_t *mBufferPtr;
 	int64_t mBufferSize;
