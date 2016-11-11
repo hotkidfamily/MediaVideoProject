@@ -25,7 +25,10 @@ public:
 	CSampleBufferManager();
 	~CSampleBufferManager();
 	
-	BOOL reset(int32_t res, int32_t count);
+	BOOL Reset(int32_t resOfFrames, int32_t nbFrames);
+	BOOL LockFrame(CSampleBuffer *);
+	BOOL UnlockFrame(CSampleBuffer *);
+	BOOL FillOneFrame(uint8_t* data, int32_t dataSize, int64_t pts, int pixelFormat);
 
 protected:
 	BOOL AllocMemoryBySizeInByte(int32_t);
@@ -34,10 +37,11 @@ protected:
 	int32_t GetFrameSizePrePlannerByRes(int32_t res);
 
 private:
-	BUFFLIST bufferList;
+	BUFFLIST readyBufferList;
 	BUFFLIST emptyBufferList;
+	BUFFLIST occupyBufferList;
 
-	uint8_t *bufferPtr;
-	int64_t bufferSize;
+	uint8_t *mBufferPtr;
+	int64_t mBufferSize;
 };
 

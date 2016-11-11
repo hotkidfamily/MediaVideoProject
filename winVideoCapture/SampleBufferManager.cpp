@@ -3,6 +3,8 @@
 
 
 CSampleBufferManager::CSampleBufferManager()
+	: mBufferSize(0)
+	, mBufferPtr(0)
 {
 }
 
@@ -11,46 +13,97 @@ CSampleBufferManager::~CSampleBufferManager()
 {
 }
 
-BOOL CSampleBufferManager::reset(int32_t res, int32_t nbFrames)
+BOOL CSampleBufferManager::Reset(int32_t res, int32_t nbFrames)
 {
 	BOOL bRet = FALSE;
-	int32_t buffSizePreFrame = GetFrameSizeByRes(res);
-	ReleaseMemory();
-	bRet = AllocMemoryBySizeInByte(buffSizePreFrame * nbFrames);
-	if (bRet){
-		bufferList.resize(nbFrames);
+	int32_t index = 0;
+	int32_t buffSizePreFrame = GetFrameSizeByRes(res) * nbFrames;
+	BUFFLIST::iterator it;
+
+	// low than current buffer
+	if (buffSizePreFrame * nbFrames > mBufferSize){
+		ReleaseMemory();
+		bRet = AllocMemoryBySizeInByte(buffSizePreFrame * nbFrames);
+		if (!bRet){
+			// out of memory
+			goto errRet;
+		}
 	}
-	BUFFLIST::iterator it = bufferList.begin();
-	for (; it != bufferList.end(); it++){
-		it->reset()
+
+	readyBufferList.resize(nbFrames);
+	for (it = readyBufferList.begin(); it != readyBufferList.end(); it++){
+		it->Reset(mBufferPtr + index*buffSizePreFrame, buffSizePreFrame);
 	}
+
+	bRet = TRUE;
+
+errRet:
+	return bRet;
+}
+
+
+BOOL CSampleBufferManager::FillOneFrame(uint8_t* data, int32_t dataSize, int64_t pts, int32_t pixelFormat)
+{
+	BOOL bRet = FALSE;
+
+	if (emptyBufferList.size()){
+		CSampleBuffer &sample = emptyBufferList.front();
+		bRet = sample.FillData(data, dataSize, pts, pixelFormat);
+		if (bRet){
+			emptyBufferList.pop_front();
+			readyBufferList.push_back(sample);
+		}
+	}
+	return bRet;
+}
+
+BOOL CSampleBufferManager::LockFrame(CSampleBuffer *buf)
+{
+	BOOL bRet = FALSE;
+
+	if (readyBufferList.size()){
+		CSampleBuffer &sample = readyBufferList.front();
+		buf = &sample;
+		occupyBufferList.push_back(sample);
+		bRet = TRUE;
+	}
+
+	return bRet;
+}
+
+BOOL CSampleBufferManager::UnlockFrame(CSampleBuffer *buf)
+{
+	BOOL bRet = TRUE;
+
+	emptyBufferList.push_back(*buf);
+	//occupyBufferList.remove(buf);
 
 	return bRet;
 }
 
 BOOL CSampleBufferManager::ReleaseMemory()
 {
-	bufferList.clear();
+	readyBufferList.clear();
 	emptyBufferList.clear();
 
-	if (bufferPtr){
-		_aligned_free(bufferPtr);
-		bufferPtr = NULL;
+	if (mBufferPtr){
+		_aligned_free(mBufferPtr);
+		mBufferPtr = NULL;
 	}
 
-	bufferSize = 0;
+	mBufferSize = 0;
 
 	return TRUE;
 }
 
 BOOL CSampleBufferManager::AllocMemoryBySizeInByte(int32_t sizeInBytes)
 {
-	bufferPtr = (uint8_t*)_aligned_malloc(sizeInBytes, 32);
-	if (!bufferPtr){
-		bufferSize = sizeInBytes;
+	mBufferPtr = (uint8_t*)_aligned_malloc(sizeInBytes, 32);
+	if (!mBufferPtr){
+		mBufferSize = sizeInBytes;
 	}
 
-	return !bufferPtr;
+	return !mBufferPtr;
 }
 
 int32_t CSampleBufferManager::GetFrameSizeByRes(int32_t res)
