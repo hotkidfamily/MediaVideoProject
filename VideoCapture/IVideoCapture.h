@@ -43,13 +43,30 @@ typedef struct tagEventParams{
 	void *param2;
 }EVENT_CONTEXT;
 
+typedef struct tagFrameDesc{
+	int32_t cbSize;
+	int32_t width;
+	int32_t height;
+	int32_t dataSize;
+	uint8_t *dataPtr;
+	DWORD pixelFormatInFourCC;
+	int64_t ptsStart;
+	int64_t ptsEnd;
+	int64_t frameStartIdx;
+	int64_t frameEndIdx;
+	tagFrameDesc(){
+		ZeroMemory(this, sizeof(struct tagFrameDesc));
+		cbSize = sizeof(struct tagFrameDesc);
+	}
+}FRAME_DESC;
+
 class VideoCaptureCallback
 {
 protected:
 	~VideoCaptureCallback(){};
 
 public:
-	virtual void OnFrame(uint8_t *frame, int64_t frameSize, int64_t timestamp) = 0;
+	virtual void OnFrame(FRAME_DESC) = 0;
 	virtual void OnEvent(EVENT_INDEX, EVENT_CONTEXT) = 0;
 };
 

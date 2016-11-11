@@ -48,9 +48,9 @@ void AddDevicesToMenu()
 	EnableMenuItem(hMenuSub, 0, MF_ENABLED);
 }
 
-bool CreateWorkThread()
+BOOL CreateWorkThread()
 {
-
+	return TRUE;
 }
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
@@ -81,6 +81,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	pVideoSdk = GetVideoCaptureObj();
 	assert(pVideoSdk);
 	AddDevicesToMenu();
+	
 	CreateWorkThread();
 
 	// Main message loop:
@@ -93,6 +94,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		}
 	}
 
+	ReleaseVideoCaptureObj(pVideoSdk);
 	return (int) msg.wParam;
 }
 

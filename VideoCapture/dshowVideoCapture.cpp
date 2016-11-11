@@ -97,28 +97,26 @@ HRESULT DShowVideoCapture::Stop()
 
 HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 {
-	uint8_t *pBuffer = NULL;
-	REFERENCE_TIME ptsStart, ptsEnd = 0;
-	LONGLONG frameStartIndex = 0, frameEndIndex = 0;
+	FRAME_DESC desc;
 	long dataLength = 0;
 	HRESULT  hr = S_OK;
 
 	ASSERT(mcb);
 
-	CHECK_HR(hr = pSample->GetPointer(&pBuffer));
+	CHECK_HR(hr = pSample->GetPointer(&desc.dataPtr));
 	dataLength = pSample->GetActualDataLength();
-	hr = pSample->GetMediaTime(&frameStartIndex, &frameEndIndex);
-	hr = pSample->GetTime(&ptsStart, &ptsEnd);
+	hr = pSample->GetMediaTime(&desc.frameStartIdx, &desc.frameEndIdx);
+	hr = pSample->GetTime(&desc.ptsStart, &desc.ptsEnd);
 
 	if (FAILED(hr)){
-		ptsStart = timeGetTime();
-		ptsEnd = ptsStart + RefTimeToMsec(workParams.avgFrameIntervalInNs);
+		desc.ptsStart = timeGetTime();
+		desc.ptsEnd = desc.ptsStart + RefTimeToMsec(workParams.avgFrameIntervalInNs);
 	}
 
 done:
 	if (FAILED(hr)){
 		// drop frame
-		mcb->OnFrame(pBuffer, dataLength, ptsStart);
+		mcb->OnFrame(desc);
 	}
 
 	return hr;

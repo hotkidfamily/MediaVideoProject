@@ -90,6 +90,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="SampleBuffer.cpp" />
+    <ClCompile Include="SampleBufferManager.cpp" />
+    <ClCompile Include="SampleCallback.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -98,6 +101,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="SampleBuffer.h" />
+    <ClInclude Include="SampleBufferManager.h" />
+    <ClInclude Include="SampleCallback.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="winVideoCapture.h" />
