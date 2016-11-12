@@ -5,9 +5,9 @@
 /*
 step 1: lock
 step 2: reset 
-step 3: filldata
-step 4.x getbuffer
-step 4.x getpts
+step 3: fill data
+step 4.x get buffer
+step 4.x get pts
 step 5: unlock
 */
 class CSampleBuffer

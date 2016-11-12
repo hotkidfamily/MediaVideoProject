@@ -34,7 +34,8 @@ BOOL CSampleBufferManager::Reset(int32_t res, int32_t nbFrames)
 
 	emptyList.resize(nbFrames);
 	for (it = emptyList.begin(); it != emptyList.end(); it++){
-		it->Reset(mBufferPtr + index*buffSizePreFrame, buffSizePreFrame);
+		*it = new CSampleBuffer;
+		(*it)->Reset(mBufferPtr + index*buffSizePreFrame, buffSizePreFrame);
 	}
 
 	bRet = TRUE;
@@ -43,21 +44,26 @@ errRet:
 	return bRet;
 }
 
-BOOL CSampleBufferManager::FillOneFrame(uint8_t* data, int32_t dataSize, int64_t pts, int32_t pixelFormat)
+BOOL CSampleBufferManager::FillFrame(uint8_t* data, int32_t dataSize, int64_t pts, int32_t pixelFormat)
 {
 	BOOL bRet = FALSE;
 
 	if (emptyList.size()){
-		CSampleBuffer &sample = emptyList.front();
-		bRet = sample.FillData(data, dataSize, pts, pixelFormat);
+		CSampleBuffer *sample = emptyList.front();
+		bRet = sample->FillData(data, dataSize, pts, pixelFormat);
 		if (bRet){
+			// FixME£º
 			emptyList.pop_front();
 			readyList.push_back(sample);
 		}
 	}
 	else if (readyList.size() > 1){
-		CSampleBuffer &sample = readyList.back();
-		bRet = sample.FillData(data, dataSize, pts, pixelFormat);
+		CSampleBuffer *sample = readyList.back();
+		bRet = sample->FillData(data, dataSize, pts, pixelFormat);
+	}
+
+	if(!bRet){
+		// drop one frame
 	}
 
 	return bRet;
@@ -68,8 +74,9 @@ BOOL CSampleBufferManager::LockFrame(CSampleBuffer *buf)
 	BOOL bRet = FALSE;
 
 	if (readyList.size()){
-		CSampleBuffer &sample = readyList.front();
-		buf = &sample;
+		CSampleBuffer *sample = readyList.front();
+		buf = sample;
+		readyList.pop_front();
 		occupyList.push_back(sample);
 		bRet = TRUE;
 	}
@@ -82,15 +89,8 @@ BOOL CSampleBufferManager::UnlockFrame(CSampleBuffer *buf)
 	BOOL bRet = TRUE;
 
 	if (buf){
-		emptyList.push_back(*buf);
-
-		BUFFLIST::iterator it = occupyList.begin();
-		for (; it != occupyList.end(); it++){
-			if ((int32_t)(it->GetDataPtr()) == (int32_t)(*buf->GetDataPtr())){
-				break;
-			}
-		}
-		occupyList.erase(it);
+		emptyList.push_back(buf);
+		occupyList.remove(buf);
 	}
 
 	return bRet;

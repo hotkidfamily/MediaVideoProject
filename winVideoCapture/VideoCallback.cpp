@@ -15,7 +15,7 @@ CVideoCallback::~CVideoCallback()
 
 void CVideoCallback::OnFrame(FRAME_DESC desc)
 {
-	mBufferManager.FillOneFrame(desc.dataPtr, desc.dataSize, desc.ptsStart, desc.pixelFormatInFourCC);
+	mBufferManager.FillFrame(desc.dataPtr, desc.dataSize, desc.ptsStart, desc.pixelFormatInFourCC);
 }
 
 void CVideoCallback::OnEvent(EVENT_INDEX index, EVENT_CONTEXT context)
