@@ -32,8 +32,8 @@ BOOL CSampleBufferManager::Reset(int32_t res, int32_t nbFrames)
 		}
 	}
 
-	readyList.resize(nbFrames);
-	for (it = readyList.begin(); it != readyList.end(); it++){
+	emptyList.resize(nbFrames);
+	for (it = emptyList.begin(); it != emptyList.end(); it++){
 		it->Reset(mBufferPtr + index*buffSizePreFrame, buffSizePreFrame);
 	}
 
@@ -122,11 +122,11 @@ BOOL CSampleBufferManager::ClearWorkStatus()
 BOOL CSampleBufferManager::AllocMemoryBySizeInByte(int32_t sizeInBytes)
 {
 	mBufferPtr = (uint8_t*)_aligned_malloc(sizeInBytes, 32);
-	if (!mBufferPtr){
+	if (mBufferPtr){
 		mBufferSize = sizeInBytes;
 	}
 
-	return !mBufferPtr;
+	return !!mBufferPtr;
 }
 
 int32_t CSampleBufferManager::GetFrameSizeByRes(int32_t res)

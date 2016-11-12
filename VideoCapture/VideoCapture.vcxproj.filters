@@ -39,6 +39,9 @@
     <ClCompile Include="mtype.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SlidingWindowCalc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dshowVideoCapture.h">
@@ -69,6 +72,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="mtype.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SlidingWindowCalc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

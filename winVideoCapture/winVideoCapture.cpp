@@ -5,31 +5,45 @@
 #include "assert.h"
 #include "winVideoCapture.h"
 #include <windowsx.h>
+#include "VideoCallback.h"
+#include "dshowutil.h"
 
 
 #define MAX_LOADSTRING 100
 
 // Global Variables:
-HINSTANCE hInst;								// current instance
-TCHAR szTitle[MAX_LOADSTRING];					// The title bar text
-TCHAR szWindowClass[MAX_LOADSTRING];			// the main window class name
-HWND hWnd;
-IVideoCapture *pVideoSdk;
+
+typedef struct tagProgramContext{
+	HINSTANCE hInst;
+	TCHAR szTitle[MAX_LOADSTRING];
+	TCHAR szWindowClass[MAX_LOADSTRING];
+	HWND mainWnd;
+	IVideoCapture *pVideoCapture;
+	CVideoCallback *callBack;
+	BOOL bRuning;
+	HANDLE workThread;
+	DWORD dwThreadId;
+	tagProgramContext(){
+		ZeroMemory(this, sizeof(struct tagProgramContext));
+	}
+}THIS_CONTEXT, *PTHIS_CONTEXT;
+
+THIS_CONTEXT *gContext = NULL;
 
 // Forward declarations of functions included in this code module:
-ATOM				MyRegisterClass(HINSTANCE hInstance);
-BOOL				InitInstance(HINSTANCE, int);
+ATOM				MyRegisterClass(PTHIS_CONTEXT hInstance);
+BOOL				InitInstance(PTHIS_CONTEXT, int);
 LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
 
-void AddDevicesToMenu()
+void AddDevicesToMenu(THIS_CONTEXT *ctx)
 {
 	HMENU hMenuSub;
-	hMenuSub = GetSubMenu(GetMenu(hWnd), 1);
+	hMenuSub = GetSubMenu(GetMenu(ctx->mainWnd), 1);
 	int iMenuItems = GetMenuItemCount(hMenuSub);
 
 	VECT camlist;
-	pVideoSdk->GetDeviceList(camlist);
+	ctx->pVideoCapture->GetDeviceList(camlist);
 	VECT::iterator it;
 	int index = 0;
 
@@ -41,14 +55,52 @@ void AddDevicesToMenu()
 	}
 
 	for (it = camlist.begin(); it != camlist.end(); it++){
-		AppendMenu(hMenuSub, MF_STRING, index++, *it);
+		AppendMenu(hMenuSub, MF_STRING, ID_DEVICE_DEVICE3+index, *it);
+		index++;
 	}
 
-	CheckMenuItem(hMenuSub, 0, MF_CHECKED);
-	EnableMenuItem(hMenuSub, 0, MF_ENABLED);
+	CheckMenuItem(hMenuSub, ID_DEVICE_DEVICE3+0, MF_CHECKED);
+	EnableMenuItem(hMenuSub, ID_DEVICE_DEVICE3+0, MF_ENABLED);
 }
 
-BOOL CreateWorkThread()
+BOOL StartWork(THIS_CONTEXT *ctx)
+{
+	BOOL bRet = FALSE;
+
+	if (!ctx->bRuning){
+		ctx->callBack = new CVideoCallback;
+		assert(ctx->callBack);
+		ctx->pVideoCapture->RegisterCallback(ctx->callBack);
+
+		OPEN_DEVICE_PARAM devices;
+		devices.parentWindow = ctx->mainWnd;
+		devices.index = 0;
+		devices.avgFrameIntervalInNs = FramesPerSecToRefTime(30);
+		devices.width = 1920;
+		devices.height = 1080;
+		bRet = ctx->pVideoCapture->StartCaptureWithParam(devices);
+		ctx->bRuning = TRUE;
+	}
+	else{
+		bRet = TRUE;
+	}
+
+	return bRet;
+}
+
+BOOL StopWork(THIS_CONTEXT *ctx)
+{
+	assert(ctx);
+	ctx->pVideoCapture->StopCapture();
+	ctx->pVideoCapture->UnRegisterCallback();
+
+	SAFE_DELETE(ctx->callBack);
+
+	ReleaseVideoCaptureObj(ctx->pVideoCapture);
+	return TRUE;
+}
+
+BOOL CreateWorkThread(THIS_CONTEXT *ctx)
 {
 	return TRUE;
 }
@@ -60,29 +112,32 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 {
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
+	gContext = new THIS_CONTEXT;
+	assert(gContext);
+	gContext->hInst = hInstance;
 
  	// TODO: Place code here.
 	MSG msg;
 	HACCEL hAccelTable;
 
 	// Initialize global strings
-	LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-	LoadString(hInstance, IDC_WINVIDEOCAPTURE, szWindowClass, MAX_LOADSTRING);
-	MyRegisterClass(hInstance);
+	LoadString(gContext->hInst, IDS_APP_TITLE, gContext->szTitle, MAX_LOADSTRING);
+	LoadString(gContext->hInst, IDC_WINVIDEOCAPTURE, gContext->szWindowClass, MAX_LOADSTRING);
+	MyRegisterClass(gContext);
 
 	// Perform application initialization:
-	if (!InitInstance (hInstance, nCmdShow))
+	if (!InitInstance(gContext, nCmdShow))
 	{
 		return FALSE;
 	}
 
-	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_WINVIDEOCAPTURE));
+	hAccelTable = LoadAccelerators(gContext->hInst, MAKEINTRESOURCE(IDC_WINVIDEOCAPTURE));
 
-	pVideoSdk = GetVideoCaptureObj();
-	assert(pVideoSdk);
-	AddDevicesToMenu();
-	
-	CreateWorkThread();
+	gContext->pVideoCapture = GetVideoCaptureObj();
+	assert(gContext->pVideoCapture);
+	AddDevicesToMenu(gContext);
+	CreateWorkThread(gContext);
+	StartWork(gContext);
 
 	// Main message loop:
 	while (GetMessage(&msg, NULL, 0, 0))
@@ -94,7 +149,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		}
 	}
 
-	ReleaseVideoCaptureObj(pVideoSdk);
+	StopWork(gContext);
+	gContext = NULL;
 	return (int) msg.wParam;
 }
 
@@ -113,7 +169,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 //    so that the application will get 'well formed' small icons associated
 //    with it.
 //
-ATOM MyRegisterClass(HINSTANCE hInstance)
+ATOM MyRegisterClass(PTHIS_CONTEXT ctx)
 {
 	WNDCLASSEX wcex;
 
@@ -123,12 +179,12 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 	wcex.lpfnWndProc	= WndProc;
 	wcex.cbClsExtra		= 0;
 	wcex.cbWndExtra		= 0;
-	wcex.hInstance		= hInstance;
-	wcex.hIcon			= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_WINVIDEOCAPTURE));
+	wcex.hInstance		= ctx->hInst;
+	wcex.hIcon			= LoadIcon(ctx->hInst, MAKEINTRESOURCE(IDI_WINVIDEOCAPTURE));
 	wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
 	wcex.hbrBackground	= (HBRUSH)(COLOR_WINDOW+1);
 	wcex.lpszMenuName	= MAKEINTRESOURCE(IDC_WINVIDEOCAPTURE);
-	wcex.lpszClassName	= szWindowClass;
+	wcex.lpszClassName	= ctx->szWindowClass;
 	wcex.hIconSm		= LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
 	return RegisterClassEx(&wcex);
@@ -144,20 +200,19 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 //        In this function, we save the instance handle in a global variable and
 //        create and display the main program window.
 //
-BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
+BOOL InitInstance(THIS_CONTEXT *ctx, int nCmdShow)
 {
-   hInst = hInstance; // Store instance handle in our global variable
 
-   hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
+	ctx->mainWnd = CreateWindow(ctx->szWindowClass, ctx->szTitle, WS_OVERLAPPEDWINDOW,
+      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, ctx->hInst, NULL);
 
-   if (!hWnd)
+	if (!ctx->mainWnd)
    {
       return FALSE;
    }
 
-   ShowWindow(hWnd, nCmdShow);
-   UpdateWindow(hWnd);
+	ShowWindow(ctx->mainWnd, nCmdShow);
+	UpdateWindow(ctx->mainWnd);
 
    return TRUE;
 }
@@ -187,10 +242,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		switch (wmId)
 		{
 		case IDM_ABOUT:
-			DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+			DialogBox(gContext->hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
 			break;
 		case IDM_EXIT:
 			DestroyWindow(hWnd);
+			break;
+		case ID_DEVICE_DEVICE3+0:
+			
 			break;
 		default:
 			return DefWindowProc(hWnd, message, wParam, lParam);
@@ -199,6 +257,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
 		// TODO: Add any drawing code here...
+		if (gContext->pVideoCapture)
+			gContext->pVideoCapture->Repaint(hdc);
+
 		EndPaint(hWnd, &ps);
 		break;
 	case WM_DESTROY:

@@ -12,7 +12,7 @@ bool IVideoCaptureDelegate::InitContext()
 {
 	mDShowCapture = new DShowVideoCapture;
 	mMFCapture = new MediaFoundationVideoCapture; 
-
+	mDShowCapture->GetDShowInterfaces();
 	return (!mDShowCapture && !mMFCapture);
 }
 
@@ -33,7 +33,7 @@ bool IVideoCaptureDelegate::UnInitContext()
 
 void IVideoCaptureDelegate::RegisterCallback(VideoCaptureCallback *cb)
 {
-	mDShowCapture->RegisterCallback(mcb);
+	mDShowCapture->RegisterCallback(cb);
 }
 
 HRESULT IVideoCaptureDelegate::GetDeviceList(VECT &camNames)

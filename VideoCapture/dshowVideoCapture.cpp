@@ -1,7 +1,6 @@
 #include "stdafx.h"
 
 #include "logger.h"
-
 #include "dshowVideoCapture.h"
 #include "dshowutil.h"
 
@@ -12,11 +11,32 @@
 using namespace ATL;
 
 DShowVideoCapture::DShowVideoCapture()
+	: mGraph(NULL)
+	, mGraphBuiler(NULL)
+	, mMediaControl(NULL)
+	, mMediaEventEx(NULL)
+	, mRender(NULL)
+	, mDropFrameStatus(NULL)
+	, mVideoControl(NULL)
+	, mCaptureFilter(NULL)
+	, mGrabberFiler(NULL)
+	, mGrabber(NULL)
+	, mcb(NULL)
 {
 }
 
 DShowVideoCapture::~DShowVideoCapture()
 {
+	internel_log(Info, "fps %f", fpsStats.frequencyPerSecond());
+}
+
+void DShowVideoCapture::ShowDShowError(HRESULT hr)
+{
+	if (FAILED(hr)){
+		_com_error err(hr);
+		LPCTSTR errMsg = err.ErrorMessage();
+		internel_log(Info, "dshow Error %s", errMsg);
+	}
 }
 
 HRESULT DShowVideoCapture::RegisterCallback(VideoCaptureCallback *cb)
@@ -49,9 +69,7 @@ HRESULT DShowVideoCapture::GetDShowInterfaces()
 	CHECK_HR(hr = mGraph->QueryInterface(IID_IMediaEventEx, (void**)&mMediaEventEx));
 
 done:
-	if(FAILED(hr)){
-		internel_log(Error, "Get dshow interface error: %d", hr);
-	}
+	ShowDShowError(hr);
 
 	return hr;
 }
@@ -68,12 +86,13 @@ bool DShowVideoCapture::Runing()
 	if (status == State_Stopped || FAILED(hr)){
 		bRet = false;
 	}
-
+	ShowDShowError(hr);
 	return bRet;
 }
 
 HRESULT DShowVideoCapture::Start(OPEN_DEVICE_PARAM params)
 {
+	HRESULT hr = S_OK;
 	ASSERT(mMediaControl);
 
 	workParams = params;
@@ -83,14 +102,35 @@ HRESULT DShowVideoCapture::Start(OPEN_DEVICE_PARAM params)
 
 	BuildGraph();
 
-	return mMediaControl->Run();
+	while (hr = mMediaControl->Run() != S_OK){
+		Sleep(100);
+	}
+
+	if (mDropFrameStatus){
+		mDropFrameStatus->GetNumDropped(&mDropFrames);
+		mDropFrameStatus->GetNumNotDropped(&mCapFrames);
+	}
+
+	ShowDShowError(hr);
+
+	return hr;
 }
 
 HRESULT DShowVideoCapture::Stop()
 {
+	long capFrameCount = 0;
+	long dropFrameCount = 0;
 	ASSERT(mMediaControl);
 
 	SAFE_DELETE(mRender);
+
+	if (mDropFrameStatus){
+		mDropFrameStatus->GetNumDropped(&dropFrameCount);
+		mDropFrameStatus->GetNumNotDropped(&capFrameCount);
+	}
+
+	internel_log(Info, "capture statistics: capture %ld, drop %ld", 
+		dropFrameCount - mDropFrames, capFrameCount - mCapFrames);
 
 	return mMediaControl->Stop();
 }
@@ -98,37 +138,40 @@ HRESULT DShowVideoCapture::Stop()
 HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 {
 	FRAME_DESC desc;
-	long dataLength = 0;
 	HRESULT  hr = S_OK;
 
-	ASSERT(mcb);
+	ASSERT(mcb != NULL);
 
 	CHECK_HR(hr = pSample->GetPointer(&desc.dataPtr));
-	dataLength = pSample->GetActualDataLength();
+	desc.dataSize = pSample->GetActualDataLength();
 	hr = pSample->GetMediaTime(&desc.frameStartIdx, &desc.frameEndIdx);
-	hr = pSample->GetTime(&desc.ptsStart, &desc.ptsEnd);
 
+
+	hr = pSample->GetTime(&desc.ptsStart, &desc.ptsEnd);
 	if (FAILED(hr)){
 		desc.ptsStart = timeGetTime();
 		desc.ptsEnd = desc.ptsStart + RefTimeToMsec(workParams.avgFrameIntervalInNs);
 	}
 
+	mcb->OnFrame(desc);
+
 done:
-	if (FAILED(hr)){
-		// drop frame
-		mcb->OnFrame(desc);
-	}
+	fpsStats.appendDataSize(1);
 
 	return hr;
 }
 
 HRESULT DShowVideoCapture::Repaint(HDC hdc)
 {
+	ASSERT(mRender != NULL);
+
 	return mRender->Repaint(workParams.parentWindow, hdc);
 }
 
 HRESULT DShowVideoCapture::UpdateVideoWindow(HWND hWnd, const LPRECT prc)
 {
+	ASSERT(mRender != NULL);
+
 	return mRender->UpdateVideoWindow(hWnd, prc);
 }
 
@@ -164,6 +207,7 @@ HRESULT DShowVideoCapture::RemoveFiltersFromGraph()
 	pFilterEnum.Release();
 
 done:
+	
 	return hr;
 }
 
@@ -176,7 +220,7 @@ HRESULT DShowVideoCapture::ReleaseDShowInterfaces()
 
 	RemoveFiltersFromGraph();
 
-	SAFE_RELEASE(mCaptureStatus);
+	SAFE_RELEASE(mDropFrameStatus);
 	SAFE_RELEASE(mMediaEventEx);
 	SAFE_RELEASE(mMediaControl);
 	SAFE_RELEASE(mGrabberFiler);
@@ -205,19 +249,21 @@ HRESULT DShowVideoCapture::BuildGraph()
 	CHECK_HR(hr = mGraph->AddFilter(mCaptureFilter, CAPTURE_FILTER_NAME_STR));
 	CHECK_HR(hr = mGraph->AddFilter(mGrabberFiler, GRABBER_FILTER_NAME_STR));
 	CHECK_HR(hr = mGraph->AddFilter(pNullRenderFilter, RENDER_FILTER_NAME_STR));
-	mGraphBuiler->RenderStream(&PIN_CATEGORY_CAPTURE, &MEDIATYPE_Video, mCaptureFilter, mGrabberFiler, pNullRenderFilter);
+	CHECK_HR(hr = mGraphBuiler->RenderStream(&PIN_CATEGORY_CAPTURE, 
+		&MEDIATYPE_Video, mCaptureFilter, mGrabberFiler, pNullRenderFilter));
 
-	mRender->AddToGraph(mGraph, workParams.parentWindow);
-	mRender->FinalizeGraph(mGraph);
+	CHECK_HR(hr = mRender->AddToGraph(mGraph, workParams.parentWindow));
+	CHECK_HR(hr = mRender->FinalizeGraph(mGraph));
 	
 	mediaType.majortype = MEDIATYPE_Video;
 	mediaType.subtype = MEDIASUBTYPE_RGB24;
 
-	mGrabber->SetMediaType(&mediaType);
-	mGrabber->SetCallback(this, 0);
-	mGrabber->SetOneShot(FALSE);
+	CHECK_HR(hr = mGrabber->SetMediaType(&mediaType));
+	CHECK_HR(hr = mGrabber->SetCallback(this, 0));
+	CHECK_HR(hr = mGrabber->SetOneShot(FALSE));
 
 done:
+	ShowDShowError(hr);
 	return hr;
 }
 
@@ -261,6 +307,7 @@ HRESULT DShowVideoCapture::findFilterByIndex(int index, IBaseFilter * &filter)
 
 			if (camlist[index] == dev){
 				hr = pM->BindToObject(NULL, NULL, IID_IBaseFilter, (void**)&filter);
+				filter->QueryInterface(IID_IAMDroppedFrames, (void**)&mDropFrameStatus);
 				break;
 			}
 		}
@@ -270,9 +317,7 @@ HRESULT DShowVideoCapture::findFilterByIndex(int index, IBaseFilter * &filter)
 	}
 
 done:
-	if (FAILED(hr)){
-		// record
-	}
+	ShowDShowError(hr);
 
 	pDevEnum.Release();
 	pDevEnumMoniker.Release();

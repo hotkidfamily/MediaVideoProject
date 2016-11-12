@@ -29,7 +29,6 @@ protected:
 private:
 	DShowVideoCapture *mDShowCapture;
 	MediaFoundationVideoCapture *mMFCapture;
-	VideoCaptureCallback *mcb;
 };
 
 #endif //__VIDEOCAPTURE_H__

@@ -8,7 +8,7 @@
 #include "mtype.h"
 #include "ISampleGrabber.h"
 #include "ISampleGrabberCBImpl.h"
-
+#include "SlidingWindowCalc.h"
 #include "IVideoCapture.h"
 
 typedef struct tagCameraDevDesc{
@@ -60,15 +60,16 @@ public:
 	HRESULT ShowCapturePropertyWindow();
 	HRESULT RegisterCallback(VideoCaptureCallback *cb);
 	HRESULT UnregisterCallback();
+	HRESULT GetDShowInterfaces();
 
 private:
 	void dshowInfo(HRESULT);
 	HRESULT RemoveFiltersFromGraph();
 	bool Runing();
-	HRESULT GetDShowInterfaces();
 	HRESULT ReleaseDShowInterfaces();
 	HRESULT findFilterByIndex(int, IBaseFilter *&);
 	HRESULT BuildGraph();
+	void ShowDShowError(HRESULT hr);
 	STDMETHODIMP SampleCB(double SampleTime, IMediaSample *pSample);
 
 private:
@@ -77,7 +78,11 @@ private:
 	IMediaControl *mMediaControl;
 	IMediaEventEx *mMediaEventEx;
 	BaseVideoRenderer *mRender;
-	IAMDroppedFrames *mCaptureStatus;
+	IAMDroppedFrames *mDropFrameStatus;
+
+	long mCapFrames;
+	long mDropFrames;
+
 	IAMVideoControl *mVideoControl;
 	IBaseFilter *mCaptureFilter;
 
@@ -88,6 +93,7 @@ private:
 
 	OPEN_DEVICE_PARAM workParams;
 	CAMERALIST camlist;
+	CSlidingWindowCalc fpsStats;
 };
 
 #endif //__DSHOWVIDEOCAPTURE_H__

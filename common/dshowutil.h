@@ -1975,7 +1975,7 @@ inline LONG RectHeight(const RECT& rc) { return rc.bottom - rc.top; }
 // Converts from frames-to-second to frame duration.
 ///////////////////////////////////////////////////////////////////////
 
-inline REFERENCE_TIME FramesPerSecToFrameLength(double fps) 
+inline REFERENCE_TIME FramesPerSecToRefTime(double fps) 
 { 
     return (REFERENCE_TIME)((double)ONE_SECOND / fps);
 }
@@ -2279,7 +2279,7 @@ inline HRESULT CreateRGBVideoType(AM_MEDIA_TYPE &mt, WORD iBitDepth, long Width,
     VIDEOINFO *pvi = (VIDEOINFO*)mt.pbFormat;
     ZeroMemory(pvi, sizeof(VIDEOINFO));
 
-    pvi->AvgTimePerFrame = FramesPerSecToFrameLength(fps);
+    pvi->AvgTimePerFrame = FramesPerSecToRefTime(fps);
 
     BITMAPINFOHEADER *pBmi = &(pvi->bmiHeader);
     pBmi->biSize = sizeof(BITMAPINFOHEADER);

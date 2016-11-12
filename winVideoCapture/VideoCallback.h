@@ -2,12 +2,12 @@
 
 #include "SampleBufferManager.h"
 
-class CSampleCallback :
+class CVideoCallback :
 	public VideoCaptureCallback
 {
 public:
-	CSampleCallback();
-	~CSampleCallback();
+	CVideoCallback();
+	~CVideoCallback();
 
 	virtual void OnFrame(FRAME_DESC);
 	virtual void OnEvent(EVENT_INDEX, EVENT_CONTEXT) ;
