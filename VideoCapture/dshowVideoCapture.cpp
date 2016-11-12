@@ -245,12 +245,15 @@ HRESULT DShowVideoCapture::BuildGraph()
 
 	CHECK_HR(hr = findFilterByIndex(workParams.index, mCaptureFilter));
 	CHECK_HR(hr = mGraph->AddFilter(mCaptureFilter, CAPTURE_FILTER_NAME_STR));
-	CHECK_HR(hr = mGraph->AddFilter(mGrabberFiler, GRABBER_FILTER_NAME_STR));
-	CHECK_HR(hr = mGraph->AddFilter(pNullRenderFilter, RENDER_FILTER_NAME_STR));
+  	CHECK_HR(hr = mGraph->AddFilter(mGrabberFiler, GRABBER_FILTER_NAME_STR));
+  	CHECK_HR(hr = mGraph->AddFilter(pNullRenderFilter, RENDER_FILTER_NAME_STR));
+	CHECK_HR(hr = mRender->AddToGraph(mGraph, workParams.parentWindow));
 	CHECK_HR(hr = mGraphBuiler->RenderStream(&PIN_CATEGORY_CAPTURE, 
 		&MEDIATYPE_Video, mCaptureFilter, mGrabberFiler, pNullRenderFilter));
 
-	CHECK_HR(hr = mRender->AddToGraph(mGraph, workParams.parentWindow));
+	hr = mGraphBuiler->RenderStream(&PIN_CATEGORY_PREVIEW,
+		&MEDIATYPE_Video, mCaptureFilter, NULL, NULL);
+
 	CHECK_HR(hr = mRender->FinalizeGraph(mGraph));
 	
 	mediaType.majortype = MEDIATYPE_Video;

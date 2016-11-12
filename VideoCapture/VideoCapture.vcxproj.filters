@@ -13,15 +13,33 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
+    <Filter Include="Source Files\dshowInterface">
+      <UniqueIdentifier>{8bfc3f56-d00a-4911-a5d5-34e12e6a36a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\mediafoundationinterface">
+      <UniqueIdentifier>{e8129116-db85-4dd0-ad2a-f869af84d34d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\buffermanager">
+      <UniqueIdentifier>{3bbb7c41-106f-4e8e-b1c5-cd11df622358}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\utils">
+      <UniqueIdentifier>{c976d277-3457-448d-81ad-bd386b64418f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\dshowinterface">
+      <UniqueIdentifier>{183177a7-f1c6-42a1-b156-9d98fef21ddd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\mediafoundationinterface">
+      <UniqueIdentifier>{4754ddda-fcd5-4548-8fe3-0979a90bc1a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\buffermanager">
+      <UniqueIdentifier>{8295eac9-2851-4dd6-8931-c34dd0790b75}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\utils">
+      <UniqueIdentifier>{c36ece20-df28-473c-bd71-eeab10965c16}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dshowVideoCapture.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="logger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
@@ -30,30 +48,27 @@
     <ClCompile Include="VideoCapture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="video.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="SlidingWindowCalc.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="dshowVideoCapture.cpp">
+      <Filter>Source Files\dshowInterface</Filter>
     </ClCompile>
     <ClCompile Include="ISampleGrabberCBImpl.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\dshowInterface</Filter>
     </ClCompile>
     <ClCompile Include="mtype.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\dshowInterface</Filter>
     </ClCompile>
-    <ClCompile Include="SlidingWindowCalc.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="logger.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="video.cpp">
+      <Filter>Source Files\dshowInterface</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="dshowVideoCapture.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="IVideoCapture.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="logger.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="mediafoundationVideoCapture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="stdafx.h">
@@ -66,16 +81,25 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="video.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="logger.h">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="dshowVideoCapture.h">
+      <Filter>Header Files\dshowinterface</Filter>
     </ClInclude>
     <ClInclude Include="ISampleGrabberCBImpl.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\dshowinterface</Filter>
     </ClInclude>
     <ClInclude Include="mtype.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\dshowinterface</Filter>
+    </ClInclude>
+    <ClInclude Include="mediafoundationVideoCapture.h">
+      <Filter>Header Files\mediafoundationinterface</Filter>
     </ClInclude>
     <ClInclude Include="SlidingWindowCalc.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

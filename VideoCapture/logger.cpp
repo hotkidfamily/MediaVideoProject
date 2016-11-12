@@ -16,7 +16,7 @@ void internel_log( int level, const char *fmt, ... )
 	if (gLogCallback){
 		gLogCallback(level, fmt, vl);
 	}else{
-		char loginfo[4096];
+		char loginfo[4096] = {'\0'};
 		_vsnprintf_s(loginfo, sizeof(loginfo), _countof(loginfo)-1, fmt, vl);
 		OutputDebugStringA(loginfo);
 	}
