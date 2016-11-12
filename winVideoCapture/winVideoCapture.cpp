@@ -48,8 +48,7 @@ void AddDevicesToMenu(THIS_CONTEXT *ctx)
 	int index = 0;
 
 	if (iMenuItems > 0){
-		for (int i = 0; i < iMenuItems; i++)
-		{
+		for (int i = 0; i < iMenuItems; i++){
 			RemoveMenu(hMenuSub, 0, MF_BYPOSITION);
 		}
 	}

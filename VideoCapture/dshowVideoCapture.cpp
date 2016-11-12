@@ -118,19 +118,18 @@ HRESULT DShowVideoCapture::Start(OPEN_DEVICE_PARAM params)
 
 HRESULT DShowVideoCapture::Stop()
 {
-	long capFrameCount = 0;
-	long dropFrameCount = 0;
 	ASSERT(mMediaControl);
 
 	SAFE_DELETE(mRender);
 
 	if (mDropFrameStatus){
+		long capFrameCount = 0;
+		long dropFrameCount = 0;
 		mDropFrameStatus->GetNumDropped(&dropFrameCount);
 		mDropFrameStatus->GetNumNotDropped(&capFrameCount);
+		internel_log(Info, "capture statistics: capture %ld, drop %ld",
+			dropFrameCount - mDropFrames, capFrameCount - mCapFrames);
 	}
-
-	internel_log(Info, "capture statistics: capture %ld, drop %ld", 
-		dropFrameCount - mDropFrames, capFrameCount - mCapFrames);
 
 	return mMediaControl->Stop();
 }
@@ -145,7 +144,6 @@ HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 	CHECK_HR(hr = pSample->GetPointer(&desc.dataPtr));
 	desc.dataSize = pSample->GetActualDataLength();
 	hr = pSample->GetMediaTime(&desc.frameStartIdx, &desc.frameEndIdx);
-
 
 	hr = pSample->GetTime(&desc.ptsStart, &desc.ptsEnd);
 	if (FAILED(hr)){

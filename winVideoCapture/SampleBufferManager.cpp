@@ -112,6 +112,27 @@ BOOL CSampleBufferManager::ReleaseMemory()
 
 BOOL CSampleBufferManager::ClearWorkStatus()
 {
+	if (readyList.size()){
+		BUFFLIST::iterator it = readyList.begin();
+		for (; it != readyList.end(); it++){
+			delete *it;
+		}
+	}
+
+	if (emptyList.size()){
+		BUFFLIST::iterator it = emptyList.begin();
+		for (; it != emptyList.end(); it++){
+			delete *it;
+		}
+	}
+
+	if (occupyList.size()){
+		BUFFLIST::iterator it = occupyList.begin();
+		for (; it != occupyList.end(); it++){
+			delete *it;
+		}
+	}
+
 	readyList.clear();
 	emptyList.clear();
 	occupyList.clear();
