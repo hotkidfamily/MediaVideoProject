@@ -75,8 +75,8 @@ BOOL StartWork(THIS_CONTEXT *ctx)
 		devices.parentWindow = ctx->mainWnd;
 		devices.index = 0;
 		devices.avgFrameIntervalInNs = FramesPerSecToRefTime(30);
-		devices.width = 1920;
-		devices.height = 1080;
+		devices.width = 1280;
+		devices.height = 720;
 		bRet = ctx->pVideoCapture->StartCaptureWithParam(devices);
 		ctx->bRuning = TRUE;
 	}

@@ -45,6 +45,13 @@ typedef struct tagCameraDevDesc{
 
 typedef std::vector<CAMERADESC> CAMERALIST;
 
+typedef struct tagVideoInfo{
+	int index;
+	CMediaType *meidaType;
+	LONGLONG MinFrameInterval;
+	LONGLONG MaxFrameInterval;
+}VIDEOARGS, *PVIDEOARGS;
+
 class DShowVideoCapture : 
 	public ISampleGrabberCBImpl
 {
@@ -63,14 +70,15 @@ public:
 	HRESULT GetDShowInterfaces();
 
 private:
-	void dshowInfo(HRESULT);
 	HRESULT RemoveFiltersFromGraph();
 	bool Runing();
 	HRESULT ReleaseDShowInterfaces();
-	HRESULT findFilterByIndex(int, IBaseFilter *&);
+	HRESULT FindFilterByIndex(int, IBaseFilter *&);
 	HRESULT BuildGraph();
 	void ShowDShowError(HRESULT hr);
 	STDMETHODIMP SampleCB(double SampleTime, IMediaSample *pSample);
+	HRESULT FindSultablePin(CComPtr<IPin> &pOutPin);
+	HRESULT FindVideoConfigByStreamConfig(CComPtr<IAMStreamConfig> &pConfig);
 
 private:
 	IGraphBuilder *mGraph;
@@ -83,17 +91,17 @@ private:
 	long mCapFrames;
 	long mDropFrames;
 
-	IAMVideoControl *mVideoControl;
-	IBaseFilter *mCaptureFilter;
-
-	IBaseFilter *mGrabberFiler;
 	ISampleGrabber *mGrabber;
+	IBaseFilter *mCaptureFilter;
+	IBaseFilter *mGrabberFiler;
+
+	CMediaType mWorkMediaType;
 
 	VideoCaptureCallback *mcb;
 
-	OPEN_DEVICE_PARAM workParams;
-	CAMERALIST camlist;
-	CSlidingWindowCalc fpsStats;
+	OPEN_DEVICE_PARAM mWorkParams;
+	CAMERALIST mCameraList;
+	CSlidingWindowCalc mFpsStats;
 };
 
 #endif //__DSHOWVIDEOCAPTURE_H__
