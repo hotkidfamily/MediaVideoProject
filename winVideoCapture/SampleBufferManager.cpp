@@ -17,7 +17,7 @@ BOOL CSampleBufferManager::Reset(int32_t res, int32_t nbFrames)
 {
 	BOOL bRet = FALSE;
 	int32_t index = 0;
-	int32_t buffSizePreFrame = GetFrameSizeByRes(res) * nbFrames;
+	int32_t buffSizePreFrame = GetFrameSizeByRes(res);
 	BUFFLIST::iterator it;
 
 	ClearWorkStatus();

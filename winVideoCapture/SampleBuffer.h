@@ -13,7 +13,17 @@ step 5: unlock
 class CSampleBuffer
 {
 public:
-	CSampleBuffer(){};
+	CSampleBuffer()
+		: occupy(FALSE)
+		, pts(0)
+		, pixelFormat(0)
+		, capacity(0)
+		, sizeInUse(0)
+		, dataPtr(NULL)
+	{
+
+	};
+
 	~CSampleBuffer(){};
 
 	/* for constructor, should first call */
