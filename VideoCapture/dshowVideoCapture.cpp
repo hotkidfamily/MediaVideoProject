@@ -266,13 +266,12 @@ HRESULT DShowVideoCapture::BuildGraph()
 	CHECK_HR(hr = mGrabber->SetOneShot(FALSE));
 	
 	CHECK_HR(hr = mRender->AddToGraph(mGraph, mWorkParams.parentWindow));
-	(hr = mGraphBuiler->RenderStream(&PIN_CATEGORY_CAPTURE, 
-		&MEDIATYPE_Video, mCaptureFilter, mGrabberFiler, pNullRenderFilter));
-
-	hr = mGraphBuiler->RenderStream(&PIN_CATEGORY_PREVIEW,
-		&MEDIATYPE_Video, mCaptureFilter, NULL, NULL);
-
 	CHECK_HR(hr = mRender->FinalizeGraph(mGraph));
+
+	mGraphBuiler->RenderStream(&PIN_CATEGORY_PREVIEW, &MEDIATYPE_Video, mCaptureFilter, NULL, NULL);
+
+	CHECK_HR(hr = mGraphBuiler->RenderStream(&PIN_CATEGORY_CAPTURE, 
+		&MEDIATYPE_Video, mCaptureFilter, mGrabberFiler, pNullRenderFilter));
 
 done:
 	ShowDShowError(hr);
