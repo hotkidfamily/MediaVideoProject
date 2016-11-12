@@ -11,8 +11,12 @@ public:
 		DeleteCriticalSection(&mCs);
 	};
 
-	void Lock(){
-		EnterCriticalSection(&mCs);
+	BOOL Lock(){
+		BOOL bRet = FALSE;
+
+		bRet = TryEnterCriticalSection(&mCs);
+
+		return bRet>0;
 	}
 
 	void Unlock(){

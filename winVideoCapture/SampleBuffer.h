@@ -61,8 +61,8 @@ public:
 	int64_t  GetPts() const { return pts; };
 	int32_t  GetPixelFormat() const{ return pixelFormat; };
 
-	BOOL LockBuffer() { mMainLock.Lock(); }
-	BOOL UnlockBuffer() { mMainLock.Unlock(); }
+	BOOL LockBuffer() { return mMainLock.Lock(); };
+	VOID UnlockBuffer() { mMainLock.Unlock(); };
 
 private:
 	BOOL occupy;
