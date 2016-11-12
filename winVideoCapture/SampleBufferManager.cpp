@@ -4,7 +4,7 @@
 
 CSampleBufferManager::CSampleBufferManager()
 	: mBufferSize(0)
-	, mBufferPtr(0)
+	, mBufferPtr(NULL)
 {
 }
 
@@ -19,6 +19,8 @@ BOOL CSampleBufferManager::Reset(int32_t res, int32_t nbFrames)
 	int32_t index = 0;
 	int32_t buffSizePreFrame = GetFrameSizeByRes(res) * nbFrames;
 	BUFFLIST::iterator it;
+
+	ClearWorkStatus();
 
 	// low than current buffer
 	if (buffSizePreFrame * nbFrames > mBufferSize){
@@ -52,6 +54,10 @@ BOOL CSampleBufferManager::FillOneFrame(uint8_t* data, int32_t dataSize, int64_t
 			emptyList.pop_front();
 			readyList.push_back(sample);
 		}
+	}
+	else if (readyList.size() > 1){
+		CSampleBuffer &sample = readyList.back();
+		bRet = sample.FillData(data, dataSize, pts, pixelFormat);
 	}
 
 	return bRet;
@@ -92,8 +98,7 @@ BOOL CSampleBufferManager::UnlockFrame(CSampleBuffer *buf)
 
 BOOL CSampleBufferManager::ReleaseMemory()
 {
-	readyList.clear();
-	emptyList.clear();
+	ClearWorkStatus();
 
 	if (mBufferPtr){
 		_aligned_free(mBufferPtr);
@@ -101,6 +106,15 @@ BOOL CSampleBufferManager::ReleaseMemory()
 	}
 
 	mBufferSize = 0;
+
+	return TRUE;
+}
+
+BOOL CSampleBufferManager::ClearWorkStatus()
+{
+	readyList.clear();
+	emptyList.clear();
+	occupyList.clear();
 
 	return TRUE;
 }

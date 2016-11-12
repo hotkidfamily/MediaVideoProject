@@ -35,6 +35,7 @@ protected:
 	BOOL ReleaseMemory();
 	int32_t GetFrameSizeByRes(int32_t resOfFrames);
 	int32_t GetFrameSizePrePlannerByRes(int32_t resOfFrames);
+	BOOL ClearWorkStatus();
 
 private:
 	BUFFLIST readyList;
