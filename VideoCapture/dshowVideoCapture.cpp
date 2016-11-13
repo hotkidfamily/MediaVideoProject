@@ -89,6 +89,8 @@ HRESULT DShowVideoCapture::Start(OPEN_DEVICE_PARAM params)
 
 	ShowDShowError(hr);
 
+	SaveGraphFile(mGraph, TEXT("C:\\Users\\hotkid\\desktop\\my.grf"));
+
 	return hr;
 }
 
@@ -276,18 +278,16 @@ done:
 HRESULT DShowVideoCapture::BuildGraph()
 {
 	HRESULT hr = E_FAIL;
+	CComPtr<IBaseFilter> pSmartTee = NULL;
 	CComPtr<IBaseFilter> pNullRenderFilter = NULL;
 	CComPtr<IPin> pCaptureOutPin = NULL;
-	CComPtr<IPin> pRenderInPin = NULL;
+	CComPtr<IPin> pNullRenderInPin = NULL;
 	CComPtr<IPin> pGrabberInPin = NULL;
 	CComPtr<IPin> pGrabberOutPin = NULL;
-	CComPtr<IPin> pPreviewPin = NULL;
+	CComPtr<IPin> pCaptureFilterPreviewPin = NULL;
 	CComPtr<IPin> pSmartTeeInPin = NULL;
 	CComPtr<IPin> pSmartTeePreOutPin = NULL;
 	CComPtr<IPin> pSmartTeeCapOutPin = NULL;
-	CComPtr<IPin> pVMR7InPin = NULL;
-	CComPtr<IBaseFilter> pSmartTee = NULL;
-	CComPtr<IBaseFilter> pVMR7 = NULL;
 
 	CMediaType mediaType;
 	mediaType.majortype = MEDIATYPE_Video;
@@ -295,41 +295,43 @@ HRESULT DShowVideoCapture::BuildGraph()
 
 	CHECK_HR(CoCreateInstance(CLSID_NullRenderer, NULL,
 		CLSCTX_INPROC_SERVER, IID_IBaseFilter, (void**)&pNullRenderFilter));
+
 	CHECK_HR(hr = FindFilterByIndex(mWorkParams.index, mCaptureFilter));
 	ASSERT(mCaptureFilter);
 
-	CHECK_HR(hr = AddFilterByCLSID(mGraph, CLSID_SmartTee, &pSmartTee, L"samrt tee"));
-	CHECK_HR(hr = AddFilterByCLSID(mGraph, CLSID_VideoMixingRenderer, &pVMR7, L"Preview Render"));
 	CHECK_HR(hr = mGraph->AddFilter(mCaptureFilter, CAPTURE_FILTER_NAME_STR));
 	CHECK_HR(hr = mGraph->AddFilter(mGrabberFiler, GRABBER_FILTER_NAME_STR));
 	CHECK_HR(hr = mGraph->AddFilter(pNullRenderFilter, RENDER_FILTER_NAME_STR));
 
 	CHECK_HR(hr = FindSultablePin(pCaptureOutPin));
-	CHECK_HR(hr = FindUnconnectedPin(pSmartTee, PINDIR_INPUT, &pSmartTeeInPin));
-	CHECK_HR(hr = FindUnconnectedPin(pSmartTee, PINDIR_OUTPUT, &pSmartTeePreOutPin));
-	CHECK_HR(hr = FindUnconnectedPin(pSmartTee, PINDIR_OUTPUT, &pSmartTeeCapOutPin));
-	CHECK_HR(hr = FindUnconnectedPin(pVMR7, PINDIR_INPUT, &pVMR7InPin));
+
 	CHECK_HR(hr = FindUnconnectedPin(mGrabberFiler, PINDIR_OUTPUT, &pGrabberOutPin));
 	CHECK_HR(hr = FindUnconnectedPin(mGrabberFiler, PINDIR_INPUT, &pGrabberInPin));
-	CHECK_HR(hr = FindUnconnectedPin(pNullRenderFilter, PINDIR_INPUT, &pRenderInPin));
-	CHECK_HR(hr = mGraph->Connect(pCaptureOutPin, pSmartTeeInPin));
-	CHECK_HR(hr = mGraph->Connect(pSmartTeeCapOutPin, pGrabberInPin));
-	CHECK_HR(hr = mGraph->Connect(pGrabberOutPin, pRenderInPin));
-	CHECK_HR(hr = mGraph->Connect(pSmartTeeCapOutPin, pVMR7InPin));
+	CHECK_HR(hr = FindUnconnectedPin(pNullRenderFilter, PINDIR_INPUT, &pNullRenderInPin));
+
+	if ((hr = FindPinByCategory(mCaptureFilter,
+		PIN_CATEGORY_PREVIEW, PINDIR_OUTPUT, &pCaptureFilterPreviewPin)) != S_OK){
+
+		CHECK_HR(hr = AddFilterByCLSID(mGraph, CLSID_SmartTee, &pSmartTee, L"smart tee"));
+
+		CHECK_HR(hr = FindUnconnectedPin(pSmartTee, PINDIR_INPUT, &pSmartTeeInPin));
+		CHECK_HR(hr = FindUnconnectedPin(pSmartTee, PINDIR_OUTPUT, &pSmartTeePreOutPin));
+		CHECK_HR(hr = FindUnconnectedPin(pSmartTee, PINDIR_OUTPUT, &pSmartTeeCapOutPin));
+
+		CHECK_HR(hr = mGraph->Connect(pCaptureOutPin, pSmartTeeInPin));
+		CHECK_HR(hr = mGraph->Connect(pSmartTeeCapOutPin, pGrabberInPin));
+		CHECK_HR(hr = mGraph->Connect(pGrabberOutPin, pNullRenderInPin));
+	}else{
+		CHECK_HR(hr = mGraph->Connect(pCaptureOutPin, pGrabberInPin));
+		CHECK_HR(hr = mGraph->Connect(pGrabberOutPin, pNullRenderInPin));
+	}
+
+	CHECK_HR(hr = mRender->AddToGraph(mGraph, mWorkParams.parentWindow));
+	//CHECK_HR(hr = mRender->FinalizeGraph(mGraph));
 
 	CHECK_HR(hr = mGrabber->SetMediaType(&mediaType));
 	CHECK_HR(hr = mGrabber->SetCallback(this, 0));
 	CHECK_HR(hr = mGrabber->SetOneShot(FALSE));
-	
-// 	CHECK_HR(hr = mRender->AddToGraph(mGraph, mWorkParams.parentWindow));
-// 	CHECK_HR(hr = mRender->FinalizeGraph(mGraph));
-
-	hr = mGraphBuiler->RenderStream(&PIN_CATEGORY_PREVIEW, &MEDIATYPE_Video, mCaptureFilter, NULL, NULL);
-
-	hr = mGraphBuiler->RenderStream(&PIN_CATEGORY_CAPTURE, 
-		&MEDIATYPE_Video, mCaptureFilter, mGrabberFiler, pNullRenderFilter);
-
-	SaveGraphFile(mGraph, TEXT("C:\\Users\\hotkid\\desktop\\my.grf"));
 
 done:
 	ShowDShowError(hr);
