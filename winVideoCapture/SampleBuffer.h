@@ -41,17 +41,19 @@ public:
 		return TRUE;
 	}
 
-	BOOL FillData(uint8_t *dataBuf, int32_t dataSize, int64_t pts, int32_t pixelFormat){
+	BOOL FillData(FRAME_DESC desc){
 		CAutoLock lock;
-		if (occupy || dataSize > capacity || !dataBuf){
+		if (this->occupy || desc.dataSize > this->capacity || !desc.dataPtr){
 			return FALSE;
 		}
 
-		this->sizeInUse = dataSize;
-		memcpy_s(dataPtr, capacity, dataBuf, sizeInUse);
+		this->sizeInUse = desc.dataSize;
+		memcpy_s(this->dataPtr, this->capacity, desc.dataPtr, desc.dataSize);
 		this->pixelFormat = pixelFormat;
 		this->pts = pts;
-		occupy = TRUE;
+		this->width = desc.width;
+		this->height = desc.height;
+		this->occupy = TRUE;
 
 		return TRUE;
 	}
@@ -66,6 +68,8 @@ public:
 
 private:
 	BOOL occupy;
+	int32_t width;
+	int32_t height;
 	int64_t pts;
 	int32_t pixelFormat;
 	int32_t capacity; // size of buffer 

@@ -73,7 +73,7 @@ HRESULT DShowVideoCapture::Start(OPEN_DEVICE_PARAM params)
 
 	mWorkParams = params;
 
-	mRender = new EVR();
+	mRender = new VMR7();
 	ASSERT(mRender);
 
 	BuildGraph();
@@ -128,6 +128,9 @@ HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 		desc.ptsStart = timeGetTime();
 		desc.ptsEnd = desc.ptsStart + RefTimeToMsec(mWorkParams.avgFrameIntervalInNs);
 	}
+
+	desc.width = mWorkParams.width;
+	desc.height = mWorkParams.height;
 
 	mcb->OnFrame(desc);
 
@@ -222,8 +225,7 @@ HRESULT DShowVideoCapture::SaveGraphFile(IGraphBuilder *pGraph, TCHAR *wszPath)
 		wszPath,
 		STGM_CREATE | STGM_TRANSACTED | STGM_READWRITE | STGM_SHARE_EXCLUSIVE,
 		0, &pStorage);
-	if (FAILED(hr))
-	{
+	if (FAILED(hr)){
 		return hr;
 	}
 
@@ -232,8 +234,7 @@ HRESULT DShowVideoCapture::SaveGraphFile(IGraphBuilder *pGraph, TCHAR *wszPath)
 		wszStreamName,
 		STGM_WRITE | STGM_CREATE | STGM_SHARE_EXCLUSIVE,
 		0, 0, &pStream);
-	if (FAILED(hr))
-	{
+	if (FAILED(hr)){
 		pStorage->Release();
 		return hr;
 	}
@@ -243,8 +244,7 @@ HRESULT DShowVideoCapture::SaveGraphFile(IGraphBuilder *pGraph, TCHAR *wszPath)
 	hr = pPersist->Save(pStream, TRUE);
 	pStream->Release();
 	pPersist->Release();
-	if (SUCCEEDED(hr))
-	{
+	if (SUCCEEDED(hr)){
 		hr = pStorage->Commit(STGC_DEFAULT);
 	}
 	pStorage->Release();

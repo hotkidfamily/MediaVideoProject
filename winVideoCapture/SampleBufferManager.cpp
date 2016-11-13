@@ -44,13 +44,13 @@ errRet:
 	return bRet;
 }
 
-BOOL CSampleBufferManager::FillFrame(uint8_t* data, int32_t dataSize, int64_t pts, int32_t pixelFormat)
+BOOL CSampleBufferManager::FillFrame(FRAME_DESC desc)
 {
 	BOOL bRet = FALSE;
 
 	if (emptyList.size()){
 		CSampleBuffer *sample = emptyList.front();
-		bRet = sample->FillData(data, dataSize, pts, pixelFormat);
+		bRet = sample->FillData(desc);
 		if (bRet){
 			// FixME£º
 			emptyList.pop_front();
@@ -59,7 +59,7 @@ BOOL CSampleBufferManager::FillFrame(uint8_t* data, int32_t dataSize, int64_t pt
 	}
 	else if (readyList.size() > 1){
 		CSampleBuffer *sample = readyList.back();
-		bRet = sample->FillData(data, dataSize, pts, pixelFormat);
+		bRet = sample->FillData(desc);
 	}
 
 	if(!bRet){
