@@ -50,29 +50,6 @@ HRESULT DShowVideoCapture::UnregisterCallback()
 	return S_OK;
 }
 
-HRESULT DShowVideoCapture::GetDShowInterfaces()
-{
-	HRESULT hr = S_OK;
-
-	CHECK_HR(hr = CoCreateInstance(CLSID_FilterGraph, NULL, 
-		CLSCTX_INPROC_SERVER, IID_IGraphBuilder, (void**)&mGraph));
-	CHECK_HR(hr = CoCreateInstance(CLSID_CaptureGraphBuilder2, NULL,
-		CLSCTX_INPROC_SERVER, IID_ICaptureGraphBuilder2, (void**)&mGraphBuiler));
-	CHECK_HR(hr = mGraphBuiler->SetFiltergraph(mGraph));
-
-	CHECK_HR(hr = CoCreateInstance(CLSID_SampleGrabber, NULL,
-		CLSCTX_INPROC_SERVER, IID_ISampleGrabber, (void**)&mGrabber));
-	CHECK_HR(hr = mGrabber->QueryInterface(IID_IBaseFilter, (void**)&mGrabberFiler));
-
-	CHECK_HR(hr = mGraph->QueryInterface(IID_IMediaControl, (void**)&mMediaControl));
-	CHECK_HR(hr = mGraph->QueryInterface(IID_IMediaEventEx, (void**)&mMediaEventEx));
-
-done:
-	ShowDShowError(hr);
-
-	return hr;
-}
-
 bool DShowVideoCapture::Runing()
 {
 	HRESULT hr = S_OK;
@@ -96,7 +73,7 @@ HRESULT DShowVideoCapture::Start(OPEN_DEVICE_PARAM params)
 
 	mWorkParams = params;
 
-	mRender = new VMR7();
+	mRender = new EVR();
 	ASSERT(mRender);
 
 	BuildGraph();
@@ -232,6 +209,70 @@ HRESULT DShowVideoCapture::ReleaseDShowInterfaces()
 	return hr;
 }
 
+
+HRESULT DShowVideoCapture::SaveGraphFile(IGraphBuilder *pGraph, TCHAR *wszPath)
+{
+	const WCHAR wszStreamName[] = L"ActiveMovieGraph";
+	HRESULT hr;
+
+	IStorage *pStorage = NULL;
+	hr = StgCreateDocfile(
+		wszPath,
+		STGM_CREATE | STGM_TRANSACTED | STGM_READWRITE | STGM_SHARE_EXCLUSIVE,
+		0, &pStorage);
+	if (FAILED(hr))
+	{
+		return hr;
+	}
+
+	IStream *pStream;
+	hr = pStorage->CreateStream(
+		wszStreamName,
+		STGM_WRITE | STGM_CREATE | STGM_SHARE_EXCLUSIVE,
+		0, 0, &pStream);
+	if (FAILED(hr))
+	{
+		pStorage->Release();
+		return hr;
+	}
+
+	IPersistStream *pPersist = NULL;
+	pGraph->QueryInterface(IID_IPersistStream, (void**)&pPersist);
+	hr = pPersist->Save(pStream, TRUE);
+	pStream->Release();
+	pPersist->Release();
+	if (SUCCEEDED(hr))
+	{
+		hr = pStorage->Commit(STGC_DEFAULT);
+	}
+	pStorage->Release();
+	return hr;
+}
+
+
+HRESULT DShowVideoCapture::GetDShowInterfaces()
+{
+	HRESULT hr = S_OK;
+
+	CHECK_HR(hr = CoCreateInstance(CLSID_FilterGraph, NULL,
+		CLSCTX_INPROC_SERVER, IID_IGraphBuilder, (void**)&mGraph));
+	CHECK_HR(hr = CoCreateInstance(CLSID_CaptureGraphBuilder2, NULL,
+		CLSCTX_INPROC_SERVER, IID_ICaptureGraphBuilder2, (void**)&mGraphBuiler));
+	CHECK_HR(hr = mGraphBuiler->SetFiltergraph(mGraph));
+
+	CHECK_HR(hr = CoCreateInstance(CLSID_SampleGrabber, NULL,
+		CLSCTX_INPROC_SERVER, IID_ISampleGrabber, (void**)&mGrabber));
+	CHECK_HR(hr = mGrabber->QueryInterface(IID_IBaseFilter, (void**)&mGrabberFiler));
+
+	CHECK_HR(hr = mGraph->QueryInterface(IID_IMediaControl, (void**)&mMediaControl));
+	CHECK_HR(hr = mGraph->QueryInterface(IID_IMediaEventEx, (void**)&mMediaEventEx));
+
+done:
+	ShowDShowError(hr);
+
+	return hr;
+}
+
 HRESULT DShowVideoCapture::BuildGraph()
 {
 	HRESULT hr = E_FAIL;
@@ -240,6 +281,13 @@ HRESULT DShowVideoCapture::BuildGraph()
 	CComPtr<IPin> pRenderInPin = NULL;
 	CComPtr<IPin> pGrabberInPin = NULL;
 	CComPtr<IPin> pGrabberOutPin = NULL;
+	CComPtr<IPin> pPreviewPin = NULL;
+	CComPtr<IPin> pSmartTeeInPin = NULL;
+	CComPtr<IPin> pSmartTeePreOutPin = NULL;
+	CComPtr<IPin> pSmartTeeCapOutPin = NULL;
+	CComPtr<IPin> pVMR7InPin = NULL;
+	CComPtr<IBaseFilter> pSmartTee = NULL;
+	CComPtr<IBaseFilter> pVMR7 = NULL;
 
 	CMediaType mediaType;
 	mediaType.majortype = MEDIATYPE_Video;
@@ -250,28 +298,38 @@ HRESULT DShowVideoCapture::BuildGraph()
 	CHECK_HR(hr = FindFilterByIndex(mWorkParams.index, mCaptureFilter));
 	ASSERT(mCaptureFilter);
 
+	CHECK_HR(hr = AddFilterByCLSID(mGraph, CLSID_SmartTee, &pSmartTee, L"samrt tee"));
+	CHECK_HR(hr = AddFilterByCLSID(mGraph, CLSID_VideoMixingRenderer, &pVMR7, L"Preview Render"));
 	CHECK_HR(hr = mGraph->AddFilter(mCaptureFilter, CAPTURE_FILTER_NAME_STR));
 	CHECK_HR(hr = mGraph->AddFilter(mGrabberFiler, GRABBER_FILTER_NAME_STR));
 	CHECK_HR(hr = mGraph->AddFilter(pNullRenderFilter, RENDER_FILTER_NAME_STR));
 
 	CHECK_HR(hr = FindSultablePin(pCaptureOutPin));
+	CHECK_HR(hr = FindUnconnectedPin(pSmartTee, PINDIR_INPUT, &pSmartTeeInPin));
+	CHECK_HR(hr = FindUnconnectedPin(pSmartTee, PINDIR_OUTPUT, &pSmartTeePreOutPin));
+	CHECK_HR(hr = FindUnconnectedPin(pSmartTee, PINDIR_OUTPUT, &pSmartTeeCapOutPin));
+	CHECK_HR(hr = FindUnconnectedPin(pVMR7, PINDIR_INPUT, &pVMR7InPin));
 	CHECK_HR(hr = FindUnconnectedPin(mGrabberFiler, PINDIR_OUTPUT, &pGrabberOutPin));
 	CHECK_HR(hr = FindUnconnectedPin(mGrabberFiler, PINDIR_INPUT, &pGrabberInPin));
 	CHECK_HR(hr = FindUnconnectedPin(pNullRenderFilter, PINDIR_INPUT, &pRenderInPin));
-	CHECK_HR(hr = mGraph->Connect(pCaptureOutPin, pGrabberInPin));
+	CHECK_HR(hr = mGraph->Connect(pCaptureOutPin, pSmartTeeInPin));
+	CHECK_HR(hr = mGraph->Connect(pSmartTeeCapOutPin, pGrabberInPin));
 	CHECK_HR(hr = mGraph->Connect(pGrabberOutPin, pRenderInPin));
+	CHECK_HR(hr = mGraph->Connect(pSmartTeeCapOutPin, pVMR7InPin));
 
 	CHECK_HR(hr = mGrabber->SetMediaType(&mediaType));
 	CHECK_HR(hr = mGrabber->SetCallback(this, 0));
 	CHECK_HR(hr = mGrabber->SetOneShot(FALSE));
 	
-	CHECK_HR(hr = mRender->AddToGraph(mGraph, mWorkParams.parentWindow));
-	CHECK_HR(hr = mRender->FinalizeGraph(mGraph));
+// 	CHECK_HR(hr = mRender->AddToGraph(mGraph, mWorkParams.parentWindow));
+// 	CHECK_HR(hr = mRender->FinalizeGraph(mGraph));
 
-	mGraphBuiler->RenderStream(&PIN_CATEGORY_PREVIEW, &MEDIATYPE_Video, mCaptureFilter, NULL, NULL);
+	hr = mGraphBuiler->RenderStream(&PIN_CATEGORY_PREVIEW, &MEDIATYPE_Video, mCaptureFilter, NULL, NULL);
 
-	CHECK_HR(hr = mGraphBuiler->RenderStream(&PIN_CATEGORY_CAPTURE, 
-		&MEDIATYPE_Video, mCaptureFilter, mGrabberFiler, pNullRenderFilter));
+	hr = mGraphBuiler->RenderStream(&PIN_CATEGORY_CAPTURE, 
+		&MEDIATYPE_Video, mCaptureFilter, mGrabberFiler, pNullRenderFilter);
+
+	SaveGraphFile(mGraph, TEXT("C:\\Users\\hotkid\\desktop\\my.grf"));
 
 done:
 	ShowDShowError(hr);

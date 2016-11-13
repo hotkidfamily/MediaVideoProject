@@ -80,6 +80,8 @@ private:
 	HRESULT FindSultablePin(CComPtr<IPin> &pOutPin);
 	HRESULT FindVideoConfigByStreamConfig(CComPtr<IAMStreamConfig> &pConfig);
 
+	HRESULT SaveGraphFile(IGraphBuilder*, TCHAR* path);
+
 private:
 	IGraphBuilder *mGraph;
 	ICaptureGraphBuilder2 *mGraphBuiler;
