@@ -30,6 +30,9 @@
     <ClCompile Include="encoder_x264.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="interfaces.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h">

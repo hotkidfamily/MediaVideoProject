@@ -83,7 +83,7 @@ bool CLibx264::addFrame(const CSampleBuffer &inputFrame)
 		break;
 	case PIXEL_FORMAT_I420:
 		inpic.img.i_csp = X264_CSP_I420;
-		inpic.img.i_plane = 1;
+		inpic.img.i_plane = 3;
 		inpic.img.plane[0] = inputFrame.GetDataPtr();
 		inpic.img.i_stride[0] = inputFrame.GetWidth();
 		break;
