@@ -86,11 +86,7 @@ public:
 	// step 2, start capture
 	virtual HRESULT StartCaptureWithParam(OPEN_DEVICE_PARAM) = 0;
 	
-	// step 3.0 repaint when window have been mask
-	virtual HRESULT Repaint(HDC hdc) = 0;
-	// step 3.1 update widow position when move window
-	virtual HRESULT UpdateVideoWindow(HWND hWnd, const LPRECT prc) = 0;
-	// step 3.2 other feature support: show property setting window
+	// step 3.x other feature support: show property setting window
 	virtual HRESULT ShowPropertyWindow(HWND parentWindowHandle) = 0;
 
 	// step 4, close capture

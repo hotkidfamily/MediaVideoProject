@@ -7,6 +7,7 @@
 #define CAPTURE_FILTER_NAME_STR (TEXT("Capture Filter"))
 #define RENDER_FILTER_NAME_STR (TEXT("NULL Render Filter"))
 #define GRABBER_FILTER_NAME_STR (TEXT("Grabber Filter"))
+#define JPEGDEC_FILTER_NAME_STR (TEXT("JPEG DEC"))
 
 using namespace ATL;
 
@@ -15,7 +16,6 @@ DShowVideoCapture::DShowVideoCapture()
 	, mGraphBuiler(NULL)
 	, mMediaControl(NULL)
 	, mMediaEventEx(NULL)
-	, mRender(NULL)
 	, mDropFrameStatus(NULL)
 	, mCaptureFilter(NULL)
 	, mGrabberFiler(NULL)
@@ -73,9 +73,6 @@ HRESULT DShowVideoCapture::Start(OPEN_DEVICE_PARAM params)
 
 	mWorkParams = params;
 
-	mRender = new VMR7();
-	ASSERT(mRender);
-
 	BuildGraph();
 
 	while (hr = mMediaControl->Run() != S_OK){
@@ -89,7 +86,7 @@ HRESULT DShowVideoCapture::Start(OPEN_DEVICE_PARAM params)
 
 	ShowDShowError(hr);
 
-	SaveGraphFile(mGraph, TEXT("C:\\Users\\hotkid\\desktop\\my.grf"));
+	SaveGraphFile(mGraph, TEXT("d:\\my.grf"));
 
 	return hr;
 }
@@ -97,8 +94,6 @@ HRESULT DShowVideoCapture::Start(OPEN_DEVICE_PARAM params)
 HRESULT DShowVideoCapture::Stop()
 {
 	ASSERT(mMediaControl);
-
-	SAFE_DELETE(mRender);
 
 	if (mDropFrameStatus){
 		long capFrameCount = 0;
@@ -139,20 +134,6 @@ done:
 	mFpsStats.appendDataSize(1);
 
 	return hr;
-}
-
-HRESULT DShowVideoCapture::Repaint(HDC hdc)
-{
-	ASSERT(mRender != NULL);
-
-	return mRender->Repaint(mWorkParams.parentWindow, hdc);
-}
-
-HRESULT DShowVideoCapture::UpdateVideoWindow(HWND hWnd, const LPRECT prc)
-{
-	ASSERT(mRender != NULL);
-
-	return mRender->UpdateVideoWindow(hWnd, prc);
 }
 
 HRESULT DShowVideoCapture::ShowCapturePropertyWindow()
@@ -207,11 +188,6 @@ HRESULT DShowVideoCapture::ReleaseDShowInterfaces()
 	SAFE_RELEASE(mGraphBuiler);
 	SAFE_RELEASE(mGraph);
 
-	if (mRender){
-		delete mRender;
-		mRender = NULL;
-	}
-	
 	return hr;
 }
 
@@ -261,6 +237,7 @@ HRESULT DShowVideoCapture::GetDShowInterfaces()
 		CLSCTX_INPROC_SERVER, IID_IGraphBuilder, (void**)&mGraph));
 	CHECK_HR(hr = CoCreateInstance(CLSID_CaptureGraphBuilder2, NULL,
 		CLSCTX_INPROC_SERVER, IID_ICaptureGraphBuilder2, (void**)&mGraphBuiler));
+
 	CHECK_HR(hr = mGraphBuiler->SetFiltergraph(mGraph));
 
 	CHECK_HR(hr = CoCreateInstance(CLSID_SampleGrabber, NULL,
@@ -279,25 +256,23 @@ done:
 HRESULT DShowVideoCapture::BuildGraph()
 {
 	HRESULT hr = E_FAIL;
-	CComPtr<IBaseFilter> pSmartTee = NULL;
 	CComPtr<IBaseFilter> pNullRenderFilter = NULL;
+	CComPtr<IBaseFilter> pJpegDecFilter = NULL;
 	CComPtr<IPin> pCaptureOutPin = NULL;
 	CComPtr<IPin> pNullRenderInPin = NULL;
 	CComPtr<IPin> pGrabberInPin = NULL;
 	CComPtr<IPin> pGrabberOutPin = NULL;
-	CComPtr<IPin> pCaptureFilterPreviewPin = NULL;
-	CComPtr<IPin> pSmartTeeInPin = NULL;
-	CComPtr<IPin> pSmartTeePreOutPin = NULL;
-	CComPtr<IPin> pSmartTeeCapOutPin = NULL;
 
 	CMediaType mediaType;
 	mediaType.majortype = MEDIATYPE_Video;
-	mediaType.subtype = MEDIASUBTYPE_YUY2;
+	mediaType.subtype = MEDIASUBTYPE_NULL;
+	CHECK_HR(hr = mGrabber->SetMediaType(&mediaType));
 
-	CHECK_HR(CoCreateInstance(CLSID_NullRenderer, NULL,
+	CHECK_HR(hr = CoCreateInstance(CLSID_NullRenderer, NULL,
 		CLSCTX_INPROC_SERVER, IID_IBaseFilter, (void**)&pNullRenderFilter));
 
 	CHECK_HR(hr = FindFilterByIndex(mWorkParams.index, mCaptureFilter));
+
 	ASSERT(mCaptureFilter);
 
 	CHECK_HR(hr = mGraph->AddFilter(mCaptureFilter, CAPTURE_FILTER_NAME_STR));
@@ -310,27 +285,22 @@ HRESULT DShowVideoCapture::BuildGraph()
 	CHECK_HR(hr = FindUnconnectedPin(mGrabberFiler, PINDIR_INPUT, &pGrabberInPin));
 	CHECK_HR(hr = FindUnconnectedPin(pNullRenderFilter, PINDIR_INPUT, &pNullRenderInPin));
 
-	if ((hr = FindPinByCategory(mCaptureFilter,
-		PIN_CATEGORY_PREVIEW, PINDIR_OUTPUT, &pCaptureFilterPreviewPin)) != S_OK){
-
-		CHECK_HR(hr = AddFilterByCLSID(mGraph, CLSID_SmartTee, &pSmartTee, L"smart tee"));
-
-		CHECK_HR(hr = FindUnconnectedPin(pSmartTee, PINDIR_INPUT, &pSmartTeeInPin));
-		CHECK_HR(hr = FindUnconnectedPin(pSmartTee, PINDIR_OUTPUT, &pSmartTeePreOutPin));
-		CHECK_HR(hr = FindUnconnectedPin(pSmartTee, PINDIR_OUTPUT, &pSmartTeeCapOutPin));
-
-		CHECK_HR(hr = mGraph->Connect(pCaptureOutPin, pSmartTeeInPin));
-		CHECK_HR(hr = mGraph->Connect(pSmartTeeCapOutPin, pGrabberInPin));
+	if (mWorkMediaType.subTypeEqual(MEDIASUBTYPE_MJPG)){
+		CComPtr<IPin> pJpegDecInPin = NULL;
+		CComPtr<IPin> pJpegDecOutPin = NULL;
+		CHECK_HR(hr = CoCreateInstance(CLSID_MjpegDec, NULL, CLSCTX_INPROC_SERVER, IID_IBaseFilter, (void**)&pJpegDecFilter));
+		CHECK_HR(hr = mGraph->AddFilter(pJpegDecFilter, JPEGDEC_FILTER_NAME_STR));
+		CHECK_HR(hr = FindUnconnectedPin(pJpegDecFilter, PINDIR_INPUT, &pJpegDecInPin));
+		CHECK_HR(hr = FindUnconnectedPin(pJpegDecFilter, PINDIR_OUTPUT, &pJpegDecOutPin));
+		CHECK_HR(hr = mGraph->Connect(pCaptureOutPin, pJpegDecInPin));
+		CHECK_HR(hr = mGraph->Connect(pJpegDecOutPin, pGrabberInPin));
 		CHECK_HR(hr = mGraph->Connect(pGrabberOutPin, pNullRenderInPin));
+		mWorkMediaType.SetSubtype(&MEDIASUBTYPE_RGB32);
 	}else{
 		CHECK_HR(hr = mGraph->Connect(pCaptureOutPin, pGrabberInPin));
 		CHECK_HR(hr = mGraph->Connect(pGrabberOutPin, pNullRenderInPin));
 	}
 
-	//CHECK_HR(hr = mRender->AddToGraph(mGraph, mWorkParams.parentWindow));
-	//CHECK_HR(hr = mRender->FinalizeGraph(mGraph));
-
-	CHECK_HR(hr = mGrabber->SetMediaType(&mediaType));
 	CHECK_HR(hr = mGrabber->SetCallback(this, 0));
 	CHECK_HR(hr = mGrabber->SetOneShot(FALSE));
 
@@ -452,6 +422,7 @@ HRESULT DShowVideoCapture::FindFilterByIndex(int index, IBaseFilter * &filter)
 		if (pM->BindToStorage(0, 0, IID_IPropertyBag, (void**)&pProperty) == S_OK){
 			pProperty->Read(TEXT("FriendlyName"), &name, 0);
 			pProperty->Read(TEXT("DevicePath"), &path, 0);
+			pProperty.Release();
 
 			CAMERADESC dev(name, path);
 

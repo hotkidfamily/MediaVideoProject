@@ -78,7 +78,7 @@ BOOL StartWork(THIS_CONTEXT *ctx)
 
 		ctx->pVideoCapture->RegisterCallback(ctx->callBack);
 		ctx->captureArgs.parentWindow = ctx->mainWnd;
-		ctx->captureArgs.index = 0;
+		ctx->captureArgs.index = 1;
 		ctx->captureArgs.avgFrameIntervalInNs = FramesPerSecToRefTime(25);
 		ctx->captureArgs.width = 1280;
 		ctx->captureArgs.height = 720;
@@ -312,9 +312,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
 		// TODO: Add any drawing code here...
-		if (gContext->pVideoCapture)
-			gContext->pVideoCapture->Repaint(hdc);
-
 		EndPaint(hWnd, &ps);
 		break;
 	case WM_DESTROY:

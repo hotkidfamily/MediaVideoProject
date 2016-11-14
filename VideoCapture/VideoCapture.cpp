@@ -65,20 +65,6 @@ HRESULT IVideoCaptureDelegate::ShowPropertyWindow(HWND parentWindowHandle)
 	return hr;
 }
 
-HRESULT IVideoCaptureDelegate::Repaint(HDC hdc)
-{
-	HRESULT hr = S_OK;
-	mDShowCapture->Repaint(hdc);
-	return hr;
-}
-
-HRESULT IVideoCaptureDelegate::UpdateVideoWindow(HWND hWnd, const LPRECT pRC)
-{
-	HRESULT hr = S_OK;
-	mDShowCapture->UpdateVideoWindow(hWnd, pRC);
-	return hr;
-}
-
 HRESULT IVideoCaptureDelegate::UnRegisterCallback()
 {
 	mDShowCapture->UnregisterCallback();

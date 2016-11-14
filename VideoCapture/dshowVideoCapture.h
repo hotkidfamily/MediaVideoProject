@@ -62,8 +62,6 @@ public:
 	HRESULT Start(OPEN_DEVICE_PARAM);
 	HRESULT EnumCaptureDevices();
 	HRESULT GetDevicesName(VECT &);
-	HRESULT Repaint(HDC hdc);
-	HRESULT UpdateVideoWindow(HWND hWnd, const LPRECT prc);
 	HRESULT ShowCapturePropertyWindow();
 	HRESULT RegisterCallback(VideoCaptureCallback *cb);
 	HRESULT UnregisterCallback();
@@ -87,7 +85,6 @@ private:
 	ICaptureGraphBuilder2 *mGraphBuiler;
 	IMediaControl *mMediaControl;
 	IMediaEventEx *mMediaEventEx;
-	BaseVideoRenderer *mRender;
 	IAMDroppedFrames *mDropFrameStatus;
 
 	long mCapFrames;

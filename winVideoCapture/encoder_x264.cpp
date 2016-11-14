@@ -80,6 +80,9 @@ bool CLibx264::addFrame(const CSampleBuffer &inputFrame)
 	case PIXEL_FORMAT_I420:
 		inpic.img.i_csp = X264_CSP_I420;
 		break;
+	case PIXEL_FORMAT_RGB32:
+		inpic.img.i_csp = X264_CSP_BGRA;
+		break;
 	default:
 		return false;
 	}
