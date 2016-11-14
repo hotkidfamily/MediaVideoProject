@@ -8,7 +8,7 @@ CLibx264::CLibx264()
 
 CLibx264::~CLibx264()
 {
-
+	close();
 }
 
 bool CLibx264::open()
@@ -25,7 +25,9 @@ bool CLibx264::open()
 
 void CLibx264::close()
 {
-	x264_encoder_close(mCodecHandle);
+	flushEncodeCache();
+	if (mCodecHandle)
+		x264_encoder_close(mCodecHandle);
 }
 
 bool CLibx264::setConfig(const ENCODEC_CFG &config)
@@ -36,9 +38,9 @@ bool CLibx264::setConfig(const ENCODEC_CFG &config)
 
 	x264_param_default(&mCodecParams);
 
-	mCodecParams.rc.i_vbv_max_bitrate = config.maxBitrate / 1000;
-	mCodecParams.rc.i_vbv_buffer_size = config.maxBitrate / 1000;
-	mCodecParams.rc.i_bitrate = config.avgBitrate / 1000;
+	mCodecParams.rc.i_vbv_max_bitrate = config.maxBitrateInKb;
+	mCodecParams.rc.i_vbv_buffer_size = config.maxBitrateInKb;
+	mCodecParams.rc.i_bitrate = config.avgBitrateInKb;
 	mCodecParams.rc.i_rc_method = X264_RC_ABR;
 	mCodecParams.rc.f_rf_constant = 0.0f; // cbr
 
@@ -85,6 +87,9 @@ bool CLibx264::addFrame(const CSampleBuffer &inputFrame)
 	inpic.img.plane[0] = inputFrame.GetDataPtr();
 	inpic.img.plane[1] = inpic.img.plane[0] + inputFrame.GetWidth() *inputFrame.GetHeight();
 	inpic.img.plane[2] = inpic.img.plane[1] + inputFrame.GetWidth() *inputFrame.GetHeight() / 2;
+	inpic.img.i_stride[0] = inputFrame.GetWidth();
+	inpic.img.i_stride[1] = inputFrame.GetWidth();
+	inpic.img.i_stride[2] = inputFrame.GetWidth();
 
 	encodeFrame(&inpic);
 	return true;
@@ -241,9 +246,12 @@ void CLibx264::flushEncodeCache()
 						}\
 			} while (0)
 
+#include <comutil.h>
 bool CLibx264::parseConfigString()
 {
-	char *pCsConfig = (char*)mWorkConfig.extraParams;
+	_bstr_t b(mWorkConfig.cfgStr.c_str());
+	const char* pCsConfig = b;
+
 	char param[256] = { '\0' }, val[256] = { '\0' };
 
 	if (!pCsConfig || strlen(pCsConfig) <= 0){

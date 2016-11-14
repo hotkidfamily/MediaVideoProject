@@ -6,6 +6,7 @@
 #include "winVideoCapture.h"
 #include <windowsx.h>
 #include "VideoCallback.h"
+#include "encoder_x264.h"
 #include "dshowutil.h"
 
 
@@ -18,11 +19,14 @@ typedef struct tagProgramContext{
 	TCHAR szTitle[MAX_LOADSTRING];
 	TCHAR szWindowClass[MAX_LOADSTRING];
 	HWND mainWnd;
+	OPEN_DEVICE_PARAM captureArgs;
 	IVideoCapture *pVideoCapture;
 	CVideoCallback *callBack;
 	BOOL bRuning;
 	HANDLE hWorkThread;
 	DWORD dwThreadId;
+	ENCODEC_CFG encoderArgs;
+	CLibx264 *encoder;
 	tagProgramContext(){
 		ZeroMemory(this, sizeof(struct tagProgramContext));
 	}
@@ -69,15 +73,15 @@ BOOL StartWork(THIS_CONTEXT *ctx)
 	if (!ctx->bRuning){
 		ctx->callBack = new CVideoCallback;
 		assert(ctx->callBack);
-		ctx->pVideoCapture->RegisterCallback(ctx->callBack);
 
-		OPEN_DEVICE_PARAM devices;
-		devices.parentWindow = ctx->mainWnd;
-		devices.index = 0;
-		devices.avgFrameIntervalInNs = FramesPerSecToRefTime(25);
-		devices.width = 1280;
-		devices.height = 720;
-		bRet = ctx->pVideoCapture->StartCaptureWithParam(devices);
+		ctx->pVideoCapture->RegisterCallback(ctx->callBack);
+		ctx->captureArgs.parentWindow = ctx->mainWnd;
+		ctx->captureArgs.index = 0;
+		ctx->captureArgs.avgFrameIntervalInNs = FramesPerSecToRefTime(25);
+		ctx->captureArgs.width = 1280;
+		ctx->captureArgs.height = 720;
+		bRet = ctx->pVideoCapture->StartCaptureWithParam(ctx->captureArgs);
+
 		ctx->bRuning = TRUE;
 	}
 	else{
@@ -93,6 +97,7 @@ BOOL StopWork(THIS_CONTEXT *ctx)
 	ctx->pVideoCapture->StopCapture();
 	ctx->pVideoCapture->UnRegisterCallback();
 
+	SAFE_DELETE(ctx->encoder);
 	SAFE_DELETE(ctx->callBack);
 
 	ReleaseVideoCaptureObj(ctx->pVideoCapture);
@@ -101,6 +106,21 @@ BOOL StopWork(THIS_CONTEXT *ctx)
 
 DWORD WINAPI EncoderThread(LPVOID args)
 {
+	THIS_CONTEXT * ctx = (THIS_CONTEXT *)args;
+	while (1){
+		CSampleBuffer* buffer = NULL;
+		if (ctx->callBack->GetFrame(buffer)){
+			if (buffer == NULL){
+				printf("%s", "error");
+			}
+			ctx->encoder->addFrame(*buffer);
+			ctx->callBack->ReleaseFrame(buffer);
+		}
+		//ctx->encoder->addFrame(*buffer);
+
+		Sleep(1);
+	}
+	
 	return TRUE;
 }
 
@@ -108,6 +128,22 @@ BOOL CreateWorkThread(THIS_CONTEXT *ctx)
 {
 	ctx->hWorkThread = CreateThread(NULL, 0, EncoderThread, ctx, 0, &(ctx->dwThreadId));
 	return TRUE;
+}
+
+BOOL SetupEncodeWork(THIS_CONTEXT *ctx)
+{
+	ctx->encoder = new CLibx264;
+	assert(ctx->encoder);
+	ctx->encoderArgs.fps = 25;
+	ctx->encoderArgs.width = ctx->captureArgs.width;
+	ctx->encoderArgs.height = ctx->captureArgs.height;
+	ctx->encoderArgs.avgBitrateInKb = 2000;
+	ctx->encoderArgs.minBitrateInKb = 2000;
+	ctx->encoderArgs.maxBitrateInKb = 2000;
+	ctx->encoderArgs.cfgStr.append(TEXT("keyint=75:min-keyint=75:scenecut=0:bframes=2:b-adapt=0:b-pyramid=none:threads=2:sliced-threads=0:ref=2:subme=6:me=hex:analyse=i4x4,i8x8,p8x8,p4x4,b8x8:direct=spatial:weightp=1:weightb=1:8x8dct=1:cabac=1:deblock=0,0:psy=0:trellis=0:aq-mode=1:rc-lookahead=0:sync-lookahead=0:mbtree=0:"));
+	
+	ctx->encoder->setConfig(ctx->encoderArgs);
+	return ctx->encoder->open();
 }
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
@@ -120,6 +156,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	gContext = new THIS_CONTEXT;
 	assert(gContext);
 	gContext->hInst = hInstance;
+
 
  	// TODO: Place code here.
 	MSG msg;
@@ -141,8 +178,9 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	gContext->pVideoCapture = GetVideoCaptureObj();
 	assert(gContext->pVideoCapture);
 	AddDevicesToMenu(gContext);
-	CreateWorkThread(gContext);
 	StartWork(gContext);
+	SetupEncodeWork(gContext);
+	CreateWorkThread(gContext);
 
 	// Main message loop:
 	while (GetMessage(&msg, NULL, 0, 0))

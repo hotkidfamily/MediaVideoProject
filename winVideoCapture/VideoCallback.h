@@ -13,8 +13,8 @@ public:
 	virtual void OnEvent(EVENT_INDEX, EVENT_CONTEXT) ;
 
 	// thread just get frame, when per 10ms??
-	BOOL GetFrame(CSampleBuffer *);
-	BOOL ReleaseFrame(CSampleBuffer *);
+	BOOL GetFrame(CSampleBuffer *&);
+	BOOL ReleaseFrame(CSampleBuffer *&);
 
 private:
 	CSampleBufferManager mBufferManager;

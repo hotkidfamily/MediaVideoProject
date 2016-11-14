@@ -131,6 +131,7 @@ HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 
 	desc.width = mWorkParams.width;
 	desc.height = mWorkParams.height;
+	desc.pixelFormatInFourCC = mWorkMediaType.subtype.Data1;
 
 	mcb->OnFrame(desc);
 
@@ -326,7 +327,7 @@ HRESULT DShowVideoCapture::BuildGraph()
 		CHECK_HR(hr = mGraph->Connect(pGrabberOutPin, pNullRenderInPin));
 	}
 
-	CHECK_HR(hr = mRender->AddToGraph(mGraph, mWorkParams.parentWindow));
+	//CHECK_HR(hr = mRender->AddToGraph(mGraph, mWorkParams.parentWindow));
 	//CHECK_HR(hr = mRender->FinalizeGraph(mGraph));
 
 	CHECK_HR(hr = mGrabber->SetMediaType(&mediaType));

@@ -19,6 +19,7 @@ BOOL CSampleBufferManager::Reset(int32_t res, int32_t nbFrames)
 	int32_t index = 0;
 	int32_t buffSizePreFrame = GetFrameSizeByRes(res);
 	BUFFLIST::iterator it;
+	mListLock.Lock();
 
 	ClearWorkStatus();
 
@@ -34,19 +35,20 @@ BOOL CSampleBufferManager::Reset(int32_t res, int32_t nbFrames)
 
 	emptyList.resize(nbFrames);
 	for (it = emptyList.begin(); it != emptyList.end(); it++){
-		*it = new CSampleBuffer;
-		(*it)->Reset(mBufferPtr + index*buffSizePreFrame, buffSizePreFrame);
+		*it = new CSampleBuffer(mBufferPtr + index*buffSizePreFrame, buffSizePreFrame);
 	}
 
 	bRet = TRUE;
 
 errRet:
+	mListLock.Unlock();
 	return bRet;
 }
 
 BOOL CSampleBufferManager::FillFrame(FRAME_DESC desc)
 {
 	BOOL bRet = FALSE;
+	mListLock.Lock();
 
 	if (emptyList.size()){
 		CSampleBuffer *sample = emptyList.front();
@@ -66,33 +68,38 @@ BOOL CSampleBufferManager::FillFrame(FRAME_DESC desc)
 		// drop one frame
 	}
 
+	mListLock.Unlock();
 	return bRet;
 }
 
-BOOL CSampleBufferManager::LockFrame(CSampleBuffer *buf)
+BOOL CSampleBufferManager::LockFrame(CSampleBuffer *&buf)
 {
 	BOOL bRet = FALSE;
+	mListLock.Lock();
 
 	if (readyList.size()){
 		CSampleBuffer *sample = readyList.front();
 		buf = sample;
-		readyList.pop_front();
 		occupyList.push_back(sample);
+		readyList.pop_front();
 		bRet = TRUE;
 	}
 
+	mListLock.Unlock();
 	return bRet;
 }
 
-BOOL CSampleBufferManager::UnlockFrame(CSampleBuffer *buf)
+BOOL CSampleBufferManager::UnlockFrame(CSampleBuffer *&sample)
 {
 	BOOL bRet = TRUE;
+	mListLock.Lock();
 
-	if (buf){
-		emptyList.push_back(buf);
-		occupyList.remove(buf);
+	if (sample){
+		emptyList.push_back(sample);
+		occupyList.remove(sample);
 	}
 
+	mListLock.Unlock();
 	return bRet;
 }
 

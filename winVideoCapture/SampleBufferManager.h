@@ -16,7 +16,6 @@ enum resList{
 
 #define ALIGN32(x) ((x + 0x1F) & (~0x1F))
 
-
 typedef std::list<CSampleBuffer*> BUFFLIST;
 
 class CSampleBufferManager
@@ -26,8 +25,8 @@ public:
 	~CSampleBufferManager();
 	
 	BOOL Reset(int32_t resOfFrames, int32_t nbFrames);
-	BOOL LockFrame(CSampleBuffer *);
-	BOOL UnlockFrame(CSampleBuffer *);
+	BOOL LockFrame(CSampleBuffer *&);
+	BOOL UnlockFrame(CSampleBuffer *&);
 	BOOL FillFrame(FRAME_DESC);
 
 protected:
@@ -44,5 +43,7 @@ private:
 
 	uint8_t *mBufferPtr;
 	int64_t mBufferSize;
+
+	CLock mListLock;
 };
 

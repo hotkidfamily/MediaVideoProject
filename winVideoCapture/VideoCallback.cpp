@@ -23,15 +23,12 @@ void CVideoCallback::OnEvent(EVENT_INDEX index, EVENT_CONTEXT context)
 	// place hold
 }
 
-BOOL CVideoCallback::GetFrame(CSampleBuffer *pSample)
+BOOL CVideoCallback::GetFrame(CSampleBuffer *&pSample)
 {
-	mBufferManager.LockFrame(pSample);
-
-	return TRUE;
+	return mBufferManager.LockFrame(pSample);
 }
 
-BOOL CVideoCallback::ReleaseFrame(CSampleBuffer * pSample)
+BOOL CVideoCallback::ReleaseFrame(CSampleBuffer *&pSample)
 {
-	mBufferManager.UnlockFrame(pSample);
-	return TRUE;
+	return mBufferManager.UnlockFrame(pSample);
 }

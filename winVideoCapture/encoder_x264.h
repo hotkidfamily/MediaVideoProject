@@ -16,9 +16,9 @@ typedef struct tagEncodecConfig
 	uint32_t width;
 	uint32_t height;
 	uint32_t fps;
-	uint32_t avgBitrate;
-	uint32_t maxBitrate;
-	uint32_t minBitrate;
+	uint32_t avgBitrateInKb;
+	uint32_t maxBitrateInKb;
+	uint32_t minBitrateInKb;
 	// pps sps vps etc.
 	uint8_t *extraData;
 	uint32_t extraDataSize;
@@ -27,17 +27,6 @@ typedef struct tagEncodecConfig
 	// reserved for future
 	void *extraParams;
 }ENCODEC_CFG, *PENCODEC_CFG;
-
-#define TO_STR(x) #x
-const char* frameTypeStr[] =
-{
-	TO_STR(ERR_FRAME),
-	TO_STR(P_FRAME),
-	TO_STR(I_FRAME),
-	TO_STR(IDR_FRAME),
-	TO_STR(B_FRAME)
-};
-#undef TO_STR
 
 struct DwVideoPackage
 {
@@ -71,7 +60,6 @@ struct DwVideoPackage
 	bool isBFrame() const { return frameType == B_FRAME; }
 	bool isPFrame() const { return frameType == P_FRAME; }
 	bool isErrFrame() const { return frameType == ERR_FRAME; }
-	const char* getFrameTypeName() { return frameTypeStr[frameType]; }
 
 	uint8_t *packageData;
 	uint32_t packageDataSize;
