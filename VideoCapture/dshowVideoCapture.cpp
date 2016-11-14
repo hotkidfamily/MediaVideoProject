@@ -412,6 +412,8 @@ HRESULT DShowVideoCapture::FindSultablePin(CComPtr<IPin> &pOutPin)
 		pConfig.Release();
 	}
 
+	CHECK_HR(hr);
+
 	pOutPin = pPin;
 	
 	mWorkMediaType.SetAvgReferenceTime(mWorkParams.avgFrameIntervalInNs);

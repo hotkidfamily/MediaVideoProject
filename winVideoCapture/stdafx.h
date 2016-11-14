@@ -22,3 +22,9 @@
 #ifndef SAFE_DELETE
 #define SAFE_DELETE(x)  {if(x) delete (x); (x)= NULL;}
 #endif
+
+#ifdef UNICODE
+#define STRING std::wstring
+#else
+#define STRING std::string
+#endif
