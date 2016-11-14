@@ -16,11 +16,13 @@ attention:
 */
 
 typedef enum tagPixelFormat{
-	PIXEL_FORMAT_I420 = 'I420', //yuv 4:2:0 planar
+	PIXEL_FORMAT_I420 = '024I', //YUV 4:2:0 planar
 	PIXEL_FORMAT_RGB24 = 0xe436eb7d,
 	PIXEL_FORMAT_RGB32 = 0xe436eb7e,
-	PIXEL_FORMAT_YV12 = 'YV12', //yvu 4:2:0 planar
-	PIXEL_FORMAT_NV12 = 'NV12', //yuv 4:2:0, with one y plane and one packed u+v
+	PIXEL_FORMAT_YV12 = '21VY', //YVU 4:2:0 planar == YUV420p
+	PIXEL_FORMAT_NV12 = '21VN', //YUV 4:2:0, with one y plane and one packed u+v
+	PIXEL_FORMAT_YUY2 = '2YUY', //YUV 4:2:2, with y+u+y+v packed
+	PIXEL_FORMAT_YVYU = 'UYVY', //YUV 4:2:2, with Y+V+Y+U packed top bottom
 };
 
 

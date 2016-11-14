@@ -49,7 +49,7 @@ bool CLibx264::setConfig(const ENCODEC_CFG &config)
 	mCodecParams.rc.i_bitrate = config.avgBitrateInKb;
 	mCodecParams.rc.i_rc_method = X264_RC_ABR;
 
-	mCodecParams.i_csp = X264_CSP_RGB;
+	mCodecParams.i_csp = X264_CSP_NV16;
 	mCodecParams.i_width = config.width;
 	mCodecParams.i_height = config.height;
 
@@ -92,6 +92,16 @@ bool CLibx264::addFrame(const CSampleBuffer &inputFrame)
 		inpic.img.i_plane = 1;
 		inpic.img.plane[0] = inputFrame.GetDataPtr();
 		inpic.img.i_stride[0] = inputFrame.GetWidth()*4;
+		break;
+	case PIXEL_FORMAT_YUY2:
+		inpic.img.i_csp = X264_CSP_NV16;
+		inpic.img.i_plane = 2;
+		inpic.img.plane[0] = inputFrame.GetDataPtr();
+		inpic.img.plane[1] = inpic.img.plane[0] + inputFrame.GetWidth()*inputFrame.GetHeight();
+		inpic.img.plane[2] = inpic.img.plane[1];
+		inpic.img.i_stride[0] = inputFrame.GetWidth();
+		inpic.img.i_stride[1] = inputFrame.GetWidth();
+		inpic.img.i_stride[2] = inputFrame.GetWidth();
 		break;
 	default:
 		return false;

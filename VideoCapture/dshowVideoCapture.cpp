@@ -325,7 +325,8 @@ HRESULT DShowVideoCapture::GetDevicesName(VECT &cameNames)
 
 HRESULT DShowVideoCapture::FindVideoConfigByStreamConfig(CComPtr<IAMStreamConfig> &pConfig)
 {
-	HRESULT hr = E_FAIL;
+	HRESULT hr = S_OK;
+	HRESULT hrRet = E_FAIL;
 	int cfgCnt = 0;
 	int cfgSize = 0;
 
@@ -335,7 +336,7 @@ HRESULT DShowVideoCapture::FindVideoConfigByStreamConfig(CComPtr<IAMStreamConfig
 	for (int i = 0; i < cfgCnt; i++){
 		CMediaType *mediaType = NULL;
 		VIDEO_STREAM_CONFIG_CAPS caps;
-		if (hr = pConfig->GetStreamCaps(i, (AM_MEDIA_TYPE**)&mediaType, (BYTE*)&caps) == S_OK){
+		if ((hr = pConfig->GetStreamCaps(i, (AM_MEDIA_TYPE**)&mediaType, (BYTE*)&caps)) == S_OK){
 			if (mediaType->isVideoInfoHeader()){
 				if (mWorkParams.avgFrameIntervalInNs >= caps.MinFrameInterval
 					&& mWorkParams.avgFrameIntervalInNs <= caps.MaxFrameInterval){
@@ -345,7 +346,7 @@ HRESULT DShowVideoCapture::FindVideoConfigByStreamConfig(CComPtr<IAMStreamConfig
 
 						mWorkMediaType.Set(*mediaType);
 
-						hr = S_OK;
+						hrRet = S_OK;
 						break;
 					}
 				}
@@ -355,7 +356,8 @@ HRESULT DShowVideoCapture::FindVideoConfigByStreamConfig(CComPtr<IAMStreamConfig
 
 done:
 	ShowDShowError(hr);
-	return hr;
+
+	return hrRet;
 }
 
 HRESULT DShowVideoCapture::FindSultablePin(CComPtr<IPin> &pOutPin)

@@ -83,8 +83,7 @@ BOOL StartWork(THIS_CONTEXT *ctx)
 
 		ctx->pVideoCapture->RegisterCallback(ctx->callBack);
 		ctx->captureArgs.parentWindow = ctx->mainWnd;
-		ctx->captureArgs.index = 0;
-		ctx->captureArgs.avgFrameIntervalInNs = FramesPerSecToRefTime(25);
+		ctx->captureArgs.avgFrameIntervalInNs = FramesPerSecToRefTime(30);
 		ctx->captureArgs.width = 1280;
 		ctx->captureArgs.height = 720;
 		bRet = ctx->pVideoCapture->StartCaptureWithParam(ctx->captureArgs);
@@ -117,7 +116,7 @@ DWORD WINAPI EncoderThread(LPVOID args)
 {
 	THIS_CONTEXT * ctx = (THIS_CONTEXT *)args;
 	std::ofstream encodeFile;
-	encodeFile.open(TEXT("d:/capture.h264"), std::ios::binary);
+	encodeFile.open(TEXT("C:\\Users\\hotkid\\desktop\\capture.h264"), std::ios::binary);
 
 	while (ctx->bRuning){
 		CSampleBuffer* buffer = NULL;
@@ -154,7 +153,7 @@ BOOL SetupEncodeWork(THIS_CONTEXT *ctx)
 	ctx->encoderArgs.avgBitrateInKb = 2000;
 	ctx->encoderArgs.minBitrateInKb = 2000;
 	ctx->encoderArgs.maxBitrateInKb = 2000;
-	ctx->encoderArgs.cfgStr.append(TEXT("keyint=75:min-keyint=75:scenecut=0:bframes=2:b-adapt=0:b-pyramid=none:threads=2:sliced-threads=0:ref=2:subme=2:me=hex:analyse=i4x4,i8x8,p8x8,p4x4,b8x8:direct=spatial:weightp=1:weightb=1:8x8dct=1:cabac=1:deblock=0,0:psy=0:trellis=0:aq-mode=1:rc-lookahead=0:sync-lookahead=0:mbtree=0:"));
+	ctx->encoderArgs.cfgStr.append(TEXT("keyint=75:min-keyint=75:scenecut=0:bframes=2:b-adapt=0:b-pyramid=none:threads=1:sliced-threads=0:ref=2:subme=2:me=hex:analyse=i4x4,i8x8,p8x8,p4x4,b8x8:direct=spatial:weightp=1:weightb=1:8x8dct=1:cabac=1:deblock=0,0:psy=0:trellis=0:aq-mode=1:rc-lookahead=0:sync-lookahead=0:mbtree=0:"));
 	
 	ctx->encoder->setConfig(ctx->encoderArgs);
 	return ctx->encoder->open();
@@ -283,28 +282,12 @@ BOOL InitInstance(THIS_CONTEXT *ctx, int nCmdShow)
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	int wmId, wmEvent;
+	int wmId;
 	PAINTSTRUCT ps;
 	HDC hdc;
 
 	switch (message)
 	{
-// 	case WM_COMMAND:
-// 		wmId    = LOWORD(wParam);
-// 		wmEvent = HIWORD(wParam);
-// 		// Parse the menu selections:
-// 		switch (wmId)
-// 		{
-// 		case IDM_ABOUT:
-// 			DialogBox(gContext->hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-// 			break;
-// 		case IDM_EXIT:
-// 			DestroyWindow(hWnd);
-// 			break;
-// 		default:
-// 			return DefWindowProc(hWnd, message, wParam, lParam);
-// 		}
-// 		break;
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
 		// TODO: Add any drawing code here...
@@ -318,18 +301,34 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			HMENU hMenu = (HMENU)lParam;
 			int idx = wParam;
-			UINT status = 0;
-			status = GetMenuState(hMenu, idx, MF_BYPOSITION);
-			if (status & MF_CHECKED){
-				CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_UNCHECKED);
-				StopWork(gContext);
-			}else{
-				CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_CHECKED);
-				gContext->captureArgs.index = idx;
-				StartWork(gContext);
-				SetupEncodeWork(gContext);
-				CreateWorkThread(gContext);
+			wmId = GetMenuItemID(hMenu, idx);
+			switch (wmId)
+			{
+			case IDM_ABOUT:
+				DialogBox(gContext->hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+				break;
+			case IDM_EXIT:
+				DestroyWindow(hWnd);
+				break;
+			default:
+				{
+					UINT status = 0;
+					status = GetMenuState(hMenu, idx, MF_BYPOSITION);
+					if (status & MF_CHECKED){
+						CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_UNCHECKED);
+						StopWork(gContext);
+					}
+					else{
+						CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_CHECKED);
+						gContext->captureArgs.index = idx;
+						StartWork(gContext);
+						SetupEncodeWork(gContext);
+						CreateWorkThread(gContext);
+					}
+				}
+				return DefWindowProc(hWnd, message, wParam, lParam);
 			}
+			
 		}
 		break;
 	default:
