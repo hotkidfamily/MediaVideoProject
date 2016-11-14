@@ -30,6 +30,9 @@
     <ClInclude Include="VideoRender.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="DdrawRender.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -39,6 +42,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="dllmain.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DdrawRender.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

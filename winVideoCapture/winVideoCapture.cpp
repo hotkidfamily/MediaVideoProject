@@ -21,7 +21,7 @@ typedef struct tagProgramContext{
 	IVideoCapture *pVideoCapture;
 	CVideoCallback *callBack;
 	BOOL bRuning;
-	HANDLE workThread;
+	HANDLE hWorkThread;
 	DWORD dwThreadId;
 	tagProgramContext(){
 		ZeroMemory(this, sizeof(struct tagProgramContext));
@@ -99,8 +99,14 @@ BOOL StopWork(THIS_CONTEXT *ctx)
 	return TRUE;
 }
 
+DWORD WINAPI EncoderThread(LPVOID args)
+{
+	return TRUE;
+}
+
 BOOL CreateWorkThread(THIS_CONTEXT *ctx)
 {
+	ctx->hWorkThread = CreateThread(NULL, 0, EncoderThread, ctx, 0, &(ctx->dwThreadId));
 	return TRUE;
 }
 
