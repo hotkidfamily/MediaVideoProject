@@ -9,6 +9,8 @@
 #include "encoder_x264.h"
 #include "dshowutil.h"
 
+#include <fstream>
+
 
 #define MAX_LOADSTRING 100
 
@@ -99,6 +101,7 @@ BOOL StopWork(THIS_CONTEXT *ctx)
 	assert(ctx);
 	ctx->pVideoCapture->StopCapture();
 	ctx->pVideoCapture->UnRegisterCallback();
+	ctx->encoder->close();
 
 	SAFE_DELETE(ctx->encoder);
 	SAFE_DELETE(ctx->callBack);
@@ -110,11 +113,20 @@ BOOL StopWork(THIS_CONTEXT *ctx)
 DWORD WINAPI EncoderThread(LPVOID args)
 {
 	THIS_CONTEXT * ctx = (THIS_CONTEXT *)args;
+	std::ofstream encodeFile;
+	encodeFile.open(TEXT("d:/capture.h264"), std::ios::binary);
+
 	while (ctx->bRuning){
 		CSampleBuffer* buffer = NULL;
+		DwVideoPackage packet;
 		if (ctx->callBack->GetFrame(buffer)){
 			ctx->encoder->addFrame(*buffer);
 			ctx->callBack->ReleaseFrame(buffer);
+			ctx->encoder->getPackage(packet);
+			if (packet.isIDRFrame())
+				encodeFile.write((const char*)(packet.extraData), packet.extraDataSize);
+			else
+				encodeFile.write((const char*)packet.packageData, packet.packageDataSize);
 		}
 		//ctx->encoder->addFrame(*buffer);
 

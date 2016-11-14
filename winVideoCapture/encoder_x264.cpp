@@ -25,9 +25,14 @@ bool CLibx264::open()
 
 void CLibx264::close()
 {
-	flushEncodeCache();
-	if (mCodecHandle)
+	if (mCodecHandle){
+		flushEncodeCache();
 		x264_encoder_close(mCodecHandle);
+		mCodecHandle = NULL;
+	}
+
+	if (mPackages.size())
+		mPackages.clear();
 }
 
 bool CLibx264::setConfig(const ENCODEC_CFG &config)
@@ -42,12 +47,8 @@ bool CLibx264::setConfig(const ENCODEC_CFG &config)
 	mCodecParams.rc.i_vbv_buffer_size = config.maxBitrateInKb;
 	mCodecParams.rc.i_bitrate = config.avgBitrateInKb;
 	mCodecParams.rc.i_rc_method = X264_RC_ABR;
-	mCodecParams.rc.f_rf_constant = 0.0f; // cbr
 
-	mCodecParams.i_keyint_min = config.fps;
-	mCodecParams.i_keyint_max = config.fps * 5;
-
-	mCodecParams.i_csp = X264_CSP_I420;
+	mCodecParams.i_csp = X264_CSP_RGB;
 	mCodecParams.i_width = config.width;
 	mCodecParams.i_height = config.height;
 
@@ -55,14 +56,6 @@ bool CLibx264::setConfig(const ENCODEC_CFG &config)
 	mCodecParams.i_fps_den = 1;
 
 	mCodecParams.b_repeat_headers = 1;
-
-	mCodecParams.b_open_gop = 0;
-	mCodecParams.i_level_idc = 51;
-	mCodecParams.b_annexb = 1;
-
-	mCodecParams.i_bframe = 3;
-	mCodecParams.rc.i_lookahead = mCodecParams.i_bframe + 4;
-	mCodecParams.i_frame_reference = 3;
 
 	parseConfigString();
 	return true;
@@ -76,20 +69,24 @@ bool CLibx264::reset(const ENCODEC_CFG &config)
 bool CLibx264::addFrame(const CSampleBuffer &inputFrame)
 {
 	x264_picture_t inpic;
+	x264_picture_init(&inpic);
 
 	inpic.i_pts = inputFrame.GetPts();
-	if (inputFrame.GetPixelFormat() == PIXEL_FORMAT_I420)
+	switch (inputFrame.GetPixelFormat())
+	{
+	case PIXEL_FORMAT_RGB24:
+		inpic.img.i_csp = X264_CSP_RGB;
+		break;
+	case PIXEL_FORMAT_I420:
 		inpic.img.i_csp = X264_CSP_I420;
-	else
+		break;
+	default:
 		return false;
+	}
 
-	inpic.img.i_plane = 3;
+	inpic.img.i_plane = 1;
 	inpic.img.plane[0] = inputFrame.GetDataPtr();
-	inpic.img.plane[1] = inpic.img.plane[0] + inputFrame.GetWidth() *inputFrame.GetHeight();
-	inpic.img.plane[2] = inpic.img.plane[1] + inputFrame.GetWidth() *inputFrame.GetHeight() / 2;
 	inpic.img.i_stride[0] = inputFrame.GetWidth();
-	inpic.img.i_stride[1] = inputFrame.GetWidth();
-	inpic.img.i_stride[2] = inputFrame.GetWidth();
 
 	encodeFrame(&inpic);
 	return true;
@@ -108,9 +105,10 @@ bool CLibx264::encodeFrame(x264_picture_t *inpic)
 {
 	bool ret = false;
 	int outputNALsDataSizeInBytes = 0;
-	x264_nal_t *outputNalus;
+	x264_nal_t *outputNalus = NULL;
 	int outputNaluCnt;
 	x264_picture_t outputPic;
+	x264_picture_init(&outputPic);
 
 	outputNALsDataSizeInBytes = x264_encoder_encode(
 		mCodecHandle, &outputNalus, &outputNaluCnt, inpic, &outputPic);
@@ -213,14 +211,16 @@ void CLibx264::flushEncodeCache()
 	int eStatus = 0;
 	x264_nal_t * outputNalus = NULL;
 	int outputNaluCount = 0;
-	x264_picture_t *outputPic = NULL;
+	x264_picture_t outputPic;
+
+	x264_picture_init(&outputPic);
 
 	if (1){
 		// flush delay frames
 		while (x264_encoder_delayed_frames(mCodecHandle)){
-			eStatus = x264_encoder_encode(mCodecHandle, &outputNalus, &outputNaluCount, NULL, outputPic);
+			eStatus = x264_encoder_encode(mCodecHandle, &outputNalus, &outputNaluCount, NULL, &outputPic);
 
-			ret = assemblePackage(eStatus, outputNalus, outputNaluCount, outputPic);
+			ret = assemblePackage(eStatus, outputNalus, outputNaluCount, &outputPic);
 			if (ret < 0){
 				break;
 			}
