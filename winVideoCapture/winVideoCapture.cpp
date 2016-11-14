@@ -44,14 +44,22 @@ INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
 
 void AddDevicesToMenu(THIS_CONTEXT *ctx)
 {
-	HMENU hMenuSub;
-	hMenuSub = GetSubMenu(GetMenu(ctx->mainWnd), 1);
+	HMENU hMainMenu = GetMenu(ctx->mainWnd);
+	HMENU hMenuSub = GetSubMenu(GetMenu(ctx->mainWnd), 1);
 	int iMenuItems = GetMenuItemCount(hMenuSub);
+	int index = 0;
+
+	MENUINFO MenuInfo;
+	ZeroMemory(&MenuInfo, sizeof(MenuInfo));
+	MenuInfo.cbSize = sizeof(MENUINFO);
+	MenuInfo.fMask = MIM_STYLE;
+	GetMenuInfo(hMainMenu, &MenuInfo);
+	MenuInfo.dwStyle |= MNS_NOTIFYBYPOS;
+	SetMenuInfo(hMainMenu, &MenuInfo);
 
 	VECT camlist;
-	ctx->pVideoCapture->GetDeviceList(camlist);
 	VECT::iterator it;
-	int index = 0;
+	ctx->pVideoCapture->GetDeviceList(camlist);
 
 	if (iMenuItems > 0){
 		for (int i = 0; i < iMenuItems; i++){
@@ -63,9 +71,6 @@ void AddDevicesToMenu(THIS_CONTEXT *ctx)
 		AppendMenu(hMenuSub, MF_STRING, ID_DEVICE_DEVICE3+index, *it);
 		index++;
 	}
-
-	CheckMenuItem(hMenuSub, ID_DEVICE_DEVICE3+0, MF_CHECKED);
-	EnableMenuItem(hMenuSub, ID_DEVICE_DEVICE3+0, MF_ENABLED);
 }
 
 BOOL StartWork(THIS_CONTEXT *ctx)
@@ -78,7 +83,7 @@ BOOL StartWork(THIS_CONTEXT *ctx)
 
 		ctx->pVideoCapture->RegisterCallback(ctx->callBack);
 		ctx->captureArgs.parentWindow = ctx->mainWnd;
-		ctx->captureArgs.index = 1;
+		ctx->captureArgs.index = 0;
 		ctx->captureArgs.avgFrameIntervalInNs = FramesPerSecToRefTime(25);
 		ctx->captureArgs.width = 1280;
 		ctx->captureArgs.height = 720;
@@ -101,12 +106,10 @@ BOOL StopWork(THIS_CONTEXT *ctx)
 	assert(ctx);
 	ctx->pVideoCapture->StopCapture();
 	ctx->pVideoCapture->UnRegisterCallback();
-	ctx->encoder->close();
 
 	SAFE_DELETE(ctx->encoder);
 	SAFE_DELETE(ctx->callBack);
 
-	ReleaseVideoCaptureObj(ctx->pVideoCapture);
 	return TRUE;
 }
 
@@ -128,7 +131,6 @@ DWORD WINAPI EncoderThread(LPVOID args)
 			else
 				encodeFile.write((const char*)packet.packageData, packet.packageDataSize);
 		}
-		//ctx->encoder->addFrame(*buffer);
 
 		Sleep(1);
 	}
@@ -152,7 +154,7 @@ BOOL SetupEncodeWork(THIS_CONTEXT *ctx)
 	ctx->encoderArgs.avgBitrateInKb = 2000;
 	ctx->encoderArgs.minBitrateInKb = 2000;
 	ctx->encoderArgs.maxBitrateInKb = 2000;
-	ctx->encoderArgs.cfgStr.append(TEXT("keyint=75:min-keyint=75:scenecut=0:bframes=2:b-adapt=0:b-pyramid=none:threads=2:sliced-threads=0:ref=2:subme=6:me=hex:analyse=i4x4,i8x8,p8x8,p4x4,b8x8:direct=spatial:weightp=1:weightb=1:8x8dct=1:cabac=1:deblock=0,0:psy=0:trellis=0:aq-mode=1:rc-lookahead=0:sync-lookahead=0:mbtree=0:"));
+	ctx->encoderArgs.cfgStr.append(TEXT("keyint=75:min-keyint=75:scenecut=0:bframes=2:b-adapt=0:b-pyramid=none:threads=2:sliced-threads=0:ref=2:subme=2:me=hex:analyse=i4x4,i8x8,p8x8,p4x4,b8x8:direct=spatial:weightp=1:weightb=1:8x8dct=1:cabac=1:deblock=0,0:psy=0:trellis=0:aq-mode=1:rc-lookahead=0:sync-lookahead=0:mbtree=0:"));
 	
 	ctx->encoder->setConfig(ctx->encoderArgs);
 	return ctx->encoder->open();
@@ -190,9 +192,6 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	gContext->pVideoCapture = GetVideoCaptureObj();
 	assert(gContext->pVideoCapture);
 	AddDevicesToMenu(gContext);
-	StartWork(gContext);
-	SetupEncodeWork(gContext);
-	CreateWorkThread(gContext);
 
 	// Main message loop:
 	while (GetMessage(&msg, NULL, 0, 0))
@@ -204,8 +203,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		}
 	}
 
-	StopWork(gContext);
-	gContext = NULL;
+	ReleaseVideoCaptureObj(gContext->pVideoCapture);
+
 	return (int) msg.wParam;
 }
 
@@ -290,32 +289,48 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	switch (message)
 	{
-	case WM_COMMAND:
-		wmId    = LOWORD(wParam);
-		wmEvent = HIWORD(wParam);
-		// Parse the menu selections:
-		switch (wmId)
-		{
-		case IDM_ABOUT:
-			DialogBox(gContext->hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-			break;
-		case IDM_EXIT:
-			DestroyWindow(hWnd);
-			break;
-		case ID_DEVICE_DEVICE3+0:
-			
-			break;
-		default:
-			return DefWindowProc(hWnd, message, wParam, lParam);
-		}
-		break;
+// 	case WM_COMMAND:
+// 		wmId    = LOWORD(wParam);
+// 		wmEvent = HIWORD(wParam);
+// 		// Parse the menu selections:
+// 		switch (wmId)
+// 		{
+// 		case IDM_ABOUT:
+// 			DialogBox(gContext->hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+// 			break;
+// 		case IDM_EXIT:
+// 			DestroyWindow(hWnd);
+// 			break;
+// 		default:
+// 			return DefWindowProc(hWnd, message, wParam, lParam);
+// 		}
+// 		break;
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
 		// TODO: Add any drawing code here...
 		EndPaint(hWnd, &ps);
 		break;
 	case WM_DESTROY:
+		DestroyWindow(hWnd);
 		PostQuitMessage(0);
+		break;
+	case WM_MENUCOMMAND:
+		{
+			HMENU hMenu = (HMENU)lParam;
+			int idx = wParam;
+			UINT status = 0;
+			status = GetMenuState(hMenu, idx, MF_BYPOSITION);
+			if (status & MF_CHECKED){
+				CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_UNCHECKED);
+				StopWork(gContext);
+			}else{
+				CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_CHECKED);
+				gContext->captureArgs.index = idx;
+				StartWork(gContext);
+				SetupEncodeWork(gContext);
+				CreateWorkThread(gContext);
+			}
+		}
 		break;
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);

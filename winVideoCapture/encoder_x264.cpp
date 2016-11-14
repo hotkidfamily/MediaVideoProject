@@ -2,6 +2,7 @@
 #include "encoder_x264.h"
 
 CLibx264::CLibx264()
+	: mCodecHandle(NULL)
 {
 
 }
@@ -25,7 +26,7 @@ bool CLibx264::open()
 
 void CLibx264::close()
 {
-	if (mCodecHandle){
+	if (mCodecHandle != NULL){
 		flushEncodeCache();
 		x264_encoder_close(mCodecHandle);
 		mCodecHandle = NULL;
@@ -76,20 +77,25 @@ bool CLibx264::addFrame(const CSampleBuffer &inputFrame)
 	{
 	case PIXEL_FORMAT_RGB24:
 		inpic.img.i_csp = X264_CSP_RGB;
+		inpic.img.i_plane = 1;
+		inpic.img.plane[0] = inputFrame.GetDataPtr();
+		inpic.img.i_stride[0] = inputFrame.GetWidth()*3;
 		break;
 	case PIXEL_FORMAT_I420:
 		inpic.img.i_csp = X264_CSP_I420;
+		inpic.img.i_plane = 1;
+		inpic.img.plane[0] = inputFrame.GetDataPtr();
+		inpic.img.i_stride[0] = inputFrame.GetWidth();
 		break;
 	case PIXEL_FORMAT_RGB32:
 		inpic.img.i_csp = X264_CSP_BGRA;
+		inpic.img.i_plane = 1;
+		inpic.img.plane[0] = inputFrame.GetDataPtr();
+		inpic.img.i_stride[0] = inputFrame.GetWidth()*4;
 		break;
 	default:
 		return false;
 	}
-
-	inpic.img.i_plane = 1;
-	inpic.img.plane[0] = inputFrame.GetDataPtr();
-	inpic.img.i_stride[0] = inputFrame.GetWidth();
 
 	encodeFrame(&inpic);
 	return true;
