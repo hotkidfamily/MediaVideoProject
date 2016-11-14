@@ -93,6 +93,9 @@ BOOL StartWork(THIS_CONTEXT *ctx)
 
 BOOL StopWork(THIS_CONTEXT *ctx)
 {
+	ctx->bRuning = 0;
+	WaitForSingleObject(ctx->hWorkThread, INFINITE);
+
 	assert(ctx);
 	ctx->pVideoCapture->StopCapture();
 	ctx->pVideoCapture->UnRegisterCallback();
@@ -107,12 +110,9 @@ BOOL StopWork(THIS_CONTEXT *ctx)
 DWORD WINAPI EncoderThread(LPVOID args)
 {
 	THIS_CONTEXT * ctx = (THIS_CONTEXT *)args;
-	while (1){
+	while (ctx->bRuning){
 		CSampleBuffer* buffer = NULL;
 		if (ctx->callBack->GetFrame(buffer)){
-			if (buffer == NULL){
-				printf("%s", "error");
-			}
 			ctx->encoder->addFrame(*buffer);
 			ctx->callBack->ReleaseFrame(buffer);
 		}
