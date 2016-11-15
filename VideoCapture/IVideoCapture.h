@@ -23,6 +23,7 @@ typedef struct tagDevParam{
 	double fps; // number? 
 	HWND parentWindow;
 	HWND attachWindow;
+	DWORD pixelFormatInFourCC;
 
 	tagDevParam(){
 		ZeroMemory(this, sizeof(struct tagDevParam));

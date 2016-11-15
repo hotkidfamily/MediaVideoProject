@@ -187,6 +187,36 @@ HRESULT DDrawRender::InitDDrawInterface(int width, int heigth)
 
 	CHECK_HR(hr = CreateSurfaces(width, heigth));
 
+	DDPIXELFORMAT pixelFormat;
+	ZeroMemory(&pixelFormat, sizeof(DDPIXELFORMAT));
+	pixelFormat.dwSize = sizeof(DDPIXELFORMAT);
+	mDDrawPrimarySurface->GetPixelFormat(&pixelFormat);
+
+	if (pixelFormat.dwFlags & DDPF_RGB){
+		switch (pixelFormat.dwRGBBitCount){
+			case 15: // must be 5.5.5 mode
+			break;
+
+			case 16: // must be 5.6.5 mode
+			break;
+
+			case 24: // must be 8.8.8 mode
+			break;
+
+			case 32: // must be alpha(8).8.8.8 mode
+			break;
+
+			default: break;
+		} // end switch
+	} // end if
+	else{
+		if (pixelFormat.dwFlags & DDPF_PALETTEINDEXED8){
+			// 256 color palettized mode
+		}else{
+			// something else??? more tests
+		} // end else
+	}
+
 	mWidth = width;
 	mHeight = heigth;
 
@@ -211,7 +241,32 @@ HRESULT DDrawRender::DeinitDDrawInterface()
 HRESULT DDrawRender::PushFrame(CSampleBuffer *frame)
 {
 	HRESULT hr = DD_OK;
-	
+	DDSURFACEDESC desc;
+	ZeroMemory(&desc, sizeof(DDSURFACEDESC));
+	desc.dwSize = sizeof(DDSURFACEDESC);
+	if (FAILED(mDDrawPrimarySurface->Lock(NULL, &desc, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL))){
+		// 
+		printf("error");
+	}
+
+ 	uint8_t *buffer = (uint8_t*)desc.lpSurface;
+	uint8_t *bufferLine = NULL;
+
+	uint8_t *frameBuffer = frame->GetDataPtr();
+	uint8_t *frameLine = NULL;
+	int line_size = desc.lPitch;
+	for (DWORD i = 0; i < desc.dwHeight; i++){
+		bufferLine = (uint8_t*)(buffer + line_size*i);
+		frameLine = frameBuffer + frame->GetWidth();
+		for (DWORD j = 0; j < desc.dwWidth; j++){
+			//bufferLine[i] = frameBuffer[j];
+			memcpy(bufferLine, frameBuffer, min(line_size, frame->GetWidth()));
+		}
+	}
+
+	//memcpy(buffer, frame->GetDataPtr(), frame->GetDataSize());
+
+	mDDrawPrimarySurface->Unlock(NULL);
 	return hr;
 }
 

@@ -74,6 +74,7 @@ DWORD WINAPI EncoderThread(LPVOID args)
 		DwVideoPackage packet;
 		if (ctx->callBack->GetFrame(buffer)){
 			ctx->encoder->addFrame(*buffer);
+			ctx->render->PushFrame(buffer);
 			ctx->callBack->ReleaseFrame(buffer);
 			ctx->encoder->getPackage(packet);
 			if (packet.isIDRFrame())

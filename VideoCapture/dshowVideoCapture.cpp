@@ -127,7 +127,7 @@ BOOL DShowVideoCapture::Runing()
 	return bRet;
 }
 
-HRESULT DShowVideoCapture::Start(OPEN_DEVICE_PARAM params)
+HRESULT DShowVideoCapture::Start(OPEN_DEVICE_PARAM &params)
 {
 	HRESULT hr = S_OK;
 	ASSERT(mMediaControl);
@@ -143,6 +143,10 @@ HRESULT DShowVideoCapture::Start(OPEN_DEVICE_PARAM params)
 	mGrabber->GetConnectedMediaType(&mWorkMediaType);
 	mWorkParams.width = mWorkMediaType.BitmapHeader()->biWidth;
 	mWorkParams.height = mWorkMediaType.BitmapHeader()->biHeight;
+	mWorkParams.fps = RefTimeToFramesPerSec(mWorkMediaType.AvgReferenceTime());
+	mWorkParams.pixelFormatInFourCC = mWorkMediaType.subtype.Data1;
+
+	params = mWorkParams;
 
 	if (mDropFrameStatus){
 		mDropFrameStatus->GetNumDropped(&mDropFrames);
@@ -333,8 +337,7 @@ HRESULT DShowVideoCapture::BuildGraph()
 	mediaType.subtype = MEDIASUBTYPE_NULL;
 	CHECK_HR(hr = mGrabber->SetMediaType(&mediaType));
 
-	CHECK_HR(hr = CoCreateInstance(CLSID_NullRenderer, NULL,
-		CLSCTX_INPROC_SERVER, IID_IBaseFilter, (void**)&pNullRenderFilter));
+	CHECK_HR(hr = CoCreateInstance(CLSID_NullRenderer, NULL, CLSCTX_INPROC_SERVER, IID_IBaseFilter, (void**)&pNullRenderFilter));
 
 	CHECK_HR(hr = FindFilterByIndex(mWorkParams.index, mCaptureFilter));
 	ASSERT(mCaptureFilter);
@@ -343,9 +346,8 @@ HRESULT DShowVideoCapture::BuildGraph()
 	CHECK_HR(hr = mGraph->AddFilter(mGrabberFiler, GRABBER_FILTER_NAME_STR));
 	CHECK_HR(hr = mGraph->AddFilter(pNullRenderFilter, RENDER_FILTER_NAME_STR));
 
-	//CHECK_HR(hr = FindSultablePin(pCaptureOutPin));
 	CHECK_HR(hr = FindPinByCategory(mCaptureFilter, PIN_CATEGORY_CAPTURE, PINDIR_OUTPUT, &pCaptureOutPin));
-	FindMediaTypeInPin(pCaptureOutPin);
+	CHECK_HR(hr = FindMediaTypeInPin(pCaptureOutPin, mWorkMediaType));
 
 	CHECK_HR(hr = FindUnconnectedPin(mGrabberFiler, PINDIR_OUTPUT, &pGrabberOutPin));
 	CHECK_HR(hr = FindUnconnectedPin(mGrabberFiler, PINDIR_INPUT, &pGrabberInPin));
@@ -361,7 +363,7 @@ HRESULT DShowVideoCapture::BuildGraph()
 		CHECK_HR(hr = mGraph->Connect(pCaptureOutPin, pJpegDecInPin));
 		CHECK_HR(hr = mGraph->Connect(pJpegDecOutPin, pGrabberInPin));
 		CHECK_HR(hr = mGraph->Connect(pGrabberOutPin, pNullRenderInPin));
-		mWorkMediaType.SetSubtype(&MEDIASUBTYPE_RGB32);
+
 	}else{
 		CHECK_HR(hr = mGraph->Connect(pCaptureOutPin, pGrabberInPin));
 		CHECK_HR(hr = mGraph->Connect(pGrabberOutPin, pNullRenderInPin));
@@ -406,7 +408,7 @@ inline BOOL DShowVideoCapture::IsFormatSupport(CMediaType &mediaType, FRAMEABILI
 /*
  * resolution is priority
  */
-HRESULT DShowVideoCapture::FindMediaTypeInPin(CComPtr<IPin> &pOutPin)
+HRESULT DShowVideoCapture::FindMediaTypeInPin(CComPtr<IPin> &pOutPin, CMediaType &requestMediaType)
 {
 	HRESULT hr = S_OK;
 	HRESULT hrRet = E_FAIL;
@@ -475,19 +477,19 @@ HRESULT DShowVideoCapture::FindMediaTypeInPin(CComPtr<IPin> &pOutPin)
 		}
 
 		REFERENCE_TIME frameInterval = FramesPerSecToRefTime(mWorkParams.fps);
-		mWorkMediaType = ability.MediaType;
+		requestMediaType = ability.MediaType;
 		if (frameInterval > ability.MaxFrameInterval){
 			frameInterval = ability.MaxFrameInterval;
 		}
 		if (frameInterval < ability.MinFrameInterval){
 			frameInterval = ability.MinFrameInterval;
 		}
-		mWorkMediaType.SetAvgReferenceTime(frameInterval);
+		requestMediaType.SetAvgReferenceTime(frameInterval);
 
-		CHECK_HR(hr = pConfig->SetFormat(&mWorkMediaType));
+		CHECK_HR(hr = pConfig->SetFormat(&requestMediaType));
+		
+		hrRet = S_OK;
 	}
-
-	//mWorkMediaType.GUIDtoStr(mWorkMediaType.subtype);
 
 done:
 	ShowDShowError(hr);

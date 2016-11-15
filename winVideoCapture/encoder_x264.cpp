@@ -88,8 +88,8 @@ bool CLibx264::addFrame(const CSampleBuffer &inputFrame)
 		inpic.img.plane[1] = inpic.img.plane[0] + inputFrame.GetWidth() *inputFrame.GetHeight();
 		inpic.img.plane[2] = inpic.img.plane[1] + inputFrame.GetWidth() *inputFrame.GetHeight() / 4;
 		inpic.img.i_stride[0] = inputFrame.GetWidth();
-		inpic.img.i_stride[1] = inputFrame.GetWidth();
-		inpic.img.i_stride[2] = inputFrame.GetWidth();
+		inpic.img.i_stride[1] = inputFrame.GetWidth()/2;
+		inpic.img.i_stride[2] = inputFrame.GetWidth()/2;
 		break;
 	case PIXEL_FORMAT_RGB32:
 		inpic.img.i_csp = X264_CSP_BGRA;

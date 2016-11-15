@@ -75,7 +75,7 @@ public:
 	DShowVideoCapture();
 	~DShowVideoCapture();
 	HRESULT Stop();
-	HRESULT Start(OPEN_DEVICE_PARAM);
+	HRESULT Start(OPEN_DEVICE_PARAM&);
 	HRESULT EnumCaptureDevices();
 	HRESULT GetDevicesName(VECT &);
 	HRESULT ShowCapturePropertyWindow();
@@ -91,7 +91,7 @@ private:
 	HRESULT BuildGraph();
 	void ShowDShowError(HRESULT hr);
 	STDMETHODIMP SampleCB(double SampleTime, IMediaSample *pSample);
-	HRESULT FindMediaTypeInPin(CComPtr<IPin> &pOutPin);
+	HRESULT FindMediaTypeInPin(CComPtr<IPin> &pOutPin, CMediaType &);
 	inline BOOL IsFormatSupport(CMediaType &, FRAMEABILITY&);
 	HRESULT SaveGraphFile(IGraphBuilder*, TCHAR* path);
 
