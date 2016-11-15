@@ -31,6 +31,7 @@ private:
 	IDirectDraw *mDDrawObj;
 	LPDIRECTDRAWSURFACE mDDrawPrimarySurface;
 	LPDIRECTDRAWSURFACE mDDrawSecondarySurface;
+	LPDIRECTDRAWCLIPPER mDDrawClippper;
 	HWND mHwnd;
 
 	DWORD mWidth;

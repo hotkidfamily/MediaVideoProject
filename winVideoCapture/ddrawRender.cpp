@@ -187,35 +187,9 @@ HRESULT DDrawRender::InitDDrawInterface(int width, int heigth)
 
 	CHECK_HR(hr = CreateSurfaces(width, heigth));
 
-	DDPIXELFORMAT pixelFormat;
-	ZeroMemory(&pixelFormat, sizeof(DDPIXELFORMAT));
-	pixelFormat.dwSize = sizeof(DDPIXELFORMAT);
-	mDDrawPrimarySurface->GetPixelFormat(&pixelFormat);
-
-	if (pixelFormat.dwFlags & DDPF_RGB){
-		switch (pixelFormat.dwRGBBitCount){
-			case 15: // must be 5.5.5 mode
-			break;
-
-			case 16: // must be 5.6.5 mode
-			break;
-
-			case 24: // must be 8.8.8 mode
-			break;
-
-			case 32: // must be alpha(8).8.8.8 mode
-			break;
-
-			default: break;
-		} // end switch
-	} // end if
-	else{
-		if (pixelFormat.dwFlags & DDPF_PALETTEINDEXED8){
-			// 256 color palettized mode
-		}else{
-			// something else??? more tests
-		} // end else
-	}
+	CHECK_HR(hr = mDDrawObj->CreateClipper(0, &mDDrawClippper, NULL));
+	CHECK_HR(hr = mDDrawClippper->SetHWnd(0, mHwnd));
+	CHECK_HR(hr = mDDrawPrimarySurface->SetClipper(mDDrawClippper));
 
 	mWidth = width;
 	mHeight = heigth;
@@ -231,6 +205,7 @@ HRESULT DDrawRender::DeinitDDrawInterface()
 
 	SAFE_RELEASE(mDDrawSecondarySurface);
 	SAFE_RELEASE(mDDrawPrimarySurface);
+	SAFE_RELEASE(mDDrawClippper);
 	SAFE_RELEASE(mDDrawObj);
 
 	CoUninitialize();
@@ -244,7 +219,10 @@ HRESULT DDrawRender::PushFrame(CSampleBuffer *frame)
 	DDSURFACEDESC desc;
 	ZeroMemory(&desc, sizeof(DDSURFACEDESC));
 	desc.dwSize = sizeof(DDSURFACEDESC);
-	if (FAILED(mDDrawPrimarySurface->Lock(NULL, &desc, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL))){
+	RECT rect;
+	GetWindowRect(mHwnd,&rect);
+	
+	if (FAILED(mDDrawSecondarySurface->Lock(NULL, &desc, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL))){
 		// 
 		printf("error");
 	}
@@ -260,15 +238,26 @@ HRESULT DDrawRender::PushFrame(CSampleBuffer *frame)
 	for (DWORD i = 0; i < desc.dwHeight; i++){
 		bufferLine = (uint8_t*)(buffer + line_size*i);
 		frameLine = frameBuffer + line_size_frame*i;
-		for (DWORD j = 0; j < desc.dwWidth; j++){
-			//bufferLine[i] = frameBuffer[j];
+		DWORD * pixel = (DWORD*)bufferLine;
+//		for (DWORD j = 0; j < desc.dwWidth; j++){
 			memcpy(bufferLine, frameLine, min(line_size, line_size_frame));
-		}
+// 			pixel[j] = RGB(frameLine[j], frameLine[j + 1], frameLine[j + 2]);
+// 			frameLine += 3;
+// 		}
 	}
 
-	//memcpy(buffer, frame->GetDataPtr(), frame->GetDataSize());
+	mDDrawSecondarySurface->Unlock(NULL);
 
-	mDDrawPrimarySurface->Unlock(NULL);
+	ZeroMemory(&desc, sizeof(DDSURFACEDESC));
+	desc.dwSize = sizeof(DDSURFACEDESC);
+
+	DDBLTFX ddblfx;
+	ZeroMemory(&ddblfx, sizeof(DDBLTFX));
+	ddblfx.dwSize = sizeof(DDBLTFX);
+	ddblfx.dwROP = SRCCOPY;
+
+	mDDrawPrimarySurface->Blt(&rect, mDDrawSecondarySurface, NULL, DDBLT_ROP, &ddblfx);
+
 	return hr;
 }
 
