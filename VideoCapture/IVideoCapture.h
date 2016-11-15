@@ -20,7 +20,7 @@ typedef struct tagDevParam{
 	int32_t index;
 	int32_t width;
 	int32_t height;
-	LONGLONG avgFrameIntervalInNs;
+	LONGLONG fps; // number? 
 	HWND parentWindow;
 	HWND attachWindow;
 

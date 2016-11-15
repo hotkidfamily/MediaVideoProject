@@ -121,7 +121,7 @@ HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 	hr = pSample->GetTime(&desc.ptsStart, &desc.ptsEnd);
 	if (FAILED(hr)){
 		desc.ptsStart = timeGetTime();
-		desc.ptsEnd = desc.ptsStart + RefTimeToMsec(mWorkParams.avgFrameIntervalInNs);
+		desc.ptsEnd = desc.ptsStart + RefTimeToMsec(mWorkParams.fps);
 	}
 
 	desc.width = mWorkParams.width;
@@ -323,6 +323,9 @@ HRESULT DShowVideoCapture::GetDevicesName(VECT &cameNames)
 	return hr;
 }
 
+/*
+ * resolution is priority 
+ */
 HRESULT DShowVideoCapture::FindVideoConfigByStreamConfig(CComPtr<IAMStreamConfig> &pConfig)
 {
 	HRESULT hr = S_OK;
@@ -338,18 +341,17 @@ HRESULT DShowVideoCapture::FindVideoConfigByStreamConfig(CComPtr<IAMStreamConfig
 		VIDEO_STREAM_CONFIG_CAPS caps;
 		if ((hr = pConfig->GetStreamCaps(i, (AM_MEDIA_TYPE**)&mediaType, (BYTE*)&caps)) == S_OK){
 			if (mediaType->isVideoInfoHeader()){
-				if (mWorkParams.avgFrameIntervalInNs >= caps.MinFrameInterval
-					&& mWorkParams.avgFrameIntervalInNs <= caps.MaxFrameInterval){
-
-					BITMAPINFOHEADER *bmp = mediaType->BitmapHeader();
-					if (mWorkParams.width == bmp->biWidth && mWorkParams.height == bmp->biHeight){
-
-						mWorkMediaType.Set(*mediaType);
-
-						hrRet = S_OK;
-						break;
-					}
+				BITMAPINFOHEADER *bmp = mediaType->BitmapHeader();
+				if (mWorkParams.width == bmp->biWidth && mWorkParams.height == bmp->biHeight){
+					mWorkMediaType.Set(*mediaType);
+					hrRet = S_OK;
+					break;
 				}
+
+// 				REFERENCE_TIME frameInterval = FramesPerSecToRefTime(mWorkParams.fps);
+// 				if (frameInterval >= caps.MinFrameInterval
+// 					&& frameInterval <= caps.MaxFrameInterval){
+// 				}
 			}
 		}
 	}
@@ -389,7 +391,7 @@ HRESULT DShowVideoCapture::FindSultablePin(CComPtr<IPin> &pOutPin)
 
 	pOutPin = pPin;
 	
-	mWorkMediaType.SetAvgReferenceTime(mWorkParams.avgFrameIntervalInNs);
+	mWorkMediaType.SetAvgReferenceTime(FramesPerSecToRefTime(mWorkParams.fps));
 	CHECK_HR(hr = pConfig->SetFormat(&mWorkMediaType));
 	mWorkMediaType.GUIDtoStr(mWorkMediaType.subtype);
 

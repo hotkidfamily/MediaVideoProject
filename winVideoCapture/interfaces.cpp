@@ -3,7 +3,6 @@
 #include "winVideoCapture.h"
 #include <assert.h>
 #include <fstream>
-#include "dshowutil.h"
 
 BOOL StartCaptureWork(THIS_CONTEXT *ctx)
 {
@@ -14,8 +13,8 @@ BOOL StartCaptureWork(THIS_CONTEXT *ctx)
 		assert(ctx->callBack);
 
 		ctx->pVideoCapture->RegisterCallback(ctx->callBack);
-		ctx->captureArgs.parentWindow = ctx->mainWnd;
-		ctx->captureArgs.avgFrameIntervalInNs = FramesPerSecToRefTime(30);
+		ctx->captureArgs.parentWindow = ctx->hMainWnd;
+		ctx->captureArgs.fps = 30;
 		ctx->captureArgs.width = 1280;
 		ctx->captureArgs.height = 720;
 		bRet = ctx->pVideoCapture->StartCaptureWithParam(ctx->captureArgs);
@@ -68,7 +67,7 @@ DWORD WINAPI EncoderThread(LPVOID args)
 {
 	THIS_CONTEXT * ctx = (THIS_CONTEXT *)args;
 	std::ofstream encodeFile;
-	encodeFile.open(TEXT("C:\\Users\\hotkid\\desktop\\capture.h264"), std::ios::binary);
+	encodeFile.open(TEXT("D:\\capture.h264"), std::ios::binary);
 
 	while (ctx->bRuning){
 		CSampleBuffer* buffer = NULL;
@@ -92,5 +91,21 @@ DWORD WINAPI EncoderThread(LPVOID args)
 BOOL CreateWorkThread(THIS_CONTEXT *ctx)
 {
 	ctx->hWorkThread = CreateThread(NULL, 0, EncoderThread, ctx, 0, &(ctx->dwThreadId));
+	return TRUE;
+}
+
+BOOL StartRenderWork(THIS_CONTEXT *ctx)
+{
+	ctx->render = new DDrawRender(ctx->hMainWnd);
+	assert(ctx->render != NULL);
+	ctx->render->InitDDrawInterface(ctx->captureArgs.width, ctx->captureArgs.height);
+
+	return TRUE;
+}
+
+BOOL StopRenderWork(THIS_CONTEXT *ctx)
+{
+	ctx->render->DeinitDDrawInterface();
+	SAFE_DELETE(ctx->render);
 	return TRUE;
 }

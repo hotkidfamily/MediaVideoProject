@@ -18,8 +18,8 @@ INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
 
 void AddDevicesToMenu(THIS_CONTEXT *ctx)
 {
-	HMENU hMainMenu = GetMenu(ctx->mainWnd);
-	HMENU hMenuSub = GetSubMenu(GetMenu(ctx->mainWnd), 1);
+	HMENU hMainMenu = GetMenu(ctx->hMainWnd);
+	HMENU hMenuSub = GetSubMenu(GetMenu(ctx->hMainWnd), 1);
 	int iMenuItems = GetMenuItemCount(hMenuSub);
 	int index = 0;
 
@@ -144,16 +144,16 @@ ATOM MyRegisterClass(PTHIS_CONTEXT ctx)
 BOOL InitInstance(THIS_CONTEXT *ctx, int nCmdShow)
 {
 
-	ctx->mainWnd = CreateWindow(ctx->szWindowClass, ctx->szTitle, WS_OVERLAPPEDWINDOW,
+	ctx->hMainWnd = CreateWindow(ctx->szWindowClass, ctx->szTitle, WS_OVERLAPPEDWINDOW,
       CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, ctx->hInst, NULL);
 
-	if (!ctx->mainWnd)
+	if (!ctx->hMainWnd)
    {
       return FALSE;
    }
 
-	ShowWindow(ctx->mainWnd, nCmdShow);
-	UpdateWindow(ctx->mainWnd);
+	ShowWindow(ctx->hMainWnd, nCmdShow);
+	UpdateWindow(ctx->hMainWnd);
 
    return TRUE;
 }
@@ -206,12 +206,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 						CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_UNCHECKED);
 						StopCaptureWork(gContext);
 						StopEncodeWork(gContext);
+						StopRenderWork(gContext);
 					}
 					else{
 						CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_CHECKED);
 						gContext->captureArgs.index = idx;
 						StartCaptureWork(gContext);
 						SetupEncodeWork(gContext);
+						StartRenderWork(gContext);
 						CreateWorkThread(gContext);
 					}
 				}

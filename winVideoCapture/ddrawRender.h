@@ -15,6 +15,7 @@ class DDrawRender
 {
 public:
 	DDrawRender();
+	DDrawRender(HWND);
 	~DDrawRender();
 
 	HRESULT InitDDrawInterface(int, int);
@@ -24,6 +25,7 @@ public:
 
 protected:
 	HRESULT CreateSurfaces(int ,int );
+	const char* GetDDrawErrorString(HRESULT );
 
 private:
 	IDirectDraw *mDDrawObj;

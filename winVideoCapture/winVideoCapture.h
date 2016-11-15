@@ -2,7 +2,7 @@
 
 #include "resource.h"
 #include "IVideoCapture.h"
-
+#include "DdrawRender.h"
 #include "VideoCallback.h"
 #include "encoder_x264.h"
 
@@ -12,7 +12,7 @@ typedef struct tagProgramContext{
 	HINSTANCE hInst;
 	TCHAR szTitle[MAX_LOADSTRING];
 	TCHAR szWindowClass[MAX_LOADSTRING];
-	HWND mainWnd;
+	HWND hMainWnd;
 	OPEN_DEVICE_PARAM captureArgs;
 	IVideoCapture *pVideoCapture;
 	CVideoCallback *callBack;
@@ -21,6 +21,7 @@ typedef struct tagProgramContext{
 	DWORD dwThreadId;
 	ENCODEC_CFG encoderArgs;
 	CLibx264 *encoder;
+	DDrawRender *render;
 	tagProgramContext(){
 		ZeroMemory(this, sizeof(struct tagProgramContext));
 	}
@@ -32,3 +33,5 @@ BOOL SetupEncodeWork(THIS_CONTEXT *ctx);
 BOOL StopEncodeWork(THIS_CONTEXT *ctx);
 DWORD WINAPI EncoderThread(LPVOID args);
 BOOL CreateWorkThread(THIS_CONTEXT *ctx);
+BOOL StartRenderWork(THIS_CONTEXT *ctx);
+BOOL StopRenderWork(THIS_CONTEXT *ctx);
