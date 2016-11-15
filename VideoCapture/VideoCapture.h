@@ -13,7 +13,7 @@ public:
 	virtual ~IVideoCaptureDelegate();
 	virtual void RegisterCallback(VideoCaptureCallback *);
 	virtual HRESULT GetDeviceList(VECT &);
-	virtual HRESULT StartCaptureWithParam(OPEN_DEVICE_PARAM );
+	virtual HRESULT StartCaptureWithParam(OPEN_DEVICE_PARAM &);
 	virtual HRESULT StopCapture();
 	virtual HRESULT ShowPropertyWindow(HWND parentWindowHandle);
 	virtual HRESULT UnRegisterCallback();

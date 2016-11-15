@@ -45,12 +45,13 @@ BOOL SetupEncodeWork(THIS_CONTEXT *ctx)
 {
 	ctx->encoder = new CLibx264;
 	assert(ctx->encoder);
-	ctx->encoderArgs.fps = 25;
+	ctx->encoderArgs.fps = (uint32_t)(ctx->captureArgs.fps);
 	ctx->encoderArgs.width = ctx->captureArgs.width;
 	ctx->encoderArgs.height = ctx->captureArgs.height;
 	ctx->encoderArgs.avgBitrateInKb = 2000;
 	ctx->encoderArgs.minBitrateInKb = 2000;
 	ctx->encoderArgs.maxBitrateInKb = 2000;
+	ctx->encoderArgs.pixelFormatInFourCC = ctx->captureArgs.pixelFormatInFourCC;
 	ctx->encoderArgs.cfgStr.append(TEXT("keyint=75:min-keyint=75:scenecut=0:bframes=2:b-adapt=0:b-pyramid=none:threads=1:sliced-threads=0:ref=2:subme=2:me=hex:analyse=i4x4,i8x8,p8x8,p4x4,b8x8:direct=spatial:weightp=1:weightb=1:8x8dct=1:cabac=1:deblock=0,0:psy=0:trellis=0:aq-mode=1:rc-lookahead=0:sync-lookahead=0:mbtree=0:"));
 
 	ctx->encoder->setConfig(ctx->encoderArgs);

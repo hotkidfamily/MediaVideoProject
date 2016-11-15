@@ -19,6 +19,7 @@ typedef struct tagEncodecConfig
 	uint32_t avgBitrateInKb;
 	uint32_t maxBitrateInKb;
 	uint32_t minBitrateInKb;
+	uint32_t pixelFormatInFourCC;
 	// pps sps vps etc.
 	uint8_t *extraData;
 	uint32_t extraDataSize;

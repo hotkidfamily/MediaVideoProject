@@ -85,7 +85,7 @@ public:
 	// step 1, get device list
 	virtual HRESULT GetDeviceList(VECT &) = 0;
 	// step 2, start capture
-	virtual HRESULT StartCaptureWithParam(OPEN_DEVICE_PARAM) = 0;
+	virtual HRESULT StartCaptureWithParam(OPEN_DEVICE_PARAM&) = 0;
 	
 	// step 3.x other feature support: show property setting window
 	virtual HRESULT ShowPropertyWindow(HWND parentWindowHandle) = 0;

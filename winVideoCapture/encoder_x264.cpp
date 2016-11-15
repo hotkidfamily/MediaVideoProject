@@ -48,8 +48,21 @@ bool CLibx264::setConfig(const ENCODEC_CFG &config)
 	mCodecParams.rc.i_vbv_buffer_size = config.maxBitrateInKb;
 	mCodecParams.rc.i_bitrate = config.avgBitrateInKb;
 	mCodecParams.rc.i_rc_method = X264_RC_ABR;
+	switch (config.pixelFormatInFourCC){
+	case PIXEL_FORMAT_RGB24:
+		mCodecParams.i_csp = X264_CSP_RGB;
+		break;
+	case PIXEL_FORMAT_I420:
+		mCodecParams.i_csp = X264_CSP_I420;
+		break;
+	case PIXEL_FORMAT_RGB32:
+		mCodecParams.i_csp = X264_CSP_BGRA;
+		break;
+	case PIXEL_FORMAT_YUY2:
+		mCodecParams.i_csp = X264_CSP_NV16;
+		break;
+	}
 
-	mCodecParams.i_csp = X264_CSP_NV16;
 	mCodecParams.i_width = config.width;
 	mCodecParams.i_height = config.height;
 
