@@ -63,25 +63,13 @@
     <ClCompile Include="logger.cpp">
       <Filter>Source Files\utils</Filter>
     </ClCompile>
-    <ClCompile Include="video.cpp">
-      <Filter>Source Files\dshowInterface</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IVideoCapture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="stdafx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="targetver.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="VideoCapture.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="video.h">
-      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="logger.h">
       <Filter>Header Files\utils</Filter>
@@ -99,6 +87,12 @@
       <Filter>Header Files\mediafoundationinterface</Filter>
     </ClInclude>
     <ClInclude Include="SlidingWindowCalc.h">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
       <Filter>Header Files\utils</Filter>
     </ClInclude>
   </ItemGroup>

@@ -3,7 +3,6 @@
 
 #include <comdef.h>
 
-#include "video.h"
 #include "dshowutil.h"
 #include "mtype.h"
 #include "ISampleGrabber.h"
@@ -46,11 +45,11 @@ typedef struct tagCameraDevDesc{
 typedef std::vector<CAMERADESC> CAMERALIST;
 
 typedef struct tagVideoInfo{
-	int index;
+	int pinIndex;
 	CMediaType *meidaType;
 	LONGLONG MinFrameInterval;
 	LONGLONG MaxFrameInterval;
-}VIDEOARGS, *PVIDEOARGS;
+}FRAMEABILITY, *PFRAMEABILITY;
 
 class DShowVideoCapture : 
 	public ISampleGrabberCBImpl
