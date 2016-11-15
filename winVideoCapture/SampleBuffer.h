@@ -68,12 +68,14 @@ public:
 		this->pts = desc.ptsStart;
 		this->width = desc.width;
 		this->height = desc.height;
+		this->lineSize = desc.lineSize;
 
 		return TRUE;
 	}
 
 	uint32_t GetDataSize() const { return sizeInUse; };
 	uint8_t *GetDataPtr() const { return dataPtr; };
+	int32_t GetLineSize() const { return lineSize; };
 	int64_t  GetPts() const { return pts; };
 	int32_t GetWidth() const { return width; };
 	int32_t GetHeight() const { return height; };
@@ -81,6 +83,7 @@ public:
 
 private:
 	int32_t width;
+	int32_t lineSize;
 	int32_t height;
 	int64_t pts;
 	int32_t pixelFormat;

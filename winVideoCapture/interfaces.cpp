@@ -67,21 +67,21 @@ BOOL StopEncodeWork(THIS_CONTEXT *ctx)
 DWORD WINAPI EncoderThread(LPVOID args)
 {
 	THIS_CONTEXT * ctx = (THIS_CONTEXT *)args;
-	std::ofstream encodeFile;
-	encodeFile.open(TEXT("D:\\capture.h264"), std::ios::binary);
+// 	std::ofstream encodeFile;
+// 	encodeFile.open(TEXT("D:\\capture.h264"), std::ios::binary);
 
 	while (ctx->bRuning){
 		CSampleBuffer* buffer = NULL;
-		DwVideoPackage packet;
+//		DwVideoPackage packet;
 		if (ctx->callBack->GetFrame(buffer)){
-			ctx->encoder->addFrame(*buffer);
+//			ctx->encoder->addFrame(*buffer);
 			ctx->render->PushFrame(buffer);
 			ctx->callBack->ReleaseFrame(buffer);
-			ctx->encoder->getPackage(packet);
-			if (packet.isIDRFrame())
-				encodeFile.write((const char*)(packet.extraData), packet.extraDataSize);
-			else
-				encodeFile.write((const char*)packet.packageData, packet.packageDataSize);
+// 			ctx->encoder->getPackage(packet);
+// 			if (packet.isIDRFrame())
+// 				encodeFile.write((const char*)(packet.extraData), packet.extraDataSize);
+// 			else
+// 				encodeFile.write((const char*)packet.packageData, packet.packageDataSize);
 		}
 
 		Sleep(1);

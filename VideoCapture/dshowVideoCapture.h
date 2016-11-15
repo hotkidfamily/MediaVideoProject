@@ -10,6 +10,13 @@
 #include "SlidingWindowCalc.h"
 #include "IVideoCapture.h"
 
+typedef struct tagFrameFormatInfo{
+	GUID subtype;
+	DWORD pixelFormatInFourCC;
+	int priority;
+	int32_t bytePerPixel;
+}FRAMEFORAMTINFO;
+
 typedef struct tagCameraDevDesc{
 	int32_t index;
 	STRING name;
@@ -114,6 +121,7 @@ private:
 	VideoCaptureCallback *mcb;
 
 	OPEN_DEVICE_PARAM mWorkParams;
+	FRAMEFORAMTINFO *mFrameInfo;
 	CAMERALIST mCameraList;
 	CSlidingWindowCalc mFpsStats;
 };

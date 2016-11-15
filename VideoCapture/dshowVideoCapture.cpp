@@ -9,12 +9,6 @@
 #define GRABBER_FILTER_NAME_STR (TEXT("Grabber Filter"))
 #define JPEGDEC_FILTER_NAME_STR (TEXT("JPEG DEC"))
 
-typedef struct tagFrameFormatInfo{
-	GUID subtype;
-	DWORD pixelFormatInFourCC;
-	int priority;
-}FRAMEFORAMTINFO;
-
 /*
 Reference :https://msdn.microsoft.com/zh-cn/library/windows/desktop/dd391027(v=vs.85).aspx
 MEDIASUBTYPE_YV12 YV12 4:2:0 Planar 8
@@ -39,35 +33,35 @@ const GUID MEDIASUBTYPE_I420 = { 0x30323449, 0x0000, 0x0010, { 0x80, 0x00, 0x00,
 
 FRAMEFORAMTINFO dshowSupportVideoFormatTable[] = {
 		/* YUV 420 */
-		{ MEDIASUBTYPE_I420, '024I', 1<< 15 },
-		{ MEDIASUBTYPE_YV12, '21VY', 1 << 15 },
-		{ MEDIASUBTYPE_NV12, '21VN', 1 << 15 },
-		{ MEDIASUBTYPE_IYUV, 'VYUI', 1 << 14 },
+		{ MEDIASUBTYPE_I420, '024I', 1<< 15, 1 },
+		{ MEDIASUBTYPE_YV12, '21VY', 1 << 15, 1 },
+		{ MEDIASUBTYPE_NV12, '21VN', 1 << 15, 1 },
+		{ MEDIASUBTYPE_IYUV, 'VYUI', 1 << 14, 1 },
 
 		/* MJPEG*/
-		{ MEDIASUBTYPE_MJPG, 'GPJM', 1 << 14 },
+		{ MEDIASUBTYPE_MJPG, 'GPJM', 1 << 14, 1 },
 
 		/* RGB */
-		{ MEDIASUBTYPE_RGB565, 0xe436eb7b, 1 << 13 },
-		{ MEDIASUBTYPE_RGB555, 0xe436eb7c, 1 << 13 },
-		{ MEDIASUBTYPE_RGB24, 0xe436eb7d, 1 << 12 },
-		{ MEDIASUBTYPE_RGB32, 0xe436eb7e, 1 << 14 },
-		{ MEDIASUBTYPE_ARGB32, 0x773c9ac0, 1 << 14 },
+		{ MEDIASUBTYPE_RGB565, 0xe436eb7b, 1 << 13, 2 },
+		{ MEDIASUBTYPE_RGB555, 0xe436eb7c, 1 << 13, 2 },
+		{ MEDIASUBTYPE_RGB24, 0xe436eb7d, 1 << 12, 3 },
+		{ MEDIASUBTYPE_RGB32, 0xe436eb7e, 1 << 14, 4 },
+		{ MEDIASUBTYPE_ARGB32, 0x773c9ac0, 1 << 14, 4 },
 
 		/* YUV 4:2:2 */
-		{ MEDIASUBTYPE_YUYV, 'VYUY', 1 << 13 }, /*422 16bits per pixel top-down image, YUYV packet */
-		{ MEDIASUBTYPE_YVU9, '9UVY', 1 << 13 },
-		{ MEDIASUBTYPE_Y411, '114Y', 1 << 13 },
-		{ MEDIASUBTYPE_Y41P, 'P14Y', 1 << 13 },
-		{ MEDIASUBTYPE_YUY2, '2YUY', 1 << 13 },
-		{ MEDIASUBTYPE_YVYU, 'UYVY', 1 << 13 },
-		{ MEDIASUBTYPE_UYVY, 'YVYU', 1 << 13 },
-		{ MEDIASUBTYPE_Y211, '112Y', 1 << 13 },
-		{ MEDIASUBTYPE_NV11, '11VN', 1 << 13 },
-		{ MEDIASUBTYPE_420O, 'O024', 1 << 13 },
+		{ MEDIASUBTYPE_YUYV, 'VYUY', 1 << 13, 2 }, /*422 16bits per pixel top-down image, YUYV packet */
+		{ MEDIASUBTYPE_YVU9, '9UVY', 1 << 13, 2 },
+		{ MEDIASUBTYPE_Y411, '114Y', 1 << 13, 2 },
+		{ MEDIASUBTYPE_Y41P, 'P14Y', 1 << 13, 2 },
+		{ MEDIASUBTYPE_YUY2, '2YUY', 1 << 13, 2 },
+		{ MEDIASUBTYPE_YVYU, 'UYVY', 1 << 13, 2 },
+		{ MEDIASUBTYPE_UYVY, 'YVYU', 1 << 13, 2 },
+		{ MEDIASUBTYPE_Y211, '112Y', 1 << 13, 2 },
+		{ MEDIASUBTYPE_NV11, '11VN', 1 << 13, 2 },
+		{ MEDIASUBTYPE_420O, 'O024', 1 << 13, 2 },
 
 		/* YUV 4:4:4 */
-		{ MEDIASUBTYPE_AYUV, 0x56555941, 1 << 10 }, /*AYUV4:4:4 Packed 8*/
+		{ MEDIASUBTYPE_AYUV, 0x56555941, 1 << 10, 4 }, /*AYUV4:4:4 Packed 8*/
 };
 
 //using namespace ATL;
@@ -88,6 +82,7 @@ DShowVideoCapture::DShowVideoCapture()
 DShowVideoCapture::~DShowVideoCapture()
 {
 	internel_log(Info, "fps %f", mFpsStats.frequencyPerSecond());
+	ReleaseDShowInterfaces();
 }
 
 void DShowVideoCapture::ShowDShowError(HRESULT hr)
@@ -108,6 +103,7 @@ HRESULT DShowVideoCapture::RegisterCallback(VideoCaptureCallback *cb)
 HRESULT DShowVideoCapture::UnregisterCallback()
 {
 	mcb = NULL;
+	
 	return S_OK;
 }
 
@@ -134,28 +130,29 @@ HRESULT DShowVideoCapture::Start(OPEN_DEVICE_PARAM &params)
 
 	mWorkParams = params;
 
-	BuildGraph();
+	CHECK_HR(hr = BuildGraph());
 
-	while (hr = mMediaControl->Run() != S_OK){
-		Sleep(100);
-	}
-	
 	mGrabber->GetConnectedMediaType(&mWorkMediaType);
 	mWorkParams.width = mWorkMediaType.BitmapHeader()->biWidth;
 	mWorkParams.height = mWorkMediaType.BitmapHeader()->biHeight;
 	mWorkParams.fps = RefTimeToFramesPerSec(mWorkMediaType.AvgReferenceTime());
 	mWorkParams.pixelFormatInFourCC = mWorkMediaType.subtype.Data1;
-
 	params = mWorkParams;
+	
+
+	while (hr = mMediaControl->Run() != S_OK){
+		Sleep(100);
+	}
 
 	if (mDropFrameStatus){
 		mDropFrameStatus->GetNumDropped(&mDropFrames);
 		mDropFrameStatus->GetNumNotDropped(&mCapFrames);
 	}
 
-	ShowDShowError(hr);
-
 	SaveGraphFile(mGraph, TEXT("d:\\my.grf"));
+
+done:
+	ShowDShowError(hr);
 
 	return hr;
 }
@@ -173,7 +170,11 @@ HRESULT DShowVideoCapture::Stop()
 			dropFrameCount - mDropFrames, capFrameCount - mCapFrames);
 	}
 
-	return mMediaControl->Stop();
+	mMediaControl->Stop();
+
+	RemoveFiltersFromGraph();
+
+	return S_OK;
 }
 
 HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
@@ -196,6 +197,7 @@ HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 	desc.width = mWorkParams.width;
 	desc.height = mWorkParams.height;
 	desc.pixelFormatInFourCC = mWorkMediaType.subtype.Data1;
+	desc.lineSize = mWorkParams.width * 3;
 
 	mcb->OnFrame(desc);
 
@@ -247,8 +249,6 @@ HRESULT DShowVideoCapture::ReleaseDShowInterfaces()
 
 	if (Runing())
 		Stop();
-
-	RemoveFiltersFromGraph();
 
 	SAFE_RELEASE(mDropFrameStatus);
 	SAFE_RELEASE(mMediaEventEx);

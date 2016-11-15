@@ -124,13 +124,13 @@ bool CLibx264::addFrame(const CSampleBuffer &inputFrame)
 		return false;
 	}
 
-	if (inpic.img.i_csp != mCodecParams.i_csp){
-		close();
-		mCodecParams.i_csp = inpic.img.i_csp;
-		mCodecParams.i_width = inputFrame.GetWidth();
-		mCodecParams.i_height = inputFrame.GetHeight();
-		open();
-	}
+// 	if (inpic.img.i_csp != mCodecParams.i_csp){
+// 		close();
+// 		mCodecParams.i_csp = inpic.img.i_csp;
+// 		mCodecParams.i_width = inputFrame.GetWidth();
+// 		mCodecParams.i_height = inputFrame.GetHeight();
+// 		open();
+// 	}
 
 	encodeFrame(&inpic);
 	return true;

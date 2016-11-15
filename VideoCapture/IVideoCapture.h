@@ -51,6 +51,7 @@ typedef struct tagFrameDesc{
 	int32_t dataSize;
 	uint8_t *dataPtr;
 	DWORD pixelFormatInFourCC;
+	int32_t lineSize;
 	int64_t ptsStart;
 	int64_t ptsEnd;
 	int64_t frameStartIdx;

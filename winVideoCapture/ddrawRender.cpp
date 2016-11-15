@@ -255,12 +255,14 @@ HRESULT DDrawRender::PushFrame(CSampleBuffer *frame)
 	uint8_t *frameBuffer = frame->GetDataPtr();
 	uint8_t *frameLine = NULL;
 	int line_size = desc.lPitch;
+	int line_size_frame = frame->GetLineSize();
+
 	for (DWORD i = 0; i < desc.dwHeight; i++){
 		bufferLine = (uint8_t*)(buffer + line_size*i);
-		frameLine = frameBuffer + frame->GetWidth();
+		frameLine = frameBuffer + line_size_frame*i;
 		for (DWORD j = 0; j < desc.dwWidth; j++){
 			//bufferLine[i] = frameBuffer[j];
-			memcpy(bufferLine, frameBuffer, min(line_size, frame->GetWidth()));
+			memcpy(bufferLine, frameLine, min(line_size, line_size_frame));
 		}
 	}
 
