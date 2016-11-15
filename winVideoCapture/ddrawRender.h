@@ -29,9 +29,9 @@ protected:
 	DWORD RenderLoop();
 
 private:
-	IDirectDraw *mDDrawObj;
-	LPDIRECTDRAWSURFACE mDDrawPrimarySurface;
-	LPDIRECTDRAWSURFACE mDDrawSecondarySurface;
+	IDirectDraw7 *mDDrawObj;
+	LPDIRECTDRAWSURFACE7 mDDrawPrimarySurface;
+	LPDIRECTDRAWSURFACE7 mDDrawSecondarySurface;
 	LPDIRECTDRAWCLIPPER mDDrawClippper;
 
 	HANDLE mRenderEvent;

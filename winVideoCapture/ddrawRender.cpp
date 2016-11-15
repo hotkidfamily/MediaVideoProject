@@ -163,7 +163,7 @@ DDrawRender::~DDrawRender()
 HRESULT DDrawRender::CreateSurfaces(int width, int height)
 {
 	HRESULT hr = DD_OK;
-	DDSURFACEDESC desc;
+	DDSURFACEDESC2 desc;
 	ZeroMemory(&desc, sizeof(DDSURFACEDESC));
 	desc.dwSize = sizeof(DDSURFACEDESC);
 	desc.dwFlags = DDSD_CAPS;
@@ -241,7 +241,7 @@ HRESULT DDrawRender::DeinitDDrawInterface()
 HRESULT DDrawRender::PushFrame(CSampleBuffer *frame)
 {
 	HRESULT hr = DD_OK;
-	DDSURFACEDESC desc;
+	DDSURFACEDESC2 desc;
 	ZeroMemory(&desc, sizeof(DDSURFACEDESC));
 	desc.dwSize = sizeof(DDSURFACEDESC);
 	RECT rect;
@@ -255,16 +255,17 @@ HRESULT DDrawRender::PushFrame(CSampleBuffer *frame)
 
 	}else{
 		uint8_t *surfaceBuffer = (uint8_t*)desc.lpSurface;
+		memcpy(surfaceBuffer, frame->GetDataPtr(), frame->GetDataSize());
 
-		for (DWORD i = 0; i < desc.dwHeight; i++){
-			DWORD * pixel = (DWORD*)(surfaceBuffer + desc.lPitch*(desc.dwHeight - i));
-			uint8_t * pixelrgb24 = (uint8_t*)(frame->GetDataPtr() + frame->GetLineSize()*i);
-			for (DWORD j = 0; j < desc.dwWidth; j++){
-				//memcpy(bufferLine, frameLine, min(line_size, line_size_frame));
-				pixel[j] = *(DWORD*)pixelrgb24;
-				pixelrgb24 += 3;
-			}
-		}
+// 		for (DWORD i = 0; i < desc.dwHeight; i++){
+// 			DWORD * pixel = (DWORD*)(surfaceBuffer + desc.lPitch*(desc.dwHeight - i));
+// 			uint8_t * pixelrgb24 = (uint8_t*)(frame->GetDataPtr() + frame->GetLineSize()*i);
+// 			for (DWORD j = 0; j < desc.dwWidth; j++){
+// 				//memcpy(bufferLine, frameLine, min(line_size, line_size_frame));
+// 				pixel[j] = *(DWORD*)pixelrgb24;
+// 				pixelrgb24 += 3;
+// 			}
+// 		}
 	}
 
 	mDDrawSecondarySurface->Unlock(NULL);
