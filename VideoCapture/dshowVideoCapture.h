@@ -56,12 +56,13 @@ typedef struct tagFrameBility{
 
 		SU_RES_LARGE_INAREA = 1 << 9,
 	};
-	int32_t Proirity;
+	int32_t Priority;
 	int32_t Ability;
 	SIZE ImageSize;
 	LONGLONG MinFrameInterval;
 	LONGLONG MaxFrameInterval;
 	CMediaType MediaType;
+	DWORD pixelFormatInFourCC;
 	tagFrameBility(){
 		ZeroMemory(this, sizeof(tagFrameBility));
 	}

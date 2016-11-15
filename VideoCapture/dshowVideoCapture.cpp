@@ -12,29 +12,58 @@
 typedef struct tagFrameFormatInfo{
 	GUID subtype;
 	DWORD pixelFormatInFourCC;
-	int proirity;
+	int priority;
 }FRAMEFORAMTINFO;
 
+/*
+Reference :https://msdn.microsoft.com/zh-cn/library/windows/desktop/dd391027(v=vs.85).aspx
+MEDIASUBTYPE_YV12 YV12 4:2:0 Planar 8
+MEDIASUBTYPE_I420 I420 4:2:0 Planar 8
+MEDIASUBTYPE_NV12 NV12 4:2:0 Planar 8
+MEDIASUBTYPE_IYUV IYUV 4:2:0 Planar 8
+
+MEDIASUBTYPE_IMC1 IMC1 4:2:0 Planar 8
+MEDIASUBTYPE_IMC3 IMC2 4:2:0 Planar 8
+MEDIASUBTYPE_IMC2 IMC3 4:2:0 Planar 8
+MEDIASUBTYPE_IMC4 IMC4 4:2:0 Planar 8
+
+MEDIASUBTYPE_YUY2 YUY2 4:2:2 Packed 8
+MEDIASUBTYPE_UYVY UYVY 4:2:2 Packed 8
+MEDIASUBTYPE_YVYU YVYU 4:2:2 Packed 8
+
+MEDIASUBTYPE_AYUV AYUV 4:4:4 Packed 8
+*/
+
 FRAMEFORAMTINFO dshowSupportVideoFormatTable[] = {
-		{ MEDIASUBTYPE_YUYV, 'VYUY', 1 },
-		{ MEDIASUBTYPE_IYUV, 'VYUI', 1 },
-		{ MEDIASUBTYPE_YVU9, '9UVY', 1 },
-		{ MEDIASUBTYPE_Y411, '114Y', 1 },
-		{ MEDIASUBTYPE_Y41P, 'P14Y', 1 },
-		{ MEDIASUBTYPE_YUY2, '2YUY', 1 },
-		{ MEDIASUBTYPE_YVYU, 'UYVY', 1 },
-		{ MEDIASUBTYPE_UYVY, 'YVYU', 1 },
-		{ MEDIASUBTYPE_Y211, '112Y', 1 },
-		{ MEDIASUBTYPE_MJPG, 'GPJM', 1 },
-		{ MEDIASUBTYPE_RGB565, 0xe436eb7b, 0},
-		{ MEDIASUBTYPE_RGB555, 0xe436eb7c, 0 },
-		{ MEDIASUBTYPE_RGB24, 0xe436eb7d, 0 },
-		{ MEDIASUBTYPE_RGB32, 0xe436eb7e, 0 },
-		{ MEDIASUBTYPE_ARGB32, 0x773c9ac0, 1},
-		{ MEDIASUBTYPE_YV12, '21VY', 0 },
-		{ MEDIASUBTYPE_NV12, '21VN', 0 },
-		{ MEDIASUBTYPE_NV11, '11VN', 2 },
-		{ MEDIASUBTYPE_420O, 'O024', 0 }
+		/* YUV 420 */
+		{ MEDIASUBTYPE_YV12, '21VY', 1 << 15 },
+		{ MEDIASUBTYPE_NV12, '21VN', 1 << 15 },
+		{ MEDIASUBTYPE_IYUV, 'VYUI', 1 << 14 },
+
+		/* MJPEG*/
+		{ MEDIASUBTYPE_MJPG, 'GPJM', 1 << 14 },
+
+		/* RGB */
+		{ MEDIASUBTYPE_RGB565, 0xe436eb7b, 1 << 13 },
+		{ MEDIASUBTYPE_RGB555, 0xe436eb7c, 1 << 13 },
+		{ MEDIASUBTYPE_RGB24, 0xe436eb7d, 1 << 12 },
+		{ MEDIASUBTYPE_RGB32, 0xe436eb7e, 1 << 14 },
+		{ MEDIASUBTYPE_ARGB32, 0x773c9ac0, 1 << 14 },
+
+		/* YUV 4:2:2 */
+		{ MEDIASUBTYPE_YUYV, 'VYUY', 1 << 13 }, /*422 16bits per pixel top-down image, YUYV packet */
+		{ MEDIASUBTYPE_YVU9, '9UVY', 1 << 13 },
+		{ MEDIASUBTYPE_Y411, '114Y', 1 << 13 },
+		{ MEDIASUBTYPE_Y41P, 'P14Y', 1 << 13 },
+		{ MEDIASUBTYPE_YUY2, '2YUY', 1 << 13 },
+		{ MEDIASUBTYPE_YVYU, 'UYVY', 1 << 13 },
+		{ MEDIASUBTYPE_UYVY, 'YVYU', 1 << 13 },
+		{ MEDIASUBTYPE_Y211, '112Y', 1 << 13 },
+		{ MEDIASUBTYPE_NV11, '11VN', 1 << 13 },
+		{ MEDIASUBTYPE_420O, 'O024', 1 << 13 },
+
+		/* YUV 4:4:4 */
+		{ MEDIASUBTYPE_AYUV, 0x56555941, 1 << 10 }, /*AYUV4:4:4 Packed 8*/
 };
 
 //using namespace ATL;
@@ -108,6 +137,8 @@ HRESULT DShowVideoCapture::Start(OPEN_DEVICE_PARAM params)
 	}
 	
 	mGrabber->GetConnectedMediaType(&mWorkMediaType);
+	mWorkParams.width = mWorkMediaType.BitmapHeader()->biWidth;
+	mWorkParams.height = mWorkMediaType.BitmapHeader()->biHeight;
 
 	if (mDropFrameStatus){
 		mDropFrameStatus->GetNumDropped(&mDropFrames);
@@ -359,7 +390,8 @@ inline BOOL DShowVideoCapture::IsFormatSupport(CMediaType &mediaType, FRAMEABILI
 	BOOL bRet = FALSE;
 	for (int i = 0; i < ARRAYSIZE(dshowSupportVideoFormatTable); i++){
 		if (mediaType.subTypeEqual(dshowSupportVideoFormatTable[i].subtype)){
-			bility.Proirity = dshowSupportVideoFormatTable[i].proirity;
+			bility.Priority = dshowSupportVideoFormatTable[i].priority;
+			bility.pixelFormatInFourCC = dshowSupportVideoFormatTable[i].pixelFormatInFourCC;
 			bRet = TRUE;
 			break;
 		}
@@ -430,13 +462,14 @@ HRESULT DShowVideoCapture::FindMediaTypeInPin(CComPtr<IPin> &pOutPin)
 	 * select support format
 	 */
 	if (supportFrameFormatList.size()){
-		int32_t largeAbility = 0;
+		int64_t largestAbility = 0;
 		FRAMEABILITY ability;
 		std::list<FRAMEABILITY>::iterator it = supportFrameFormatList.begin();
 		for (; it != supportFrameFormatList.end(); it++){
-			if (it->Ability > largeAbility){
+			int64_t distance = it->Ability * it->Priority;
+			if (distance > largestAbility){
 				ability = *it;
-				largeAbility = it->Ability;
+				largestAbility = distance;
 			}
 		}
 
