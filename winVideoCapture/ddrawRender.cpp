@@ -160,7 +160,7 @@ DDrawRender::~DDrawRender()
 {
 }
 
-HRESULT DDrawRender::CreateSurfaces(int width, int height)
+HRESULT DDrawRender::CreateSurfaces(int width, int height, DWORD pixelFormatInFourCC)
 {
 	HRESULT hr = DD_OK;
 	DDSURFACEDESC2 desc;
@@ -171,10 +171,15 @@ HRESULT DDrawRender::CreateSurfaces(int width, int height)
 
 	CHECK_HR(hr = mDDrawObj->CreateSurface(&desc, &mDDrawPrimarySurface, NULL));
 
-	desc.dwFlags = DDSD_WIDTH | DDSD_HEIGHT | DDSD_CAPS;
+	desc.dwFlags = DDSD_WIDTH | DDSD_HEIGHT | DDSD_CAPS | DDSD_PIXELFORMAT;
 	desc.dwWidth = width;
 	desc.dwHeight = height;
  	desc.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
+	desc.ddpfPixelFormat.dwSize = sizeof(DDPIXELFORMAT);
+	desc.ddpfPixelFormat.dwFourCC = pixelFormatInFourCC;
+	desc.ddpfPixelFormat.dwFlags = DDPF_FOURCC | DDPF_YUV;
+	desc.ddpfPixelFormat.dwYUVBitCount = 8;
+
 	CHECK_HR(hr = mDDrawObj->CreateSurface(&desc, &mDDrawSecondarySurface, NULL));
 
 done:
@@ -198,7 +203,7 @@ DWORD DDrawRender::RenderLoop()
 	return 0;
 }
 
-HRESULT DDrawRender::InitDDrawInterface(int width, int heigth)
+HRESULT DDrawRender::InitDDrawInterface(int width, int height, DWORD pixelFormatInFourCC)
 {
 	HRESULT hr = DD_OK;
 	CHECK_HR(hr = CoInitialize(NULL));
@@ -207,14 +212,14 @@ HRESULT DDrawRender::InitDDrawInterface(int width, int heigth)
 	CHECK_HR(hr = mDDrawObj->Initialize(NULL));
 	CHECK_HR(hr = mDDrawObj->SetCooperativeLevel(mHwnd, DDSCL_NORMAL));
 
-	CHECK_HR(hr = CreateSurfaces(width, heigth));
+	CHECK_HR(hr = CreateSurfaces(width, height, pixelFormatInFourCC));
 
 	CHECK_HR(hr = mDDrawObj->CreateClipper(0, &mDDrawClippper, NULL));
 	CHECK_HR(hr = mDDrawClippper->SetHWnd(0, mHwnd));
 	CHECK_HR(hr = mDDrawPrimarySurface->SetClipper(mDDrawClippper));
 
 	mWidth = width;
-	mHeight = heigth;
+	mHeight = height;
 
 	mRenderThreadHandle = CreateThread(NULL, 0, RenderThread, this, NULL, &mRenderThreadId);
 
@@ -256,16 +261,6 @@ HRESULT DDrawRender::PushFrame(CSampleBuffer *frame)
 	}else{
 		uint8_t *surfaceBuffer = (uint8_t*)desc.lpSurface;
 		memcpy(surfaceBuffer, frame->GetDataPtr(), frame->GetDataSize());
-
-// 		for (DWORD i = 0; i < desc.dwHeight; i++){
-// 			DWORD * pixel = (DWORD*)(surfaceBuffer + desc.lPitch*(desc.dwHeight - i));
-// 			uint8_t * pixelrgb24 = (uint8_t*)(frame->GetDataPtr() + frame->GetLineSize()*i);
-// 			for (DWORD j = 0; j < desc.dwWidth; j++){
-// 				//memcpy(bufferLine, frameLine, min(line_size, line_size_frame));
-// 				pixel[j] = *(DWORD*)pixelrgb24;
-// 				pixelrgb24 += 3;
-// 			}
-// 		}
 	}
 
 	mDDrawSecondarySurface->Unlock(NULL);
@@ -273,6 +268,7 @@ HRESULT DDrawRender::PushFrame(CSampleBuffer *frame)
 	DDBLTFX ddblfx;
 	ZeroMemory(&ddblfx, sizeof(DDBLTFX));
 	ddblfx.dwSize = sizeof(DDBLTFX);
+	ddblfx.dwRotationAngle = 9000;
 	ddblfx.dwROP = SRCCOPY;
 
 	mDDrawPrimarySurface->Blt(&rect, mDDrawSecondarySurface, NULL, DDBLT_ROP, &ddblfx);

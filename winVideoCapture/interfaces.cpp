@@ -15,8 +15,8 @@ BOOL StartCaptureWork(THIS_CONTEXT *ctx)
 		ctx->pVideoCapture->RegisterCallback(ctx->callBack);
 		ctx->captureArgs.parentWindow = ctx->hMainWnd;
 		ctx->captureArgs.fps = 30;
-		ctx->captureArgs.width = 1280;
-		ctx->captureArgs.height = 720;
+		ctx->captureArgs.width = 640;
+		ctx->captureArgs.height = 480;
 		bRet = ctx->pVideoCapture->StartCaptureWithParam(ctx->captureArgs);
 
 		ctx->bRuning = TRUE;
@@ -100,7 +100,7 @@ BOOL StartRenderWork(THIS_CONTEXT *ctx)
 {
 	ctx->render = new DDrawRender(ctx->hMainWnd);
 	assert(ctx->render != NULL);
-	ctx->render->InitDDrawInterface(ctx->captureArgs.width, ctx->captureArgs.height);
+	ctx->render->InitDDrawInterface(ctx->captureArgs.width, ctx->captureArgs.height, ctx->captureArgs.pixelFormatInFourCC);
 
 	return TRUE;
 }

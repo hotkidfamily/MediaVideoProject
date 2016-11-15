@@ -18,13 +18,13 @@ public:
 	DDrawRender(HWND);
 	~DDrawRender();
 
-	HRESULT InitDDrawInterface(int, int);
+	HRESULT InitDDrawInterface(int, int, DWORD);
 	HRESULT DeinitDDrawInterface();
 
 	HRESULT PushFrame(CSampleBuffer *frame);
 
 protected:
-	HRESULT CreateSurfaces(int ,int );
+	HRESULT CreateSurfaces(int, int, DWORD);
 	const char* GetDDrawErrorString(HRESULT );
 	DWORD RenderLoop();
 
