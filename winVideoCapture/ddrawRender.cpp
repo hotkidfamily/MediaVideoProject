@@ -160,13 +160,15 @@ HRESULT DDrawRender::CreateSurfaces(int width, int height)
 	DDSURFACEDESC desc;
 	ZeroMemory(&desc, sizeof(DDSURFACEDESC));
 	desc.dwSize = sizeof(DDSURFACEDESC);
-	desc.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT;
-	desc.dwWidth = width;
-	desc.dwHeight = height;
+	desc.dwFlags = DDSD_CAPS;
 	desc.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
 
 	CHECK_HR(hr = mDDrawObj->CreateSurface(&desc, &mDDrawPrimarySurface, NULL));
-	desc.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
+
+	desc.dwFlags = DDSD_WIDTH | DDSD_HEIGHT | DDSD_CAPS;
+	desc.dwWidth = width;
+	desc.dwHeight = height;
+ 	desc.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
 	CHECK_HR(hr = mDDrawObj->CreateSurface(&desc, &mDDrawSecondarySurface, NULL));
 
 done:
@@ -183,7 +185,7 @@ HRESULT DDrawRender::InitDDrawInterface(int width, int heigth)
 	CHECK_HR(hr = mDDrawObj->Initialize(NULL));
 	CHECK_HR(hr = mDDrawObj->SetCooperativeLevel(mHwnd, DDSCL_NORMAL));
 
-	//CHECK_HR(hr = CreateSurfaces(width, heigth));
+	CHECK_HR(hr = CreateSurfaces(width, heigth));
 
 	mWidth = width;
 	mHeight = heigth;
@@ -197,9 +199,9 @@ HRESULT DDrawRender::DeinitDDrawInterface()
 {
 	HRESULT hr = S_OK;
 
-	SAFE_RELEASE(mDDrawObj);
-	SAFE_RELEASE(mDDrawPrimarySurface);
 	SAFE_RELEASE(mDDrawSecondarySurface);
+	SAFE_RELEASE(mDDrawPrimarySurface);
+	SAFE_RELEASE(mDDrawObj);
 
 	CoUninitialize();
 
@@ -209,7 +211,7 @@ HRESULT DDrawRender::DeinitDDrawInterface()
 HRESULT DDrawRender::PushFrame(CSampleBuffer *frame)
 {
 	HRESULT hr = DD_OK;
-
+	
 	return hr;
 }
 
