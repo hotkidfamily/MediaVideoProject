@@ -85,7 +85,11 @@ bool CLibx264::addFrame(const CSampleBuffer &inputFrame)
 		inpic.img.i_csp = X264_CSP_I420;
 		inpic.img.i_plane = 3;
 		inpic.img.plane[0] = inputFrame.GetDataPtr();
+		inpic.img.plane[1] = inpic.img.plane[0] + inputFrame.GetWidth() *inputFrame.GetHeight();
+		inpic.img.plane[2] = inpic.img.plane[1] + inputFrame.GetWidth() *inputFrame.GetHeight() / 4;
 		inpic.img.i_stride[0] = inputFrame.GetWidth();
+		inpic.img.i_stride[1] = inputFrame.GetWidth();
+		inpic.img.i_stride[2] = inputFrame.GetWidth();
 		break;
 	case PIXEL_FORMAT_RGB32:
 		inpic.img.i_csp = X264_CSP_BGRA;
@@ -107,16 +111,26 @@ bool CLibx264::addFrame(const CSampleBuffer &inputFrame)
 		return false;
 	}
 
+	if (inpic.img.i_csp != mCodecParams.i_csp){
+		close();
+		mCodecParams.i_csp = inpic.img.i_csp;
+		mCodecParams.i_width = inputFrame.GetWidth();
+		mCodecParams.i_height = inputFrame.GetHeight();
+		open();
+	}
+
 	encodeFrame(&inpic);
 	return true;
 }
 
 bool CLibx264::getPackage(DwVideoPackage &outputPackage)
 {
+	lock.Lock();
 	if (mPackages.size()){
 		outputPackage = mPackages.front();
 		mPackages.pop_front();
 	}
+	lock.Unlock();
 	return true;
 }
 
@@ -214,8 +228,9 @@ bool CLibx264::assemblePackage(int outputNALsDataSizeInBytes,
 			encodedPackage.frameType = DwVideoPackage::ERR_FRAME;
 			break;
 		}
-
+		lock.Lock();
 		mPackages.push_back(encodedPackage);
+		lock.Unlock();
 	}else if (outputNALsDataSizeInBytes == 0){
 	}else{
 		ret = false;

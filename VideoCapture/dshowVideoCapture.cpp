@@ -33,9 +33,13 @@ MEDIASUBTYPE_YVYU YVYU 4:2:2 Packed 8
 
 MEDIASUBTYPE_AYUV AYUV 4:4:4 Packed 8
 */
+#ifndef MEDIASUBTYPE_I420
+const GUID MEDIASUBTYPE_I420 = { 0x30323449, 0x0000, 0x0010, { 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71 } };
+#endif
 
 FRAMEFORAMTINFO dshowSupportVideoFormatTable[] = {
 		/* YUV 420 */
+		{ MEDIASUBTYPE_I420, '024I', 1<< 15 },
 		{ MEDIASUBTYPE_YV12, '21VY', 1 << 15 },
 		{ MEDIASUBTYPE_NV12, '21VN', 1 << 15 },
 		{ MEDIASUBTYPE_IYUV, 'VYUI', 1 << 14 },
@@ -410,7 +414,6 @@ HRESULT DShowVideoCapture::FindMediaTypeInPin(CComPtr<IPin> &pOutPin)
 	int cfgCnt = 0;
 	int cfgSize = 0;
 	std::list<FRAMEABILITY> supportFrameFormatList;
-	std::list<FRAMEABILITY> suitableFrameFromatList;
 
 	CHECK_HR(hr = pOutPin->QueryInterface(IID_IAMStreamConfig, (void**)&pConfig));
 	CHECK_HR(hr = pConfig->GetNumberOfCapabilities(&cfgCnt, &cfgSize));
@@ -434,20 +437,18 @@ HRESULT DShowVideoCapture::FindMediaTypeInPin(CComPtr<IPin> &pOutPin)
 
 					if (bility.ImageSize.cx == mWorkParams.width && bility.ImageSize.cy == mWorkParams.height){
 						bility.Ability |= FRAMEABILITY::SU_RES;
-					}
-					else if (bility.ImageSize.cx > mWorkParams.width && bility.ImageSize.cy > mWorkParams.height){
-						bility.Ability |= FRAMEABILITY::SU_RES_LARGE;
-					}
-					else if (bility.ImageSize.cx * bility.ImageSize.cy > mWorkParams.width * mWorkParams.height){
-						bility.Ability |= FRAMEABILITY::SU_RES_LARGE_INAREA;
-					}
-
-					if (bility.ImageSize.cx * mWorkParams.height == bility.ImageSize.cy * mWorkParams.width){
+					}else if (bility.ImageSize.cx * mWorkParams.height == bility.ImageSize.cy * mWorkParams.width){
 						bility.Ability |= FRAMEABILITY::SU_RES_RATIO;
+					}else if (bility.ImageSize.cx > mWorkParams.width && bility.ImageSize.cy > mWorkParams.height){
+						bility.Ability |= FRAMEABILITY::SU_RES_LARGE;
+					}else if (bility.ImageSize.cx * bility.ImageSize.cy > mWorkParams.width * mWorkParams.height){
+						bility.Ability |= FRAMEABILITY::SU_RES_LARGE_INAREA;
+					}else{
+						continue;
 					}
 
 					REFERENCE_TIME frameInterval = FramesPerSecToRefTime(mWorkParams.fps);
-					if (frameInterval < bility.MinFrameInterval || frameInterval > bility.MaxFrameInterval){
+					if (frameInterval >= bility.MinFrameInterval || frameInterval <= bility.MaxFrameInterval){
 						bility.Ability |= FRAMEABILITY::SU_FPS;
 					}
 

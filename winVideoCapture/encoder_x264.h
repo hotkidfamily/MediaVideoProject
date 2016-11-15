@@ -113,4 +113,5 @@ private:
 	std::list<DwVideoPackage> mPackages;
 
 	ENCODEC_CFG mWorkConfig;
+	CLock lock;
 };
