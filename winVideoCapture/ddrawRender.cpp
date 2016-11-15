@@ -137,6 +137,9 @@ DDrawRender::DDrawRender()
 	, mHwnd(NULL)
 	, mWidth(0)
 	, mHeight(0)
+	, mRenderThreadHandle(NULL)
+	, mRenderThreadId(0)
+	, mRenderEvent(NULL)
 {
 }
 
@@ -147,6 +150,9 @@ DDrawRender::DDrawRender(HWND hWnd)
 	, mHwnd(hWnd)
 	, mWidth(0)
 	, mHeight(0)
+	, mRenderThreadHandle(NULL)
+	, mRenderThreadId(0)
+	, mRenderEvent(NULL)
 {
 }
 
@@ -176,6 +182,22 @@ done:
 	return hr;
 }
 
+DWORD WINAPI RenderThread(LPVOID args)
+{
+	DDrawRender *pRender = (DDrawRender*)args;
+
+	return TRUE;
+}
+
+DWORD DDrawRender::RenderLoop()
+{
+	while (bRender){
+		
+	}
+
+	return 0;
+}
+
 HRESULT DDrawRender::InitDDrawInterface(int width, int heigth)
 {
 	HRESULT hr = DD_OK;
@@ -194,6 +216,8 @@ HRESULT DDrawRender::InitDDrawInterface(int width, int heigth)
 	mWidth = width;
 	mHeight = heigth;
 
+	mRenderThreadHandle = CreateThread(NULL, 0, RenderThread, this, NULL, &mRenderThreadId);
+
 done:
 	GetDDrawErrorString(hr);
 	return hr;
@@ -210,6 +234,7 @@ HRESULT DDrawRender::DeinitDDrawInterface()
 
 	CoUninitialize();
 
+
 	return hr;
 }
 
@@ -221,35 +246,28 @@ HRESULT DDrawRender::PushFrame(CSampleBuffer *frame)
 	desc.dwSize = sizeof(DDSURFACEDESC);
 	RECT rect;
 	GetWindowRect(mHwnd,&rect);
-	
-	if (FAILED(mDDrawSecondarySurface->Lock(NULL, &desc, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL))){
-		// 
-		printf("error");
+
+	if (FAILED(hr = mDDrawSecondarySurface->Lock(NULL, &desc, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL))){
+		goto done;
 	}
 
- 	uint8_t *buffer = (uint8_t*)desc.lpSurface;
-	uint8_t *bufferLine = NULL;
+	if (frame->GetWidth() > desc.dwWidth || frame->GetHeight() > desc.dwHeight){
 
-	uint8_t *frameBuffer = frame->GetDataPtr();
-	uint8_t *frameLine = NULL;
-	int line_size = desc.lPitch;
-	int line_size_frame = frame->GetLineSize();
+	}else{
+		uint8_t *surfaceBuffer = (uint8_t*)desc.lpSurface;
 
-	for (DWORD i = 0; i < desc.dwHeight; i++){
-		bufferLine = (uint8_t*)(buffer + line_size*i);
-		frameLine = frameBuffer + line_size_frame*i;
-		DWORD * pixel = (DWORD*)bufferLine;
-//		for (DWORD j = 0; j < desc.dwWidth; j++){
-			memcpy(bufferLine, frameLine, min(line_size, line_size_frame));
-// 			pixel[j] = RGB(frameLine[j], frameLine[j + 1], frameLine[j + 2]);
-// 			frameLine += 3;
-// 		}
+		for (DWORD i = 0; i < desc.dwHeight; i++){
+			DWORD * pixel = (DWORD*)(surfaceBuffer + desc.lPitch*(desc.dwHeight - i));
+			uint8_t * pixelrgb24 = (uint8_t*)(frame->GetDataPtr() + frame->GetLineSize()*i);
+			for (DWORD j = 0; j < desc.dwWidth; j++){
+				//memcpy(bufferLine, frameLine, min(line_size, line_size_frame));
+				pixel[j] = *(DWORD*)pixelrgb24;
+				pixelrgb24 += 3;
+			}
+		}
 	}
 
 	mDDrawSecondarySurface->Unlock(NULL);
-
-	ZeroMemory(&desc, sizeof(DDSURFACEDESC));
-	desc.dwSize = sizeof(DDSURFACEDESC);
 
 	DDBLTFX ddblfx;
 	ZeroMemory(&ddblfx, sizeof(DDBLTFX));
@@ -258,6 +276,7 @@ HRESULT DDrawRender::PushFrame(CSampleBuffer *frame)
 
 	mDDrawPrimarySurface->Blt(&rect, mDDrawSecondarySurface, NULL, DDBLT_ROP, &ddblfx);
 
+done:
 	return hr;
 }
 

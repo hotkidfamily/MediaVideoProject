@@ -26,13 +26,20 @@ public:
 protected:
 	HRESULT CreateSurfaces(int ,int );
 	const char* GetDDrawErrorString(HRESULT );
+	DWORD RenderLoop();
 
 private:
 	IDirectDraw *mDDrawObj;
 	LPDIRECTDRAWSURFACE mDDrawPrimarySurface;
 	LPDIRECTDRAWSURFACE mDDrawSecondarySurface;
 	LPDIRECTDRAWCLIPPER mDDrawClippper;
+
+	HANDLE mRenderEvent;
+	HANDLE mRenderThreadHandle;
+	DWORD mRenderThreadId;
+
 	HWND mHwnd;
+	BOOL bRender;
 
 	DWORD mWidth;
 	DWORD mHeight;
