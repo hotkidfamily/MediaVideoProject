@@ -6,7 +6,6 @@
 #include "dshowVideoCapture.h"
 #include "mediafoundationVideoCapture.h"
 
-
 class IVideoCaptureDelegate : 
 	public IVideoCapture
 {

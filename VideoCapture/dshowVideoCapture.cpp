@@ -9,7 +9,35 @@
 #define GRABBER_FILTER_NAME_STR (TEXT("Grabber Filter"))
 #define JPEGDEC_FILTER_NAME_STR (TEXT("JPEG DEC"))
 
-using namespace ATL;
+typedef struct tagFrameFormatInfo{
+	GUID subtype;
+	DWORD pixelFormatInFourCC;
+	int proirity;
+}FRAMEFORAMTINFO;
+
+FRAMEFORAMTINFO dshowSupportVideoFormatTable[] = {
+		{ MEDIASUBTYPE_YUYV, 'VYUY', 1 },
+		{ MEDIASUBTYPE_IYUV, 'VYUI', 1 },
+		{ MEDIASUBTYPE_YVU9, '9UVY', 1 },
+		{ MEDIASUBTYPE_Y411, '114Y', 1 },
+		{ MEDIASUBTYPE_Y41P, 'P14Y', 1 },
+		{ MEDIASUBTYPE_YUY2, '2YUY', 1 },
+		{ MEDIASUBTYPE_YVYU, 'UYVY', 1 },
+		{ MEDIASUBTYPE_UYVY, 'YVYU', 1 },
+		{ MEDIASUBTYPE_Y211, '112Y', 1 },
+		{ MEDIASUBTYPE_MJPG, 'GPJM', 1 },
+		{ MEDIASUBTYPE_RGB565, 0xe436eb7b, 0},
+		{ MEDIASUBTYPE_RGB555, 0xe436eb7c, 0 },
+		{ MEDIASUBTYPE_RGB24, 0xe436eb7d, 0 },
+		{ MEDIASUBTYPE_RGB32, 0xe436eb7e, 0 },
+		{ MEDIASUBTYPE_ARGB32, 0x773c9ac0, 1},
+		{ MEDIASUBTYPE_YV12, '21VY', 0 },
+		{ MEDIASUBTYPE_NV12, '21VN', 0 },
+		{ MEDIASUBTYPE_NV11, '11VN', 2 },
+		{ MEDIASUBTYPE_420O, 'O024', 0 }
+};
+
+//using namespace ATL;
 
 DShowVideoCapture::DShowVideoCapture()
 	: mGraph(NULL)
@@ -50,17 +78,17 @@ HRESULT DShowVideoCapture::UnregisterCallback()
 	return S_OK;
 }
 
-bool DShowVideoCapture::Runing()
+BOOL DShowVideoCapture::Runing()
 {
 	HRESULT hr = S_OK;
-	bool bRet = true;
+	BOOL bRet = TRUE;
 	OAFilterState status = State_Stopped;
 
 	ASSERT(mMediaControl);
 	
 	hr = mMediaControl->GetState(INFINITE, &status);
 	if (status == State_Stopped || FAILED(hr)){
-		bRet = false;
+		bRet = FALSE;
 	}
 	ShowDShowError(hr);
 	return bRet;
@@ -78,6 +106,8 @@ HRESULT DShowVideoCapture::Start(OPEN_DEVICE_PARAM params)
 	while (hr = mMediaControl->Run() != S_OK){
 		Sleep(100);
 	}
+	
+	mGrabber->GetConnectedMediaType(&mWorkMediaType);
 
 	if (mDropFrameStatus){
 		mDropFrameStatus->GetNumDropped(&mDropFrames);
@@ -121,7 +151,7 @@ HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 	hr = pSample->GetTime(&desc.ptsStart, &desc.ptsEnd);
 	if (FAILED(hr)){
 		desc.ptsStart = timeGetTime();
-		desc.ptsEnd = desc.ptsStart + RefTimeToMsec(mWorkParams.fps);
+		desc.ptsEnd = desc.ptsStart + FramesPerSecToRefTime(mWorkParams.fps);
 	}
 
 	desc.width = mWorkParams.width;
@@ -272,14 +302,15 @@ HRESULT DShowVideoCapture::BuildGraph()
 		CLSCTX_INPROC_SERVER, IID_IBaseFilter, (void**)&pNullRenderFilter));
 
 	CHECK_HR(hr = FindFilterByIndex(mWorkParams.index, mCaptureFilter));
-
 	ASSERT(mCaptureFilter);
 
 	CHECK_HR(hr = mGraph->AddFilter(mCaptureFilter, CAPTURE_FILTER_NAME_STR));
 	CHECK_HR(hr = mGraph->AddFilter(mGrabberFiler, GRABBER_FILTER_NAME_STR));
 	CHECK_HR(hr = mGraph->AddFilter(pNullRenderFilter, RENDER_FILTER_NAME_STR));
 
-	CHECK_HR(hr = FindSultablePin(pCaptureOutPin));
+	//CHECK_HR(hr = FindSultablePin(pCaptureOutPin));
+	CHECK_HR(hr = FindPinByCategory(mCaptureFilter, PIN_CATEGORY_CAPTURE, PINDIR_OUTPUT, &pCaptureOutPin));
+	FindMediaTypeInPin(pCaptureOutPin);
 
 	CHECK_HR(hr = FindUnconnectedPin(mGrabberFiler, PINDIR_OUTPUT, &pGrabberOutPin));
 	CHECK_HR(hr = FindUnconnectedPin(mGrabberFiler, PINDIR_INPUT, &pGrabberInPin));
@@ -323,86 +354,112 @@ HRESULT DShowVideoCapture::GetDevicesName(VECT &cameNames)
 	return hr;
 }
 
+inline BOOL DShowVideoCapture::IsFormatSupport(CMediaType &mediaType, FRAMEABILITY & bility)
+{
+	BOOL bRet = FALSE;
+	for (int i = 0; i < ARRAYSIZE(dshowSupportVideoFormatTable); i++){
+		if (mediaType.subTypeEqual(dshowSupportVideoFormatTable[i].subtype)){
+			bility.Proirity = dshowSupportVideoFormatTable[i].proirity;
+			bRet = TRUE;
+			break;
+		}
+	}
+	return bRet;
+}
+
 /*
- * resolution is priority 
+ * resolution is priority
  */
-HRESULT DShowVideoCapture::FindVideoConfigByStreamConfig(CComPtr<IAMStreamConfig> &pConfig)
+HRESULT DShowVideoCapture::FindMediaTypeInPin(CComPtr<IPin> &pOutPin)
 {
 	HRESULT hr = S_OK;
 	HRESULT hrRet = E_FAIL;
+	CComPtr<IAMStreamConfig> pConfig = NULL;
 	int cfgCnt = 0;
 	int cfgSize = 0;
+	std::list<FRAMEABILITY> supportFrameFormatList;
+	std::list<FRAMEABILITY> suitableFrameFromatList;
 
-	ASSERT(pConfig);
-
+	CHECK_HR(hr = pOutPin->QueryInterface(IID_IAMStreamConfig, (void**)&pConfig));
 	CHECK_HR(hr = pConfig->GetNumberOfCapabilities(&cfgCnt, &cfgSize));
+
+	/*
+	 * Get all output format
+	 */
 	for (int i = 0; i < cfgCnt; i++){
 		CMediaType *mediaType = NULL;
 		VIDEO_STREAM_CONFIG_CAPS caps;
 		if ((hr = pConfig->GetStreamCaps(i, (AM_MEDIA_TYPE**)&mediaType, (BYTE*)&caps)) == S_OK){
-			if (mediaType->isVideoInfoHeader()){
+			if (mediaType->isVideoInfoHeader()){ // sample only support format_videoinfo
 				BITMAPINFOHEADER *bmp = mediaType->BitmapHeader();
-				if (mWorkParams.width == bmp->biWidth && mWorkParams.height == bmp->biHeight){
-					mWorkMediaType.Set(*mediaType);
-					hrRet = S_OK;
-					break;
-				}
+				FRAMEABILITY bility;
+				if (IsFormatSupport(*mediaType, bility)){
+					bility.MaxFrameInterval = caps.MaxFrameInterval;
+					bility.MinFrameInterval = caps.MinFrameInterval;
+					bility.ImageSize.cx = abs(bmp->biWidth);
+					bility.ImageSize.cy = abs(bmp->biHeight);
+					bility.MediaType = *mediaType;
 
-// 				REFERENCE_TIME frameInterval = FramesPerSecToRefTime(mWorkParams.fps);
-// 				if (frameInterval >= caps.MinFrameInterval
-// 					&& frameInterval <= caps.MaxFrameInterval){
-// 				}
+					if (bility.ImageSize.cx == mWorkParams.width && bility.ImageSize.cy == mWorkParams.height){
+						bility.Ability |= FRAMEABILITY::SU_RES;
+					}
+					else if (bility.ImageSize.cx > mWorkParams.width && bility.ImageSize.cy > mWorkParams.height){
+						bility.Ability |= FRAMEABILITY::SU_RES_LARGE;
+					}
+					else if (bility.ImageSize.cx * bility.ImageSize.cy > mWorkParams.width * mWorkParams.height){
+						bility.Ability |= FRAMEABILITY::SU_RES_LARGE_INAREA;
+					}
+
+					if (bility.ImageSize.cx * mWorkParams.height == bility.ImageSize.cy * mWorkParams.width){
+						bility.Ability |= FRAMEABILITY::SU_RES_RATIO;
+					}
+
+					REFERENCE_TIME frameInterval = FramesPerSecToRefTime(mWorkParams.fps);
+					if (frameInterval < bility.MinFrameInterval || frameInterval > bility.MaxFrameInterval){
+						bility.Ability |= FRAMEABILITY::SU_FPS;
+					}
+
+					if (bility.Ability)
+						supportFrameFormatList.push_back(bility);
+				}
 			}
 		}
 	}
 
-done:
-	ShowDShowError(hr);
-
-	return hrRet;
-}
-
-HRESULT DShowVideoCapture::FindSultablePin(CComPtr<IPin> &pOutPin)
-{
-	HRESULT hr = S_OK;
-	CComPtr<IEnumPins> pPinEnums = NULL;
-	CComPtr<IPin> pPin = NULL;
-	CComPtr<IPin> pGrabberInPin = NULL;
-	CComPtr<IAMStreamConfig> pConfig = NULL;
-	
-	CHECK_HR(hr = mCaptureFilter->EnumPins(&pPinEnums));
-	pPinEnums->Reset();
-	while ((hr = pPinEnums->Next(1, &pPin, NULL)) == S_OK){
-		PIN_DIRECTION dir;
-		pPin->QueryDirection(&dir);
-		if (dir != PINDIR_OUTPUT){
-			pPin.Release();
-			continue;
+	/*
+	 * select support format
+	 */
+	if (supportFrameFormatList.size()){
+		int32_t largeAbility = 0;
+		FRAMEABILITY ability;
+		std::list<FRAMEABILITY>::iterator it = supportFrameFormatList.begin();
+		for (; it != supportFrameFormatList.end(); it++){
+			if (it->Ability > largeAbility){
+				ability = *it;
+				largeAbility = it->Ability;
+			}
 		}
-		hr = pPin->QueryInterface(IID_IAMStreamConfig, (void**)&pConfig);
-		if ((hr = FindVideoConfigByStreamConfig(pConfig)) == S_OK){
-			break;
+
+		REFERENCE_TIME frameInterval = FramesPerSecToRefTime(mWorkParams.fps);
+		mWorkMediaType = ability.MediaType;
+		if (frameInterval > ability.MaxFrameInterval){
+			frameInterval = ability.MaxFrameInterval;
 		}
-		pPin.Release();
-		pConfig.Release();
+		if (frameInterval < ability.MinFrameInterval){
+			frameInterval = ability.MinFrameInterval;
+		}
+		mWorkMediaType.SetAvgReferenceTime(frameInterval);
+
+		CHECK_HR(hr = pConfig->SetFormat(&mWorkMediaType));
 	}
 
-	CHECK_HR(hr);
-
-	pOutPin = pPin;
-	
-	mWorkMediaType.SetAvgReferenceTime(FramesPerSecToRefTime(mWorkParams.fps));
-	CHECK_HR(hr = pConfig->SetFormat(&mWorkMediaType));
-	mWorkMediaType.GUIDtoStr(mWorkMediaType.subtype);
+	//mWorkMediaType.GUIDtoStr(mWorkMediaType.subtype);
 
 done:
 	ShowDShowError(hr);
-
-	pPinEnums.Release();
-	pPin.Release();
 	pConfig.Release();
-	pGrabberInPin.Release();
-	return hr;
+
+	return hrRet;
 }
 
 HRESULT DShowVideoCapture::FindFilterByIndex(int index, IBaseFilter * &filter)

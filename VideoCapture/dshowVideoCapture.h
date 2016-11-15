@@ -44,11 +44,27 @@ typedef struct tagCameraDevDesc{
 
 typedef std::vector<CAMERADESC> CAMERALIST;
 
-typedef struct tagVideoInfo{
-	int pinIndex;
-	CMediaType *meidaType;
+typedef struct tagFrameBility{
+	enum ability{
+		SU_RES = 1 << 15,
+		SU_FPS = 1 << 14,
+		SU_RES_RATIO = 1 << 13,
+		SU_FPS_SMALL = 1 << 12,
+
+		SU_RES_LARGE = 1 << 11,
+		SU_FPS_LARGE = 1<< 10,
+
+		SU_RES_LARGE_INAREA = 1 << 9,
+	};
+	int32_t Proirity;
+	int32_t Ability;
+	SIZE ImageSize;
 	LONGLONG MinFrameInterval;
 	LONGLONG MaxFrameInterval;
+	CMediaType MediaType;
+	tagFrameBility(){
+		ZeroMemory(this, sizeof(tagFrameBility));
+	}
 }FRAMEABILITY, *PFRAMEABILITY;
 
 class DShowVideoCapture : 
@@ -68,15 +84,14 @@ public:
 
 private:
 	HRESULT RemoveFiltersFromGraph();
-	bool Runing();
+	BOOL Runing();
 	HRESULT ReleaseDShowInterfaces();
 	HRESULT FindFilterByIndex(int, IBaseFilter *&);
 	HRESULT BuildGraph();
 	void ShowDShowError(HRESULT hr);
 	STDMETHODIMP SampleCB(double SampleTime, IMediaSample *pSample);
-	HRESULT FindSultablePin(CComPtr<IPin> &pOutPin);
-	HRESULT FindVideoConfigByStreamConfig(CComPtr<IAMStreamConfig> &pConfig);
-
+	HRESULT FindMediaTypeInPin(CComPtr<IPin> &pOutPin);
+	inline BOOL IsFormatSupport(CMediaType &, FRAMEABILITY&);
 	HRESULT SaveGraphFile(IGraphBuilder*, TCHAR* path);
 
 private:

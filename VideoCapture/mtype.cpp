@@ -38,14 +38,14 @@ GUIDSTRING supportList[] = {
 	{ MEDIATYPE_File, tostr(MEDIATYPE_File) },
 	{ MEDIATYPE_ScriptCommand, tostr(MEDIATYPE_ScriptCommand) },
 	{ MEDIATYPE_AUXLine21Data, tostr(MEDIATYPE_AUXLine21Data) },
-// 	{ MEDIATYPE_AUXTeletextPage, tostr(MEDIATYPE_AUXTeletextPage) },
-// 	{ MEDIATYPE_CC_CONTAINER, tostr(MEDIATYPE_CC_CONTAINER) },
+	{ MEDIATYPE_AUXTeletextPage, tostr(MEDIATYPE_AUXTeletextPage) },
+	{ MEDIATYPE_CC_CONTAINER, tostr(MEDIATYPE_CC_CONTAINER) },
 	{ MEDIATYPE_DTVCCData, tostr(MEDIATYPE_DTVCCData) },
 	{ MEDIATYPE_MSTVCaption, tostr(MEDIATYPE_MSTVCaption) },
 	{ MEDIATYPE_VBI, tostr(MEDIATYPE_VBI) },
-// 	{ MEDIASUBTYPE_DVB_SUBTITLES, tostr(MEDIASUBTYPE_DVB_SUBTITLES) },
-// 	{ MEDIASUBTYPE_ISDB_CAPTIONS, tostr(MEDIASUBTYPE_ISDB_CAPTIONS) },
-// 	{ MEDIASUBTYPE_ISDB_SUPERIMPOSE, tostr(MEDIASUBTYPE_ISDB_SUPERIMPOSE) },
+	{ MEDIASUBTYPE_DVB_SUBTITLES, tostr(MEDIASUBTYPE_DVB_SUBTITLES) },
+	{ MEDIASUBTYPE_ISDB_CAPTIONS, tostr(MEDIASUBTYPE_ISDB_CAPTIONS) },
+	{ MEDIASUBTYPE_ISDB_SUPERIMPOSE, tostr(MEDIASUBTYPE_ISDB_SUPERIMPOSE) },
 	{ MEDIATYPE_Timecode, tostr(MEDIATYPE_Timecode) },
 	{ MEDIATYPE_LMRT, tostr(MEDIATYPE_LMRT) },
 	{ MEDIATYPE_URL_STREAM, tostr(MEDIATYPE_URL_STREAM) },
@@ -99,17 +99,17 @@ GUIDSTRING supportList[] = {
 	{ MEDIASUBTYPE_ARGB1555_D3D_DX9_RT, tostr(MEDIASUBTYPE_ARGB1555_D3D_DX9_RT) },
 	{ MEDIASUBTYPE_YV12, tostr(MEDIASUBTYPE_YV12) },
 	{ MEDIASUBTYPE_NV12, tostr(MEDIASUBTYPE_NV12) },
-//	{ MEDIASUBTYPE_NV11, tostr(MEDIASUBTYPE_NV11) },
-// 	{ MEDIASUBTYPE_P208, tostr(MEDIASUBTYPE_P208) },
-// 	{ MEDIASUBTYPE_P210, tostr(MEDIASUBTYPE_P210) },
-// 	{ MEDIASUBTYPE_P216, tostr(MEDIASUBTYPE_P216) },
-// 	{ MEDIASUBTYPE_P010, tostr(MEDIASUBTYPE_P010) },
-// 	{ MEDIASUBTYPE_P016, tostr(MEDIASUBTYPE_P016) },
-// 	{ MEDIASUBTYPE_Y210, tostr(MEDIASUBTYPE_Y210) },
-// 	{ MEDIASUBTYPE_Y216, tostr(MEDIASUBTYPE_Y216) },
-// 	{ MEDIASUBTYPE_P408, tostr(MEDIASUBTYPE_P408) },
+	{ MEDIASUBTYPE_NV11, tostr(MEDIASUBTYPE_NV11) },
+	{ MEDIASUBTYPE_P208, tostr(MEDIASUBTYPE_P208) },
+	{ MEDIASUBTYPE_P210, tostr(MEDIASUBTYPE_P210) },
+	{ MEDIASUBTYPE_P216, tostr(MEDIASUBTYPE_P216) },
+	{ MEDIASUBTYPE_P010, tostr(MEDIASUBTYPE_P010) },
+	{ MEDIASUBTYPE_P016, tostr(MEDIASUBTYPE_P016) },
+	{ MEDIASUBTYPE_Y210, tostr(MEDIASUBTYPE_Y210) },
+	{ MEDIASUBTYPE_Y216, tostr(MEDIASUBTYPE_Y216) },
+	{ MEDIASUBTYPE_P408, tostr(MEDIASUBTYPE_P408) },
 	{ MEDIASUBTYPE_NV24, tostr(MEDIASUBTYPE_NV24) },
-// 	{ MEDIASUBTYPE_420O, tostr(MEDIASUBTYPE_420O) },
+	{ MEDIASUBTYPE_420O, tostr(MEDIASUBTYPE_420O) },
 	{ MEDIASUBTYPE_IMC1, tostr(MEDIASUBTYPE_IMC1) },
 	{ MEDIASUBTYPE_IMC2, tostr(MEDIASUBTYPE_IMC2) },
 	{ MEDIASUBTYPE_IMC3, tostr(MEDIASUBTYPE_IMC3) },
@@ -148,11 +148,11 @@ GUIDSTRING supportList[] = {
 	{ MEDIASUBTYPE_Line21_VBIRawData, tostr(MEDIASUBTYPE_Line21_VBIRawData) },
 	{ MEDIASUBTYPE_708_608Data, tostr(MEDIASUBTYPE_708_608Data) },
 	{ MEDIASUBTYPE_DtvCcData, tostr(MEDIASUBTYPE_DtvCcData) },
-//	{ MEDIASUBTYPE_CC_CONTAINER, tostr(MEDIASUBTYPE_CC_CONTAINER) },
+	{ MEDIASUBTYPE_CC_CONTAINER, tostr(MEDIASUBTYPE_CC_CONTAINER) },
 	{ MEDIASUBTYPE_TELETEXT, tostr(MEDIASUBTYPE_TELETEXT) },
-// 	{ MEDIASUBTYPE_VBI, tostr(MEDIASUBTYPE_VBI) },
+ 	{ MEDIASUBTYPE_VBI, tostr(MEDIASUBTYPE_VBI) },
 	{ MEDIASUBTYPE_WSS, tostr(MEDIASUBTYPE_WSS) },
-// 	{ MEDIASUBTYPE_XDS, tostr(MEDIASUBTYPE_XDS) },
+ 	{ MEDIASUBTYPE_XDS, tostr(MEDIASUBTYPE_XDS) },
 	{ MEDIASUBTYPE_VPS, tostr(MEDIASUBTYPE_VPS) },
 	{ MEDIASUBTYPE_DRM_Audio, tostr(MEDIASUBTYPE_DRM_Audio) },
 	{ MEDIASUBTYPE_IEEE_FLOAT, tostr(MEDIASUBTYPE_IEEE_FLOAT) },
@@ -396,7 +396,7 @@ CMediaType::SetAvgReferenceTime(REFERENCE_TIME rt)
 {
 	if( isVideoInfoHeader() ){
 		VideoInfoHeader()->AvgTimePerFrame = rt;
-	}else {
+	}else if(isVideoInfo2Header()){
 		VideoInfo2Header()->AvgTimePerFrame = rt;
 	}
 }
@@ -599,6 +599,116 @@ CMediaType::MatchesPartial(const CMediaType* ppartial) const
 
 }
 
+
+char *CMediaType::GUIDtoStr(GUID id)
+{
+	int i = 0;
+	for (; i < ARRAYSIZE(supportList); i++){
+		if (IsEqualGUID(supportList[i].id, id)){
+			break;
+		}
+	}
+
+	return supportList[i].name;
+}
+
+
+void
+CMediaType::ShowAMMediaType()
+{
+#if 1
+	PrintMessage("    majortype\t%s", GUIDtoStr(*Type()));
+	PrintMessage("    subtype\t%s", GUIDtoStr(*Subtype()));
+	PrintMessage("    bFixedSizeSamples\t%d\n", bFixedSizeSamples);
+	PrintMessage("    bTemporalCompression\t%d\n", bTemporalCompression);
+	PrintMessage("    lSampleSize\t%lu\n", lSampleSize);
+	PrintMessage("    formattype\t%s", GUIDtoStr(*FormatType()));
+	PrintMessage("    pUnk\t%x\n", pUnk);
+	PrintMessage("    cbFormat\t%lu\n", cbFormat);
+	PrintMessage("    pbFormat\t%x\n", pbFormat);
+
+	if (IsEqualGUID(formattype, FORMAT_VideoInfo)) {
+		VIDEOINFOHEADER *v = (VIDEOINFOHEADER *)pbFormat;
+		PrintMessage("      rcSource: left %ld top %ld right %ld bottom %ld\n",
+			v->rcSource.left, v->rcSource.top, v->rcSource.right, v->rcSource.bottom);
+		PrintMessage("      rcTarget: left %ld top %ld right %ld bottom %ld\n",
+			v->rcTarget.left, v->rcTarget.top, v->rcTarget.right, v->rcTarget.bottom);
+		PrintMessage("      dwBitRate: %lu\n", v->dwBitRate);
+		PrintMessage("      dwBitErrorRate: %lu\n", v->dwBitErrorRate);
+		PrintMessage("      AvgTimePerFrame: %lld\n", v->AvgTimePerFrame);
+		PrintBitmapHeader(&v->bmiHeader);
+	}
+	else if (IsEqualGUID(formattype, FORMAT_VideoInfo2)) {
+		VIDEOINFOHEADER2 *v = (VIDEOINFOHEADER2 *)pbFormat;
+		PrintMessage("      rcSource: left %ld top %ld right %ld bottom %ld\n",
+			v->rcSource.left, v->rcSource.top, v->rcSource.right, v->rcSource.bottom);
+		PrintMessage("      rcTarget: left %ld top %ld right %ld bottom %ld\n",
+			v->rcTarget.left, v->rcTarget.top, v->rcTarget.right, v->rcTarget.bottom);
+		PrintMessage("      dwBitRate: %lu\n", v->dwBitRate);
+		PrintMessage("      dwBitErrorRate: %lu\n", v->dwBitErrorRate);
+		PrintMessage("      AvgTimePerFrame: %lld\n", v->AvgTimePerFrame);
+		PrintMessage("      dwInterlaceFlags: %lu\n", v->dwInterlaceFlags);
+		PrintMessage("      dwCopyProtectFlags: %lu\n", v->dwCopyProtectFlags);
+		PrintMessage("      dwPictAspectRatioX: %lu\n", v->dwPictAspectRatioX);
+		PrintMessage("      dwPictAspectRatioY: %lu\n", v->dwPictAspectRatioY);
+		//        PrintMessage("      dwReserved1: %lu\n", v->u.dwReserved1); /* mingw-w64 is buggy and doesn't name unnamed unions */
+		PrintMessage("      dwReserved2: %lu\n", v->dwReserved2);
+		PrintBitmapHeader(&v->bmiHeader);
+	}
+	else if (IsEqualGUID(formattype, FORMAT_WaveFormatEx)) {
+		WAVEFORMATEX *fx = (WAVEFORMATEX *)pbFormat;
+		PrintMessage("      wFormatTag: %u\n", fx->wFormatTag);
+		PrintMessage("      nChannels: %u\n", fx->nChannels);
+		PrintMessage("      nSamplesPerSec: %lu\n", fx->nSamplesPerSec);
+		PrintMessage("      nAvgBytesPerSec: %lu\n", fx->nAvgBytesPerSec);
+		PrintMessage("      nBlockAlign: %u\n", fx->nBlockAlign);
+		PrintMessage("      wBitsPerSample: %u\n", fx->wBitsPerSample);
+		PrintMessage("      cbSize: %u\n", fx->cbSize);
+	}
+#endif
+}
+
+void CMediaType::PrintGUID(GUID id)
+{
+	const uint32_t *d = (const uint32_t *)&id.Data1;
+	const uint16_t *w = (const uint16_t *)&id.Data2;
+	const uint8_t  *c = (const uint8_t  *)&id.Data4;
+
+	internel_log(Info, "           \t0x%08x 0x%04x 0x%04x %02x%02x%02x%02x%02x%02x%02x%02x",
+		d[0], w[0], w[1],
+		c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7]);
+}
+
+
+void
+CMediaType::PrintBitmapHeader(BITMAPINFOHEADER *bmpHeader)
+{
+	PrintMessage("      BITMAPINFOHEADER\n");
+	PrintMessage("            biSize:\t %lu\n", bmpHeader->biSize);
+	PrintMessage("            biWidth:\t %ld\n", bmpHeader->biWidth);
+	PrintMessage("            biHeight:\t %ld\n", bmpHeader->biHeight);
+	PrintMessage("            biPlanes:\t %d\n", bmpHeader->biPlanes);
+	PrintMessage("            biBitCount:\t %d\n", bmpHeader->biBitCount);
+	PrintMessage("            biCompression:\t %x\n", bmpHeader->biCompression);
+	PrintMessage("            biSizeImage:\t %lu\n", bmpHeader->biSizeImage);
+	PrintMessage("            biXPelsPerMeter:\t %lu\n", bmpHeader->biXPelsPerMeter);
+	PrintMessage("            biYPelsPerMeter:\t %lu\n", bmpHeader->biYPelsPerMeter);
+	PrintMessage("            biClrUsed:\t %lu\n", bmpHeader->biClrUsed);
+	PrintMessage("            biClrImportant:\t %lu\n", bmpHeader->biClrImportant);
+}
+
+void
+CMediaType::PrintMessage(const char* format, ...)
+{
+	char buffer[4096] = "\0";
+	va_list vt;
+	va_start(vt, format);
+	vsprintf_s(buffer, 4096, format, vt);
+	va_end(vt);
+
+	internel_log(Info, "%s", buffer);
+}
+
 // this also comes in useful when using the IEnumMediaTypes interface so
 // that you can copy a media type, you can do nearly the same by creating
 // a CMediaType object but as soon as it goes out of scope the destructor
@@ -688,112 +798,6 @@ void WINAPI FreeMediaType(__inout AM_MEDIA_TYPE& mt)
     }
 }
 
-void
-CMediaType::ShowAMMediaType()
-{
-#if 1
-	PrintMessage("    majortype\t%s", GUIDtoStr(*Type()));
-	PrintMessage("    subtype\t%s",GUIDtoStr(*Subtype()));
-	PrintMessage("    bFixedSizeSamples\t%d\n", bFixedSizeSamples);
-	PrintMessage("    bTemporalCompression\t%d\n", bTemporalCompression);
-	PrintMessage("    lSampleSize\t%lu\n", lSampleSize);
-	PrintMessage("    formattype\t%s",GUIDtoStr(*FormatType()));
-	PrintMessage("    pUnk\t%x\n", pUnk);
-	PrintMessage("    cbFormat\t%lu\n", cbFormat);
-	PrintMessage("    pbFormat\t%x\n", pbFormat);
-
-	if (IsEqualGUID(formattype, FORMAT_VideoInfo)) {
-		VIDEOINFOHEADER *v = (VIDEOINFOHEADER *)pbFormat;
-		PrintMessage("      rcSource: left %ld top %ld right %ld bottom %ld\n",
-			v->rcSource.left, v->rcSource.top, v->rcSource.right, v->rcSource.bottom);
-		PrintMessage("      rcTarget: left %ld top %ld right %ld bottom %ld\n",
-			v->rcTarget.left, v->rcTarget.top, v->rcTarget.right, v->rcTarget.bottom);
-		PrintMessage("      dwBitRate: %lu\n", v->dwBitRate);
-		PrintMessage("      dwBitErrorRate: %lu\n", v->dwBitErrorRate);
-		PrintMessage("      AvgTimePerFrame: %lld\n", v->AvgTimePerFrame);
-		PrintBitmapHeader(&v->bmiHeader);
-	} else if (IsEqualGUID(formattype, FORMAT_VideoInfo2)) {
-		VIDEOINFOHEADER2 *v = (VIDEOINFOHEADER2 *) pbFormat;
-		PrintMessage("      rcSource: left %ld top %ld right %ld bottom %ld\n",
-			v->rcSource.left, v->rcSource.top, v->rcSource.right, v->rcSource.bottom);
-		PrintMessage("      rcTarget: left %ld top %ld right %ld bottom %ld\n",
-			v->rcTarget.left, v->rcTarget.top, v->rcTarget.right, v->rcTarget.bottom);
-		PrintMessage("      dwBitRate: %lu\n", v->dwBitRate);
-		PrintMessage("      dwBitErrorRate: %lu\n", v->dwBitErrorRate);
-		PrintMessage("      AvgTimePerFrame: %lld\n", v->AvgTimePerFrame);
-		PrintMessage("      dwInterlaceFlags: %lu\n", v->dwInterlaceFlags);
-		PrintMessage("      dwCopyProtectFlags: %lu\n", v->dwCopyProtectFlags);
-		PrintMessage("      dwPictAspectRatioX: %lu\n", v->dwPictAspectRatioX);
-		PrintMessage("      dwPictAspectRatioY: %lu\n", v->dwPictAspectRatioY);
-		//        PrintMessage("      dwReserved1: %lu\n", v->u.dwReserved1); /* mingw-w64 is buggy and doesn't name unnamed unions */
-		PrintMessage("      dwReserved2: %lu\n", v->dwReserved2);
-		PrintBitmapHeader(&v->bmiHeader);
-	} else if (IsEqualGUID(formattype, FORMAT_WaveFormatEx)) {
-		WAVEFORMATEX *fx = (WAVEFORMATEX *) pbFormat;
-		PrintMessage("      wFormatTag: %u\n", fx->wFormatTag);
-		PrintMessage("      nChannels: %u\n", fx->nChannels);
-		PrintMessage("      nSamplesPerSec: %lu\n", fx->nSamplesPerSec);
-		PrintMessage("      nAvgBytesPerSec: %lu\n", fx->nAvgBytesPerSec);
-		PrintMessage("      nBlockAlign: %u\n", fx->nBlockAlign);
-		PrintMessage("      wBitsPerSample: %u\n", fx->wBitsPerSample);
-		PrintMessage("      cbSize: %u\n", fx->cbSize);
-	}
-#endif
-}
-
-
-char *CMediaType::GUIDtoStr(GUID id)
-{
-	int i =0;
-	for(; i<ARRAYSIZE(supportList); i++){
-		if(IsEqualGUID(supportList[i].id , id)){
-			break;
-		}
-	}
-
-	return supportList[i].name;
-}
-
-void CMediaType::PrintGUID(GUID id)
-{
-	const uint32_t *d = (const uint32_t *) &id.Data1;
-	const uint16_t *w = (const uint16_t *) &id.Data2;
-	const uint8_t  *c = (const uint8_t  *) &id.Data4;
-
-	internel_log(Info, "           \t0x%08x 0x%04x 0x%04x %02x%02x%02x%02x%02x%02x%02x%02x",
-		d[0], w[0], w[1],
-		c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7]);
-}
-
-
-void 
-CMediaType::PrintBitmapHeader(BITMAPINFOHEADER *bmpHeader)
-{
-	PrintMessage("      BITMAPINFOHEADER\n");
-	PrintMessage("            biSize:\t %lu\n", bmpHeader->biSize);
-	PrintMessage("            biWidth:\t %ld\n", bmpHeader->biWidth);
-	PrintMessage("            biHeight:\t %ld\n", bmpHeader->biHeight);
-	PrintMessage("            biPlanes:\t %d\n", bmpHeader->biPlanes);
-	PrintMessage("            biBitCount:\t %d\n", bmpHeader->biBitCount);
-	PrintMessage("            biCompression:\t %x\n", bmpHeader->biCompression);
-	PrintMessage("            biSizeImage:\t %lu\n", bmpHeader->biSizeImage);
-	PrintMessage("            biXPelsPerMeter:\t %lu\n", bmpHeader->biXPelsPerMeter);
-	PrintMessage("            biYPelsPerMeter:\t %lu\n", bmpHeader->biYPelsPerMeter);
-	PrintMessage("            biClrUsed:\t %lu\n", bmpHeader->biClrUsed);
-	PrintMessage("            biClrImportant:\t %lu\n", bmpHeader->biClrImportant);
-}
-
-void 
-CMediaType::PrintMessage(const char* format, ...)
-{
-	char buffer[4096] = "\0";
-	va_list vt;
-	va_start(vt, format);
-	vsprintf_s(buffer, 4096, format, vt);
-	va_end(vt);
-
-	internel_log(Info, "%s", buffer);
-}
 
 // eliminate very many spurious warnings from MS compiler
 #pragma warning(disable:4514)
