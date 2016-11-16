@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "ddrawRender.h"
+#include <DShow.h>
 
 #define to_pair(x) {x, #x}
 typedef struct tagddrawError{
@@ -173,8 +174,19 @@ HRESULT DDrawRender::CreateSurfaces(int width, int height, DWORD pixelFormatInFo
  	desc.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
 	desc.ddpfPixelFormat.dwSize = sizeof(DDPIXELFORMAT);
 	desc.ddpfPixelFormat.dwFourCC = pixelFormatInFourCC;
-	desc.ddpfPixelFormat.dwFlags = DDPF_FOURCC | DDPF_YUV;
-	desc.ddpfPixelFormat.dwYUVBitCount = 8;
+
+	if (pixelFormatInFourCC == PIXEL_FORMAT_RGB24){
+		desc.ddpfPixelFormat.dwFourCC = BI_RGB;
+		desc.ddpfPixelFormat.dwFlags = DDPF_RGB;
+		desc.ddpfPixelFormat.dwRGBBitCount = 24;
+		desc.ddpfPixelFormat.dwRBitMask = 0x00ff0000;
+		desc.ddpfPixelFormat.dwGBitMask = 0x0000ff00;
+		desc.ddpfPixelFormat.dwBBitMask = 0x000000ff;
+		desc.ddpfPixelFormat.dwRGBAlphaBitMask = 0x0;
+	}else{
+		desc.ddpfPixelFormat.dwFlags = DDPF_FOURCC | DDPF_YUV;
+		desc.ddpfPixelFormat.dwYUVBitCount = 8;
+	}
 
 	CHECK_HR(hr = mDDrawObj->CreateSurface(&desc, &mDDrawSecondarySurface, NULL));
 
