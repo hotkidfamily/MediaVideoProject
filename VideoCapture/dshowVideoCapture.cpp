@@ -171,7 +171,7 @@ HRESULT DShowVideoCapture::Stop()
 			dropFrameCount - mDropFrames, capFrameCount - mCapFrames);
 	}
 
-	mMediaControl->Stop();
+	while(FAILED(mMediaControl->Stop()));
 
 	RemoveFiltersFromGraph();
 	mFrameInfo = NULL;
@@ -245,7 +245,8 @@ HRESULT DShowVideoCapture::RemoveFiltersFromGraph()
 	CComPtr<IBaseFilter> pFilter = NULL;
 
 	ASSERT(mGraph);
-
+	mVideoGrabber->SetOneShot(TRUE);
+	mVideoGrabber->SetCallback(NULL, 0);
 	CHECK_HR(mGraph->EnumFilters(&pFilterEnum));
 	while (pFilterEnum->Next(1, &pFilter, NULL) == S_OK){
 		mGraph->RemoveFilter(pFilter);
