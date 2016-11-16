@@ -2,6 +2,7 @@
 
 #include "SampleBuffer.h"
 #include <ddraw.h>
+#include "SlidingWindowCalc.h"
 
 #ifndef CHECK_HR
 #define CHECK_HR(hr) if (FAILED(hr)) { goto done; }
@@ -28,6 +29,7 @@ protected:
 	const char* GetDDrawErrorString(HRESULT );
 	DWORD RenderLoop();
 	void FillddPixelFormatFromFourCC(LPDDPIXELFORMAT ddPixelFormat, DWORD dwFourCC);
+	BOOL OSDText(HDC, char *, ...);
 
 private:
 	IDirectDraw7 *mDDrawObj;
@@ -44,5 +46,6 @@ private:
 	BOOL bRender;
 
 	int64_t mLastPts;
+	CSlidingWindowCalc mRenderStatis;
 };
 

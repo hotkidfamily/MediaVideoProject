@@ -328,6 +328,9 @@ HRESULT DDrawRender::PushFrame(CSampleBuffer *frame)
 	DDSURFACEDESC2 desc;
 	RECT rect;
 	RECT srcRect = { 0, 0, frame->GetWidth(), frame->GetHeight() };
+	uint32_t interval = (frame->GetPts() - mLastPts) / 10000;
+
+	mRenderStatis.AppendSample(interval);
 
 	ZeroMemory(&desc, sizeof(DDSURFACEDESC));
 	desc.dwSize = sizeof(DDSURFACEDESC);
@@ -361,10 +364,31 @@ HRESULT DDrawRender::PushFrame(CSampleBuffer *frame)
 	CHECK_HR(hr = mPrimarySurface->Blt(&rect, mCanvasSurface, NULL, DDBLT_WAIT, NULL));
 
 	mLastPts = frame->GetPts();
+	HDC dc = NULL;
+	CHECK_HR(hr = mPrimarySurface->GetDC(&dc));
+	OSDText(dc, "pts %lld,itv %d avg %08u, fps %.2f", mLastPts, interval, mRenderStatis.Bitrate(), mRenderStatis.Frequency());
+	mPrimarySurface->ReleaseDC(dc);
 
 done:
 	GetDDrawErrorString(hr);
 	return hr;
+}
+
+BOOL DDrawRender::OSDText(HDC hdc, char* format, ...)
+{
+	char buff[2048] = { 0 };
+	va_list vl;
+	va_start(vl, format);
+	vsnprintf_s(buff, 2048, format, vl);
+	va_end(vl);
+
+	RECT rect = { 0 };
+	GetWindowRect(mHwnd, &rect);
+
+	int mode = SetBkMode(hdc, OPAQUE);
+	TextOutA(hdc, rect.left+300, rect.top+200, buff, strlen(buff));
+	SetBkMode(hdc, mode);
+	return TRUE;
 }
 
 const char* DDrawRender::GetDDrawErrorString(HRESULT hr)
