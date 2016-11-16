@@ -100,7 +100,9 @@ BOOL StartRenderWork(THIS_CONTEXT *ctx)
 {
 	ctx->render = new DDrawRender(ctx->hMainWnd);
 	assert(ctx->render != NULL);
-	ctx->render->InitDDrawInterface(ctx->captureArgs.width, ctx->captureArgs.height, ctx->captureArgs.pixelFormatInFourCC);
+	if (ctx->render->InitDDrawInterface(ctx->captureArgs.width, ctx->captureArgs.height, ctx->captureArgs.pixelFormatInFourCC) < 0){
+		return FALSE;
+	}
 
 	return TRUE;
 }

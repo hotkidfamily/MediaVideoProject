@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "ddrawRender.h"
-#include <DShow.h>
 
 #define to_pair(x) {x, #x}
 typedef struct tagddrawError{
@@ -133,23 +132,25 @@ DDRAWERROR errorList[] = {
 
 DDrawRender::DDrawRender()
 	: mDDrawObj(NULL)
-	, mDDrawPrimarySurface(NULL)
-	, mDDrawSecondarySurface(NULL)
+	, mPrimarySurface(NULL)
+	, mCanvasSurface(NULL)
 	, mHwnd(NULL)
 	, mRenderThreadHandle(NULL)
 	, mRenderThreadId(0)
 	, mRenderEvent(NULL)
+	, mDDrawClippper(NULL)
 {
 }
 
 DDrawRender::DDrawRender(HWND hWnd)
 	: mDDrawObj(NULL)
-	, mDDrawPrimarySurface(NULL)
-	, mDDrawSecondarySurface(NULL)
+	, mPrimarySurface(NULL)
+	, mCanvasSurface(NULL)
 	, mHwnd(hWnd)
 	, mRenderThreadHandle(NULL)
 	, mRenderThreadId(0)
 	, mRenderEvent(NULL)
+	, mDDrawClippper(NULL)
 {
 }
 
@@ -157,38 +158,98 @@ DDrawRender::~DDrawRender()
 {
 }
 
+void DDrawRender::FillddPixelFormatFromFourCC(LPDDPIXELFORMAT ddPixelFormat, DWORD dwFourCC)
+{
+	if (!ddPixelFormat){
+		return;
+	}
+	ZeroMemory(ddPixelFormat, sizeof(DDPIXELFORMAT));
+	ddPixelFormat->dwSize = sizeof(DDPIXELFORMAT);
+
+	switch (dwFourCC)
+	{
+	case PIXEL_FORMAT_RGB24:
+		ddPixelFormat->dwFlags = DDPF_RGB;
+		ddPixelFormat->dwFourCC = 0;
+		ddPixelFormat->dwRGBBitCount = 32;
+		ddPixelFormat->dwRBitMask = 0x00ff0000;
+		ddPixelFormat->dwGBitMask = 0x0000ff00;
+		ddPixelFormat->dwBBitMask = 0x000000ff;
+		ddPixelFormat->dwRGBAlphaBitMask = 0x0;
+		break;
+	case PIXEL_FORMAT_RGB32:
+		ddPixelFormat->dwFlags = DDPF_RGB;
+		ddPixelFormat->dwFourCC = 0;
+		ddPixelFormat->dwRGBBitCount = 32;
+		ddPixelFormat->dwRBitMask = 0x00ff0000;
+		ddPixelFormat->dwGBitMask = 0x0000ff00;
+		ddPixelFormat->dwBBitMask = 0x000000ff;
+		ddPixelFormat->dwRGBAlphaBitMask = 0x0;
+		break;
+	case PIXEL_FORMAT_ARGB:
+		ddPixelFormat->dwFlags = DDPF_RGB | DDPF_ALPHAPIXELS;
+		ddPixelFormat->dwFourCC = 0;
+		ddPixelFormat->dwRGBBitCount = 32;
+		ddPixelFormat->dwRBitMask = 0x00ff0000;
+		ddPixelFormat->dwGBitMask = 0x0000ff00;
+		ddPixelFormat->dwBBitMask = 0x000000ff;
+		ddPixelFormat->dwRGBAlphaBitMask = 0xff000000;
+		break;
+	case PIXEL_FORMAT_RGB565:
+		ddPixelFormat->dwFlags = DDPF_RGB;
+		ddPixelFormat->dwFourCC = 0;
+		ddPixelFormat->dwRGBBitCount = 16;
+		ddPixelFormat->dwRBitMask = 0xF800;
+		ddPixelFormat->dwGBitMask = 0x07E0;
+		ddPixelFormat->dwBBitMask = 0x001F;
+		ddPixelFormat->dwRGBAlphaBitMask = 0x0;
+		break;
+	case PIXEL_FORMAT_RGB555:
+		ddPixelFormat->dwFlags = DDPF_RGB;
+		ddPixelFormat->dwFourCC = 0;
+		ddPixelFormat->dwRGBBitCount = 16;
+		ddPixelFormat->dwRBitMask = 0x7C00;
+		ddPixelFormat->dwGBitMask = 0x03E0;
+		ddPixelFormat->dwBBitMask = 0x001F;
+		ddPixelFormat->dwRGBAlphaBitMask = 0x0;
+		break;
+	case PIXEL_FORMAT_UYVY:
+	case PIXEL_FORMAT_YUY2 :
+		ddPixelFormat->dwFlags = DDPF_FOURCC | DDPF_YUV;
+		ddPixelFormat->dwFourCC = dwFourCC;
+		ddPixelFormat->dwYUVBitCount = 16;
+		break;
+	case PIXEL_FORMAT_YV12:
+		ddPixelFormat->dwFlags = DDPF_FOURCC | DDPF_YUV;
+		ddPixelFormat->dwFourCC = dwFourCC;
+		ddPixelFormat->dwYUVBitCount = 12;
+		break;
+	default:
+		ddPixelFormat->dwFlags = DDPF_FOURCC | DDPF_YUV;
+		ddPixelFormat->dwFourCC = dwFourCC;
+		ddPixelFormat->dwRGBBitCount = 8;
+		break;
+	}
+}
+
 HRESULT DDrawRender::CreateSurfaces(int width, int height, DWORD pixelFormatInFourCC)
 {
 	HRESULT hr = DD_OK;
-	DDSURFACEDESC2 desc;
-	ZeroMemory(&desc, sizeof(DDSURFACEDESC));
+	DDSURFACEDESC2 desc = {0};
+	
 	desc.dwSize = sizeof(DDSURFACEDESC);
 	desc.dwFlags = DDSD_CAPS;
 	desc.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
 
-	CHECK_HR(hr = mDDrawObj->CreateSurface(&desc, &mDDrawPrimarySurface, NULL));
+	CHECK_HR(hr = mDDrawObj->CreateSurface(&desc, &mPrimarySurface, NULL));
 
 	desc.dwFlags = DDSD_WIDTH | DDSD_HEIGHT | DDSD_CAPS | DDSD_PIXELFORMAT;
 	desc.dwWidth = width;
 	desc.dwHeight = height;
  	desc.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
-	desc.ddpfPixelFormat.dwSize = sizeof(DDPIXELFORMAT);
-	desc.ddpfPixelFormat.dwFourCC = pixelFormatInFourCC;
+	FillddPixelFormatFromFourCC(&(desc.ddpfPixelFormat), pixelFormatInFourCC);
 
-	if (pixelFormatInFourCC == PIXEL_FORMAT_RGB24){
-		desc.ddpfPixelFormat.dwFourCC = BI_RGB;
-		desc.ddpfPixelFormat.dwFlags = DDPF_RGB;
-		desc.ddpfPixelFormat.dwRGBBitCount = 24;
-		desc.ddpfPixelFormat.dwRBitMask = 0x00ff0000;
-		desc.ddpfPixelFormat.dwGBitMask = 0x0000ff00;
-		desc.ddpfPixelFormat.dwBBitMask = 0x000000ff;
-		desc.ddpfPixelFormat.dwRGBAlphaBitMask = 0x0;
-	}else{
-		desc.ddpfPixelFormat.dwFlags = DDPF_FOURCC | DDPF_YUV;
-		desc.ddpfPixelFormat.dwYUVBitCount = 8;
-	}
-
-	CHECK_HR(hr = mDDrawObj->CreateSurface(&desc, &mDDrawSecondarySurface, NULL));
+	CHECK_HR(hr = mDDrawObj->CreateSurface(&desc, &mCanvasSurface, NULL));
 
 done:
 	GetDDrawErrorString(hr);
@@ -214,17 +275,30 @@ DWORD DDrawRender::RenderLoop()
 HRESULT DDrawRender::InitDDrawInterface(int width, int height, DWORD pixelFormatInFourCC)
 {
 	HRESULT hr = DD_OK;
+	DDBLTFX ddbltfx = { 0 };
+	ZeroMemory(&mHwCaps, sizeof(DDCAPS));
+	ZeroMemory(&mHelCaps, sizeof(DDCAPS));
+
 	CHECK_HR(hr = CoInitialize(NULL));
 
 	CHECK_HR(hr = CoCreateInstance(CLSID_DirectDraw, NULL, CLSCTX_ALL, IID_IDirectDraw, (void**)&mDDrawObj));
 	CHECK_HR(hr = mDDrawObj->Initialize(NULL));
 	CHECK_HR(hr = mDDrawObj->SetCooperativeLevel(mHwnd, DDSCL_NORMAL));
-
+	
+	mHwCaps.dwSize = sizeof(DDCAPS);
+	mHelCaps.dwSize = sizeof(DDCAPS);
+	mDDrawObj->GetCaps(&mHwCaps, &mHelCaps);
+	
 	CHECK_HR(hr = CreateSurfaces(width, height, pixelFormatInFourCC));
 
 	CHECK_HR(hr = mDDrawObj->CreateClipper(0, &mDDrawClippper, NULL));
 	CHECK_HR(hr = mDDrawClippper->SetHWnd(0, mHwnd));
-	CHECK_HR(hr = mDDrawPrimarySurface->SetClipper(mDDrawClippper));
+	CHECK_HR(hr = mPrimarySurface->SetClipper(mDDrawClippper));
+	
+	/* clear screen */
+	ddbltfx.dwSize = sizeof(ddbltfx);
+	ddbltfx.dwFillColor = RGB(0, 0, 0);
+	hr = mPrimarySurface->Blt(NULL, NULL, NULL, DDBLT_COLORFILL | DDBLT_WAIT, &ddbltfx);
 
 	mLastPts = 0;
 
@@ -239,14 +313,12 @@ HRESULT DDrawRender::DeinitDDrawInterface()
 {
 	HRESULT hr = S_OK;
 
-	SAFE_RELEASE(mDDrawSecondarySurface);
-	SAFE_RELEASE(mDDrawPrimarySurface);
+	SAFE_RELEASE(mCanvasSurface);
+	SAFE_RELEASE(mPrimarySurface);
 	SAFE_RELEASE(mDDrawClippper);
 	SAFE_RELEASE(mDDrawObj);
 
 	CoUninitialize();
-
-
 	return hr;
 }
 
@@ -254,36 +326,40 @@ HRESULT DDrawRender::PushFrame(CSampleBuffer *frame)
 {
 	HRESULT hr = DD_OK;
 	DDSURFACEDESC2 desc;
+	RECT rect;
+	RECT srcRect = { 0, 0, frame->GetWidth(), frame->GetHeight() };
+
 	ZeroMemory(&desc, sizeof(DDSURFACEDESC));
 	desc.dwSize = sizeof(DDSURFACEDESC);
-	RECT rect;
-	GetWindowRect(mHwnd,&rect);
+	GetWindowRect(mHwnd, &rect);
 
-	if (FAILED(hr = mDDrawSecondarySurface->Lock(NULL, &desc, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL))){
-		goto done;
-	}
+	CHECK_HR(hr = mCanvasSurface->Lock(NULL, &desc, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL));
 
-	if (frame->GetWidth() > desc.dwWidth || frame->GetHeight() > desc.dwHeight){
-
-	}else{
+	if (!((uint32_t)frame->GetWidth() > desc.dwWidth || (uint32_t)frame->GetHeight() > desc.dwHeight)){
 		uint8_t *surfaceBuffer = (uint8_t*)desc.lpSurface;
-		memcpy(surfaceBuffer, frame->GetDataPtr(), frame->GetDataSize());
+		if (frame->GetPixelFormat() == PIXEL_FORMAT_RGB24){
+			for (int i = 0; i < frame->GetHeight(); i++){
+				DWORD *rgb32Buffer = rgb32Buffer = (DWORD*)(surfaceBuffer + (frame->GetHeight() - i)*desc.lPitch);
+				uint8_t* rgb24Buffer = frame->GetDataPtr() + frame->GetLineSize()*i;
+				for (int j = 0; j < frame->GetWidth(); j++){
+					rgb32Buffer[j] = RGB(rgb24Buffer[0], rgb24Buffer[1], rgb24Buffer[2]);
+					rgb24Buffer += 3;
+				}
+			}
+		}else{
+			memcpy(surfaceBuffer, frame->GetDataPtr(), frame->GetDataSize());
+		}
 	}
 
-	mDDrawSecondarySurface->Unlock(NULL);
-
-	HDC dc;
-	hr = mDDrawPrimarySurface->GetDC(&dc);
-#define TEXTCHAR "hello world"
-	TextOutA(dc, rect.left, rect.top + 100, TEXTCHAR, strlen(TEXTCHAR));
-	mDDrawPrimarySurface->ReleaseDC(dc);
+	mCanvasSurface->Unlock(NULL);
 
 	DDBLTFX ddblfx;
 	ZeroMemory(&ddblfx, sizeof(DDBLTFX));
 	ddblfx.dwSize = sizeof(DDBLTFX);
 	ddblfx.dwROP = SRCCOPY;
 
-	mDDrawPrimarySurface->Blt(&rect, mDDrawSecondarySurface, NULL, DDBLT_ROP, &ddblfx);
+	CHECK_HR(hr = mPrimarySurface->Blt(&rect, mCanvasSurface, NULL, DDBLT_WAIT, NULL));
+
 	mLastPts = frame->GetPts();
 
 done:

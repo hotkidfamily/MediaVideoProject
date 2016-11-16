@@ -27,12 +27,14 @@ protected:
 	HRESULT CreateSurfaces(int, int, DWORD);
 	const char* GetDDrawErrorString(HRESULT );
 	DWORD RenderLoop();
+	void FillddPixelFormatFromFourCC(LPDDPIXELFORMAT ddPixelFormat, DWORD dwFourCC);
 
 private:
 	IDirectDraw7 *mDDrawObj;
-	LPDIRECTDRAWSURFACE7 mDDrawPrimarySurface;
-	LPDIRECTDRAWSURFACE7 mDDrawSecondarySurface;
+	LPDIRECTDRAWSURFACE7 mPrimarySurface;
+	LPDIRECTDRAWSURFACE7 mCanvasSurface;
 	LPDIRECTDRAWCLIPPER mDDrawClippper;
+	DDCAPS mHwCaps, mHelCaps;
 
 	HANDLE mRenderEvent;
 	HANDLE mRenderThreadHandle;
