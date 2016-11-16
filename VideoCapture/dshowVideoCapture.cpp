@@ -31,50 +31,49 @@ MEDIASUBTYPE_AYUV AYUV 4:4:4 Packed 8
 const GUID MEDIASUBTYPE_I420 = { 0x30323449, 0x0000, 0x0010, { 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71 } };
 #endif
 
-FRAMEFORAMTINFO dshowSupportVideoFormatTable[] = {
+const FRAMEFORAMTINFO videoFormatTable[] = {
 		/* YUV 420 */
-		{ MEDIASUBTYPE_I420, '024I', 1<< 15, 1 },
-		{ MEDIASUBTYPE_YV12, '21VY', 1 << 15, 1 },
-		{ MEDIASUBTYPE_NV12, '21VN', 1 << 15, 1 },
-		{ MEDIASUBTYPE_IYUV, 'VYUI', 1 << 14, 1 },
+		{ MEDIASUBTYPE_I420, PIXEL_FORMAT_I420, 1<< 15, 1 },
+		{ MEDIASUBTYPE_YV12, PIXEL_FORMAT_YV12, 1 << 15, 1 },
+		{ MEDIASUBTYPE_NV12, PIXEL_FORMAT_NV12, 1 << 15, 1 },
+		{ MEDIASUBTYPE_IYUV, PIXEL_FORMAT_IYUV, 1 << 14, 1 },
 
 		/* MJPEG*/
-		{ MEDIASUBTYPE_MJPG, 'GPJM', 1 << 14, 1 },
+		{ MEDIASUBTYPE_MJPG, PIXEL_FORMAT_MJPEG, 1 << 14, 1 },
 
 		/* RGB */
-		{ MEDIASUBTYPE_RGB565, 0xe436eb7b, 1 << 13, 2 },
-		{ MEDIASUBTYPE_RGB555, 0xe436eb7c, 1 << 13, 2 },
-		{ MEDIASUBTYPE_RGB24, 0xe436eb7d, 1 << 12, 3 },
-		{ MEDIASUBTYPE_RGB32, 0xe436eb7e, 1 << 14, 4 },
-		{ MEDIASUBTYPE_ARGB32, 0x773c9ac0, 1 << 14, 4 },
+		{ MEDIASUBTYPE_RGB565, PIXEL_FORMAT_RGB565, 1 << 13, 2 },
+		{ MEDIASUBTYPE_RGB555, PIXEL_FORMAT_RGB555, 1 << 13, 2 },
+		{ MEDIASUBTYPE_RGB24, PIXEL_FORMAT_RGB24, 1 << 12, 3 },
+		{ MEDIASUBTYPE_RGB32, PIXEL_FORMAT_RGB32, 1 << 14, 4 },
+		{ MEDIASUBTYPE_ARGB32, PIXEL_FORMAT_ARGB, 1 << 14, 4 },
 
 		/* YUV 4:2:2 */
-		{ MEDIASUBTYPE_YUYV, 'VYUY', 1 << 13, 2 }, /*422 16bits per pixel top-down image, YUYV packet */
-		{ MEDIASUBTYPE_YVU9, '9UVY', 1 << 13, 2 },
-		{ MEDIASUBTYPE_Y411, '114Y', 1 << 13, 2 },
-		{ MEDIASUBTYPE_Y41P, 'P14Y', 1 << 13, 2 },
-		{ MEDIASUBTYPE_YUY2, '2YUY', 1 << 13, 2 },
-		{ MEDIASUBTYPE_YVYU, 'UYVY', 1 << 13, 2 },
-		{ MEDIASUBTYPE_UYVY, 'YVYU', 1 << 13, 2 },
-		{ MEDIASUBTYPE_Y211, '112Y', 1 << 13, 2 },
-		{ MEDIASUBTYPE_NV11, '11VN', 1 << 13, 2 },
-		{ MEDIASUBTYPE_420O, 'O024', 1 << 13, 2 },
+		{ MEDIASUBTYPE_YUYV, PIXEL_FORMAT_YUYV, 1 << 13, 2 }, /*422 16bits per pixel top-down image, YUYV packet */
+		{ MEDIASUBTYPE_YVU9, PIXEL_FORMAT_YVU9, 1 << 13, 2 },
+		{ MEDIASUBTYPE_Y411, PIXEL_FORMAT_Y411, 1 << 13, 2 },
+		{ MEDIASUBTYPE_Y41P, PIXEL_FORMAT_Y41P, 1 << 13, 2 },
+		{ MEDIASUBTYPE_YUY2, PIXEL_FORMAT_YUY2, 1 << 13, 2 },
+		{ MEDIASUBTYPE_YVYU, PIXEL_FORMAT_YVYU, 1 << 13, 2 },
+		{ MEDIASUBTYPE_UYVY, PIXEL_FORMAT_UYVY, 1 << 13, 2 },
+		{ MEDIASUBTYPE_Y211, PIXEL_FORMAT_Y211, 1 << 13, 2 },
+		{ MEDIASUBTYPE_NV11, PIXEL_FORMAT_NV11, 1 << 13, 2 },
+		{ MEDIASUBTYPE_420O, PIXEL_FORMAT_420O, 1 << 13, 2 },
 
 		/* YUV 4:4:4 */
-		{ MEDIASUBTYPE_AYUV, 0x56555941, 1 << 10, 4 }, /*AYUV4:4:4 Packed 8*/
+		{ MEDIASUBTYPE_AYUV, PIXEL_FORMAT_AYUV, 1 << 10, 4 }, /*AYUV4:4:4 Packed 8*/
 };
 
 //using namespace ATL;
 
 DShowVideoCapture::DShowVideoCapture()
 	: mGraph(NULL)
-	, mGraphBuiler(NULL)
 	, mMediaControl(NULL)
 	, mMediaEventEx(NULL)
 	, mDropFrameStatus(NULL)
 	, mCaptureFilter(NULL)
 	, mGrabberFiler(NULL)
-	, mGrabber(NULL)
+	, mVideoGrabber(NULL)
 	, mcb(NULL)
 {
 }
@@ -132,7 +131,8 @@ HRESULT DShowVideoCapture::Start(OPEN_DEVICE_PARAM &params)
 
 	CHECK_HR(hr = BuildGraph());
 
-	mGrabber->GetConnectedMediaType(&mWorkMediaType);
+	// update work parameters 
+	mVideoGrabber->GetConnectedMediaType(&mWorkMediaType);
 	mWorkParams.width = mWorkMediaType.BitmapHeader()->biWidth;
 	mWorkParams.height = mWorkMediaType.BitmapHeader()->biHeight;
 	mWorkParams.fps = RefTimeToFramesPerSec(mWorkMediaType.AvgReferenceTime());
@@ -177,6 +177,22 @@ HRESULT DShowVideoCapture::Stop()
 	return S_OK;
 }
 
+inline int32_t DShowVideoCapture::GetBitsPerPixel(DWORD pixelFormat)
+{
+	int32_t bitsPerFixel = 0;
+	const FRAMEFORAMTINFO *info = NULL;
+	for (int i = 0; i < ARRAYSIZE(videoFormatTable); i++){
+		if (videoFormatTable[i].pixelFormatInFourCC == pixelFormat){
+			info = &videoFormatTable[i];
+			break;
+		}
+	}
+	if (info){
+		bitsPerFixel = info->bytePerPixel;
+	}
+	return bitsPerFixel;
+}
+
 HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 {
 	FRAME_DESC desc;
@@ -197,7 +213,7 @@ HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 	desc.width = mWorkParams.width;
 	desc.height = mWorkParams.height;
 	desc.pixelFormatInFourCC = mWorkMediaType.subtype.Data1;
-	desc.lineSize = mWorkParams.width * 3;
+	desc.lineSize = mWorkParams.width * GetBitsPerPixel(desc.pixelFormatInFourCC) / 8;
 
 	mcb->OnFrame(desc);
 
@@ -254,7 +270,6 @@ HRESULT DShowVideoCapture::ReleaseDShowInterfaces()
 	SAFE_RELEASE(mMediaEventEx);
 	SAFE_RELEASE(mMediaControl);
 	SAFE_RELEASE(mGrabberFiler);
-	SAFE_RELEASE(mGraphBuiler);
 	SAFE_RELEASE(mGraph);
 
 	return hr;
@@ -304,14 +319,10 @@ HRESULT DShowVideoCapture::GetDShowInterfaces()
 
 	CHECK_HR(hr = CoCreateInstance(CLSID_FilterGraph, NULL,
 		CLSCTX_INPROC_SERVER, IID_IGraphBuilder, (void**)&mGraph));
-	CHECK_HR(hr = CoCreateInstance(CLSID_CaptureGraphBuilder2, NULL,
-		CLSCTX_INPROC_SERVER, IID_ICaptureGraphBuilder2, (void**)&mGraphBuiler));
-
-	CHECK_HR(hr = mGraphBuiler->SetFiltergraph(mGraph));
 
 	CHECK_HR(hr = CoCreateInstance(CLSID_SampleGrabber, NULL,
-		CLSCTX_INPROC_SERVER, IID_ISampleGrabber, (void**)&mGrabber));
-	CHECK_HR(hr = mGrabber->QueryInterface(IID_IBaseFilter, (void**)&mGrabberFiler));
+		CLSCTX_INPROC_SERVER, IID_ISampleGrabber, (void**)&mVideoGrabber));
+	CHECK_HR(hr = mVideoGrabber->QueryInterface(IID_IBaseFilter, (void**)&mGrabberFiler));
 
 	CHECK_HR(hr = mGraph->QueryInterface(IID_IMediaControl, (void**)&mMediaControl));
 	CHECK_HR(hr = mGraph->QueryInterface(IID_IMediaEventEx, (void**)&mMediaEventEx));
@@ -333,9 +344,10 @@ HRESULT DShowVideoCapture::BuildGraph()
 	CComPtr<IPin> pGrabberOutPin = NULL;
 
 	CMediaType mediaType;
+	CMediaType mediaTypeFound;
 	mediaType.majortype = MEDIATYPE_Video;
 	mediaType.subtype = MEDIASUBTYPE_NULL;
-	CHECK_HR(hr = mGrabber->SetMediaType(&mediaType));
+	CHECK_HR(hr = mVideoGrabber->SetMediaType(&mediaType));
 
 	CHECK_HR(hr = CoCreateInstance(CLSID_NullRenderer, NULL, CLSCTX_INPROC_SERVER, IID_IBaseFilter, (void**)&pNullRenderFilter));
 
@@ -347,13 +359,13 @@ HRESULT DShowVideoCapture::BuildGraph()
 	CHECK_HR(hr = mGraph->AddFilter(pNullRenderFilter, RENDER_FILTER_NAME_STR));
 
 	CHECK_HR(hr = FindPinByCategory(mCaptureFilter, PIN_CATEGORY_CAPTURE, PINDIR_OUTPUT, &pCaptureOutPin));
-	CHECK_HR(hr = FindMediaTypeInPin(pCaptureOutPin, mWorkMediaType));
+	CHECK_HR(hr = FindMediaTypeInPin(pCaptureOutPin, mediaTypeFound));
 
 	CHECK_HR(hr = FindUnconnectedPin(mGrabberFiler, PINDIR_OUTPUT, &pGrabberOutPin));
 	CHECK_HR(hr = FindUnconnectedPin(mGrabberFiler, PINDIR_INPUT, &pGrabberInPin));
 	CHECK_HR(hr = FindUnconnectedPin(pNullRenderFilter, PINDIR_INPUT, &pNullRenderInPin));
 
-	if (mWorkMediaType.subTypeEqual(MEDIASUBTYPE_MJPG)){
+	if (mediaTypeFound.subTypeEqual(MEDIASUBTYPE_MJPG)){
 		CComPtr<IPin> pJpegDecInPin = NULL;
 		CComPtr<IPin> pJpegDecOutPin = NULL;
 		CHECK_HR(hr = CoCreateInstance(CLSID_MjpegDec, NULL, CLSCTX_INPROC_SERVER, IID_IBaseFilter, (void**)&pJpegDecFilter));
@@ -363,14 +375,13 @@ HRESULT DShowVideoCapture::BuildGraph()
 		CHECK_HR(hr = mGraph->Connect(pCaptureOutPin, pJpegDecInPin));
 		CHECK_HR(hr = mGraph->Connect(pJpegDecOutPin, pGrabberInPin));
 		CHECK_HR(hr = mGraph->Connect(pGrabberOutPin, pNullRenderInPin));
-
 	}else{
 		CHECK_HR(hr = mGraph->Connect(pCaptureOutPin, pGrabberInPin));
 		CHECK_HR(hr = mGraph->Connect(pGrabberOutPin, pNullRenderInPin));
 	}
 
-	CHECK_HR(hr = mGrabber->SetCallback(this, 0));
-	CHECK_HR(hr = mGrabber->SetOneShot(FALSE));
+	CHECK_HR(hr = mVideoGrabber->SetCallback(this, 0));
+	CHECK_HR(hr = mVideoGrabber->SetOneShot(FALSE));
 
 done:
 	ShowDShowError(hr);
@@ -394,10 +405,9 @@ HRESULT DShowVideoCapture::GetDevicesName(VECT &cameNames)
 inline BOOL DShowVideoCapture::IsFormatSupport(CMediaType &mediaType, FRAMEABILITY & bility)
 {
 	BOOL bRet = FALSE;
-	for (int i = 0; i < ARRAYSIZE(dshowSupportVideoFormatTable); i++){
-		if (mediaType.subTypeEqual(dshowSupportVideoFormatTable[i].subtype)){
-			bility.Priority = dshowSupportVideoFormatTable[i].priority;
-			bility.pixelFormatInFourCC = dshowSupportVideoFormatTable[i].pixelFormatInFourCC;
+	for (int i = 0; i < ARRAYSIZE(videoFormatTable); i++){
+		if (mediaType.subTypeEqual(videoFormatTable[i].subtype)){
+			bility.Priority = videoFormatTable[i].priority;
 			bRet = TRUE;
 			break;
 		}

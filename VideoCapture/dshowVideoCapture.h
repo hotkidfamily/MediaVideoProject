@@ -69,7 +69,6 @@ typedef struct tagFrameBility{
 	LONGLONG MinFrameInterval;
 	LONGLONG MaxFrameInterval;
 	CMediaType MediaType;
-	DWORD pixelFormatInFourCC;
 	tagFrameBility(){
 		ZeroMemory(this, sizeof(tagFrameBility));
 	}
@@ -101,24 +100,25 @@ private:
 	HRESULT FindMediaTypeInPin(CComPtr<IPin> &pOutPin, CMediaType &);
 	inline BOOL IsFormatSupport(CMediaType &, FRAMEABILITY&);
 	HRESULT SaveGraphFile(IGraphBuilder*, TCHAR* path);
+	int32_t GetBitsPerPixel(DWORD);
 
 private:
 	IGraphBuilder *mGraph;
-	ICaptureGraphBuilder2 *mGraphBuiler;
 	IMediaControl *mMediaControl;
 	IMediaEventEx *mMediaEventEx;
-	IAMDroppedFrames *mDropFrameStatus;
 
-	long mCapFrames;
-	long mDropFrames;
-
-	ISampleGrabber *mGrabber;
+	ISampleGrabber *mVideoGrabber;
 	IBaseFilter *mCaptureFilter;
 	IBaseFilter *mGrabberFiler;
+
+	IAMDroppedFrames *mDropFrameStatus;
+	long mCapFrames;
+	long mDropFrames;
 
 	CMediaType mWorkMediaType;
 
 	VideoCaptureCallback *mcb;
+
 
 	OPEN_DEVICE_PARAM mWorkParams;
 	FRAMEFORAMTINFO *mFrameInfo;
