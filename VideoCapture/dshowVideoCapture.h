@@ -100,7 +100,7 @@ private:
 	HRESULT FindMediaTypeInPin(CComPtr<IPin> &pOutPin, CMediaType &);
 	inline BOOL IsFormatSupport(CMediaType &, FRAMEABILITY&);
 	HRESULT SaveGraphFile(IGraphBuilder*, TCHAR* path);
-	int32_t GetBitsPerPixel(DWORD);
+	const FRAMEFORAMTINFO* GetFrameInfoByFourCC(DWORD);
 
 private:
 	IGraphBuilder *mGraph;
@@ -121,7 +121,7 @@ private:
 
 
 	OPEN_DEVICE_PARAM mWorkParams;
-	FRAMEFORAMTINFO *mFrameInfo;
+	const FRAMEFORAMTINFO *mFrameInfo;
 	CAMERALIST mCameraList;
 	CSlidingWindowCalc mFpsStats;
 };

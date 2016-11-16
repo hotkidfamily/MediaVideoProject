@@ -75,6 +75,7 @@ DShowVideoCapture::DShowVideoCapture()
 	, mGrabberFiler(NULL)
 	, mVideoGrabber(NULL)
 	, mcb(NULL)
+	, mFrameInfo(NULL)
 {
 }
 
@@ -137,10 +138,10 @@ HRESULT DShowVideoCapture::Start(OPEN_DEVICE_PARAM &params)
 	mWorkParams.height = mWorkMediaType.BitmapHeader()->biHeight;
 	mWorkParams.fps = RefTimeToFramesPerSec(mWorkMediaType.AvgReferenceTime());
 	mWorkParams.pixelFormatInFourCC = mWorkMediaType.subtype.Data1;
+	mFrameInfo = GetFrameInfoByFourCC(mWorkMediaType.subtype.Data1);
 	params = mWorkParams;
 	
-
-	while (hr = mMediaControl->Run() != S_OK){
+	while ((hr = mMediaControl->Run()) != S_OK){
 		Sleep(100);
 	}
 
@@ -173,11 +174,12 @@ HRESULT DShowVideoCapture::Stop()
 	mMediaControl->Stop();
 
 	RemoveFiltersFromGraph();
+	mFrameInfo = NULL;
 
 	return S_OK;
 }
 
-inline int32_t DShowVideoCapture::GetBitsPerPixel(DWORD pixelFormat)
+inline const FRAMEFORAMTINFO* DShowVideoCapture::GetFrameInfoByFourCC(DWORD pixelFormat)
 {
 	int32_t bitsPerFixel = 0;
 	const FRAMEFORAMTINFO *info = NULL;
@@ -187,10 +189,8 @@ inline int32_t DShowVideoCapture::GetBitsPerPixel(DWORD pixelFormat)
 			break;
 		}
 	}
-	if (info){
-		bitsPerFixel = info->bytePerPixel;
-	}
-	return bitsPerFixel;
+	
+	return info;
 }
 
 HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
@@ -213,7 +213,7 @@ HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 	desc.width = mWorkParams.width;
 	desc.height = mWorkParams.height;
 	desc.pixelFormatInFourCC = mWorkMediaType.subtype.Data1;
-	desc.lineSize = mWorkParams.width * GetBitsPerPixel(desc.pixelFormatInFourCC) / 8;
+	desc.lineSize = mWorkParams.width * mFrameInfo->bytePerPixel / 8;
 
 	mcb->OnFrame(desc);
 
