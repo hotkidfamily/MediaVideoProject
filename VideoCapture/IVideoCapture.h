@@ -16,7 +16,7 @@
 enum CPPixelFormat{
 	FMT(I420, '024I'),
 	FMT(RGB565, 0xe436eb7c),
-	FMT(RGB555, 0xe436eb7c),
+	FMT(RGB555, 0xe436eb7b),
 	FMT(RGB24, 0xe436eb7d),
 	FMT(RGB32, 0xe436eb7e),
 	FMT(ARGB, 0x773c9ac0),
