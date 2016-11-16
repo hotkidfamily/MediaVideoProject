@@ -205,7 +205,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					if (status & MF_CHECKED){
 						CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_UNCHECKED);
 						StopCaptureWork(gContext);
-						//StopEncodeWork(gContext);
+						StopEncodeWork(gContext);
 						StopRenderWork(gContext);
 					}
 					else{
@@ -215,7 +215,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 						RECT rect = {0};
 						GetWindowRect(gContext->hMainWnd, &rect);
 						MoveWindow(gContext->hMainWnd, rect.left, rect.top, gContext->captureArgs.width, gContext->captureArgs.height + 16, TRUE);
-						//SetupEncodeWork(gContext);
+						SetupEncodeWork(gContext);
 						StartRenderWork(gContext);
 						CreateWorkThread(gContext);
 					}
