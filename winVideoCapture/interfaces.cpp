@@ -15,8 +15,8 @@ BOOL StartCaptureWork(THIS_CONTEXT *ctx)
 		ctx->pVideoCapture->RegisterCallback(ctx->callBack);
 		ctx->captureArgs.parentWindow = ctx->hMainWnd;
 		ctx->captureArgs.fps = 30;
-		ctx->captureArgs.width = 640;
-		ctx->captureArgs.height = 480;
+		ctx->captureArgs.width = 1280;
+		ctx->captureArgs.height = 720;
 		bRet = ctx->pVideoCapture->StartCaptureWithParam(ctx->captureArgs);
 
 		ctx->bRuning = TRUE;

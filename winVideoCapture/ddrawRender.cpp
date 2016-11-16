@@ -135,8 +135,6 @@ DDrawRender::DDrawRender()
 	, mDDrawPrimarySurface(NULL)
 	, mDDrawSecondarySurface(NULL)
 	, mHwnd(NULL)
-	, mWidth(0)
-	, mHeight(0)
 	, mRenderThreadHandle(NULL)
 	, mRenderThreadId(0)
 	, mRenderEvent(NULL)
@@ -148,8 +146,6 @@ DDrawRender::DDrawRender(HWND hWnd)
 	, mDDrawPrimarySurface(NULL)
 	, mDDrawSecondarySurface(NULL)
 	, mHwnd(hWnd)
-	, mWidth(0)
-	, mHeight(0)
 	, mRenderThreadHandle(NULL)
 	, mRenderThreadId(0)
 	, mRenderEvent(NULL)
@@ -218,8 +214,7 @@ HRESULT DDrawRender::InitDDrawInterface(int width, int height, DWORD pixelFormat
 	CHECK_HR(hr = mDDrawClippper->SetHWnd(0, mHwnd));
 	CHECK_HR(hr = mDDrawPrimarySurface->SetClipper(mDDrawClippper));
 
-	mWidth = width;
-	mHeight = height;
+	mLastPts = 0;
 
 	mRenderThreadHandle = CreateThread(NULL, 0, RenderThread, this, NULL, &mRenderThreadId);
 
@@ -265,15 +260,22 @@ HRESULT DDrawRender::PushFrame(CSampleBuffer *frame)
 
 	mDDrawSecondarySurface->Unlock(NULL);
 
+	HDC dc;
+	hr = mDDrawPrimarySurface->GetDC(&dc);
+#define TEXTCHAR "hello world"
+	TextOutA(dc, rect.left, rect.top + 100, TEXTCHAR, strlen(TEXTCHAR));
+	mDDrawPrimarySurface->ReleaseDC(dc);
+
 	DDBLTFX ddblfx;
 	ZeroMemory(&ddblfx, sizeof(DDBLTFX));
 	ddblfx.dwSize = sizeof(DDBLTFX);
-	ddblfx.dwRotationAngle = 9000;
 	ddblfx.dwROP = SRCCOPY;
 
 	mDDrawPrimarySurface->Blt(&rect, mDDrawSecondarySurface, NULL, DDBLT_ROP, &ddblfx);
+	mLastPts = frame->GetPts();
 
 done:
+	GetDDrawErrorString(hr);
 	return hr;
 }
 

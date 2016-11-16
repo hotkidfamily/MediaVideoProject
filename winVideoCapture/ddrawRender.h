@@ -41,7 +41,6 @@ private:
 	HWND mHwnd;
 	BOOL bRender;
 
-	DWORD mWidth;
-	DWORD mHeight;
+	int64_t mLastPts;
 };
 
