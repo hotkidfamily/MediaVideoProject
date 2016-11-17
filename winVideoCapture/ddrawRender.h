@@ -44,8 +44,10 @@ private:
 
 	HWND mHwnd;
 	BOOL bRender;
+	SIZE mScreenSizeInPixel;
 
 	int64_t mLastPts;
 	CSlidingWindowCalc mRenderStatis;
+	int32_t mCanvasBpp;
 };
 

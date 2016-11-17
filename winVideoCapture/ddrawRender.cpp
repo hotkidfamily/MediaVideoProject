@@ -235,21 +235,23 @@ void DDrawRender::FillddPixelFormatFromFourCC(LPDDPIXELFORMAT ddPixelFormat, DWO
 HRESULT DDrawRender::CreateSurfaces(int width, int height, DWORD pixelFormatInFourCC)
 {
 	HRESULT hr = DD_OK;
-	DDSURFACEDESC2 desc = {0};
+	DDSURFACEDESC2 ddsd = {0};
 	
-	desc.dwSize = sizeof(DDSURFACEDESC);
-	desc.dwFlags = DDSD_CAPS;
-	desc.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
+	ddsd.dwSize = sizeof(DDSURFACEDESC);
+	ddsd.dwFlags = DDSD_CAPS;
+	ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
 
-	CHECK_HR(hr = mDDrawObj->CreateSurface(&desc, &mPrimarySurface, NULL));
+	CHECK_HR(hr = mDDrawObj->CreateSurface(&ddsd, &mPrimarySurface, NULL));
 
-	desc.dwFlags = DDSD_WIDTH | DDSD_HEIGHT | DDSD_CAPS | DDSD_PIXELFORMAT;
-	desc.dwWidth = width;
-	desc.dwHeight = height;
- 	desc.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
-	FillddPixelFormatFromFourCC(&(desc.ddpfPixelFormat), pixelFormatInFourCC);
+	ddsd.dwFlags = DDSD_WIDTH | DDSD_HEIGHT | DDSD_CAPS | DDSD_PIXELFORMAT;
+	ddsd.dwWidth = width;
+	ddsd.dwHeight = height;
+ 	ddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
+	FillddPixelFormatFromFourCC(&(ddsd.ddpfPixelFormat), pixelFormatInFourCC);
 
-	CHECK_HR(hr = mDDrawObj->CreateSurface(&desc, &mCanvasSurface, NULL));
+	CHECK_HR(hr = mDDrawObj->CreateSurface(&ddsd, &mCanvasSurface, NULL));
+
+	mCanvasBpp = ddsd.ddpfPixelFormat.dwRGBBitCount;
 
 done:
 	GetDDrawErrorString(hr);
@@ -299,8 +301,13 @@ HRESULT DDrawRender::InitDDrawInterface(int width, int height, DWORD pixelFormat
 	ddbltfx.dwSize = sizeof(ddbltfx);
 	ddbltfx.dwFillColor = RGB(0, 0, 0);
 	hr = mPrimarySurface->Blt(NULL, NULL, NULL, DDBLT_COLORFILL | DDBLT_WAIT, &ddbltfx);
+	if (hr == DDERR_SURFACELOST){
+		//Restore surface
+	}
 
 	mLastPts = 0;
+	mScreenSizeInPixel.cx = width;
+	mScreenSizeInPixel.cy = height;
 
 	mRenderThreadHandle = CreateThread(NULL, 0, RenderThread, this, NULL, &mRenderThreadId);
 
@@ -386,7 +393,7 @@ BOOL DDrawRender::OSDText(HDC hdc, char* format, ...)
 	GetWindowRect(mHwnd, &rect);
 
 	int mode = SetBkMode(hdc, OPAQUE);
-	TextOutA(hdc, rect.left+300, rect.top+200, buff, strlen(buff));
+	TextOutA(hdc, rect.left + mScreenSizeInPixel.cx /4, rect.top + mScreenSizeInPixel.cy /4, buff, strlen(buff));
 	SetBkMode(hdc, mode);
 	return TRUE;
 }
