@@ -80,8 +80,7 @@ DWORD WINAPI EncoderThread(LPVOID args)
 			ctx->encoder->getPackage(packet);
 			if (packet.isIDRFrame())
 				encodeFile.write((const char*)(packet.extraData), packet.extraDataSize);
-			else
-				encodeFile.write((const char*)packet.packageData, packet.packageDataSize);
+			encodeFile.write((const char*)packet.packageData, packet.packageDataSize);
 		}
 
 		Sleep(1);
