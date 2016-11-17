@@ -110,6 +110,7 @@ private:
 	x264_param_t mCodecParams;
 	x264_t *mCodecHandle;
 	uint32_t mLastError;
+	x264_picture_t mInPic;
 
 	std::list<DwVideoPackage> mPackages;
 
