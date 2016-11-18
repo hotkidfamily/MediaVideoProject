@@ -1,6 +1,8 @@
 
 #include <list>
 #include "samplebuffer.h"
+#include "PackageBuffer.h"
+#include "PackageManager.h"
 
 extern "C" {
 #include <stdint.h>
@@ -29,51 +31,6 @@ typedef struct tagEncodecConfig
 	void *extraParams;
 }ENCODEC_CFG, *PENCODEC_CFG;
 
-struct DwVideoPackage
-{
-	DwVideoPackage() {
-		memset(this, 0, sizeof(struct DwVideoPackage));
-	}
-
-	void Release() {
-		if (packageData) {
-			delete[] packageData;
-			packageData = NULL;
-		}
-		packageDataSize = 0;
-		if (extraData){
-			delete[] extraData;
-			extraData = NULL;
-		}
-		extraDataSize = 0;
-	}
-
-	enum FRAME_TYPE{
-		ERR_FRAME = 0,
-		P_FRAME = 1,
-		I_FRAME = 2,
-		IDR_FRAME = 3,
-		B_FRAME = 4
-	};
-
-	bool isIDRFrame() const { return frameType == IDR_FRAME; }
-	bool isIFrame() const{ return frameType == I_FRAME; }
-	bool isBFrame() const { return frameType == B_FRAME; }
-	bool isPFrame() const { return frameType == P_FRAME; }
-	bool isErrFrame() const { return frameType == ERR_FRAME; }
-
-	uint8_t *packageData;
-	uint32_t packageDataSize;
-	uint8_t *extraData;
-	uint32_t extraDataSize;
-	FRAME_TYPE frameType;
-	int64_t pts;
-	int64_t dts; /* sometimes dts is negative value */
-
-	// reserved for future
-	void *extraParam;
-};
-
 class CLibx264{
 public:
 	CLibx264();
@@ -92,7 +49,9 @@ public:
 	/* step 3.x */
 	bool addFrame(const CSampleBuffer &inputFrame);
 	/* step 3.x */
-	bool getPackage(DwVideoPackage &outputPackage);
+	bool getPackage(CPackageBuffer *&outputPackage);
+
+	bool releasePackage(CPackageBuffer *&outputPackage);
 	/* step all */
 	uint32_t getLastError() { return mLastError; }
 
@@ -112,7 +71,7 @@ private:
 	uint32_t mLastError;
 	x264_picture_t mInPic;
 
-	std::list<DwVideoPackage> mPackages;
+	CPackageBufferManager mPackages;
 
 	ENCODEC_CFG mWorkConfig;
 	CLock lock;

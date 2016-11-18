@@ -95,6 +95,7 @@
     <ClCompile Include="ddrawRender.cpp" />
     <ClCompile Include="encoder_x264.cpp" />
     <ClCompile Include="interfaces.cpp" />
+    <ClCompile Include="PackageManager.cpp" />
     <ClCompile Include="SampleBufferManager.cpp" />
     <ClCompile Include="SlidingWindowCalc.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -109,6 +110,8 @@
     <ClInclude Include="AutoLock.h" />
     <ClInclude Include="ddrawRender.h" />
     <ClInclude Include="encoder_x264.h" />
+    <ClInclude Include="PackageBuffer.h" />
+    <ClInclude Include="PackageManager.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SampleBuffer.h" />
     <ClInclude Include="SampleBufferManager.h" />

@@ -71,16 +71,18 @@ DWORD WINAPI EncoderThread(LPVOID args)
  	encodeFile.open(TEXT("C:\\Users\\hotkid\\desktop\\capture.h264"), std::ios::binary);
 
 	while (ctx->bRuning){
-		CSampleBuffer* buffer = NULL;
-		DwVideoPackage packet;
-		if (ctx->callBack->GetFrame(buffer)){
-			ctx->encoder->addFrame(*buffer);
-			ctx->render->PushFrame(buffer);
-			ctx->callBack->ReleaseFrame(buffer);
-			ctx->encoder->getPackage(packet);
-			if (packet.isIDRFrame())
-				encodeFile.write((const char*)(packet.extraData), packet.extraDataSize);
-			encodeFile.write((const char*)packet.packageData, packet.packageDataSize);
+		CSampleBuffer *frame ;
+		CPackageBuffer *packet = NULL;
+		if (ctx->callBack->GetFrame(frame)){
+			ctx->encoder->addFrame(*frame);
+			ctx->render->PushFrame(frame);
+			ctx->callBack->ReleaseFrame(frame);
+			if (ctx->encoder->getPackage(packet)){
+				if (packet->isIDRFrame())
+					encodeFile.write((const char*)(packet->ExtraData()), packet->ExtraDataSize());
+				encodeFile.write((const char*)packet->Data(), packet->DataSize());
+				ctx->encoder->releasePackage(packet);
+			}
 		}
 
 		Sleep(1);

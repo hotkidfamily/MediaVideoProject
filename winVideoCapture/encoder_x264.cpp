@@ -80,6 +80,8 @@ bool CLibx264::open()
 		setLastError(-1);
 	}
 
+	mPackages.Reset(10);
+
 	return (mCodecHandle != NULL);
 }
 
@@ -90,9 +92,6 @@ void CLibx264::close()
 		x264_encoder_close(mCodecHandle);
 		mCodecHandle = NULL;
 	}
-
-	if (mPackages.size())
-		mPackages.clear();
 
 	x264_picture_clean(&mInPic);
 }
@@ -202,15 +201,14 @@ bool CLibx264::addFrame(const CSampleBuffer &inputFrame)
 	return true;
 }
 
-bool CLibx264::getPackage(DwVideoPackage &outputPackage)
+bool CLibx264::getPackage(CPackageBuffer *&outputPackage)
 {
-	lock.Lock();
-	if (mPackages.size()){
-		outputPackage = mPackages.front();
-		mPackages.pop_front();
-	}
-	lock.Unlock();
-	return true;
+	return !!mPackages.LockPackage(outputPackage);
+}
+
+bool CLibx264::releasePackage(CPackageBuffer *&outputPackage)
+{
+	return !!mPackages.UnlockPackage(outputPackage);
 }
 
 bool CLibx264::encodeFrame(x264_picture_t *inpic)
@@ -230,50 +228,41 @@ bool CLibx264::encodeFrame(x264_picture_t *inpic)
 	return ret;
 }
 
-bool CLibx264::assemblePackage(int outputNALsDataSizeInBytes, 
+bool CLibx264::assemblePackage(int uNALsDataSizeInBytes, 
 	const x264_nal_t *outputNalus,
 	int outputNaluCnt,
 	const x264_picture_t *outputPic)
 {
 	bool ret = true;
+	FRAME_TYPE frameType;
 
-	if (outputNALsDataSizeInBytes > 0)// encode one frame.
+	if (uNALsDataSizeInBytes > 0)// encode one frame.
 	{
 		int i = 0;
-		DwVideoPackage encodedPackage;
+		CPackageBuffer *outPackage;
+		if (mPackages.GetPackage(outPackage)){
+			return false;
+		}
 		uint8_t *pOutData = NULL;
 		uint8_t *pExtraData = NULL;
+		uint32_t extraDataSize = 0;
 
 		// 1.calculate buffer size 
 		for (i = 0; i < outputNaluCnt; i++){
 			switch (outputNalus[i].i_type){
 			case NAL_SPS:
 			case NAL_PPS:
-				encodedPackage.extraDataSize += outputNalus[i].i_payload;
+				extraDataSize += outputNalus[i].i_payload;
 			default:
 				break;
 			}
 		}
-
-		encodedPackage.packageDataSize = outputNALsDataSizeInBytes - encodedPackage.extraDataSize;
-		// 2.alloc buffer
-		encodedPackage.packageData = new uint8_t[encodedPackage.packageDataSize + 16];
-		if (!encodedPackage.packageData){
+		if (!outPackage->Reset(uNALsDataSizeInBytes, uNALsDataSizeInBytes - extraDataSize)){
 			return false;
 		}
 
-		if (encodedPackage.extraDataSize){
-			encodedPackage.extraData = new uint8_t[encodedPackage.extraDataSize + 16];
-			if (!encodedPackage.extraData){
-				delete encodedPackage.packageData;
-				encodedPackage.packageData = NULL;
-				encodedPackage.packageDataSize = 0;
-				return false;
-			}
-		}
-
-		pOutData = encodedPackage.packageData;
-		pExtraData = encodedPackage.extraData;
+		pOutData = outPackage->Data();
+		pExtraData = outPackage->ExtraData();
 
 		// 3.copy data
 		for (i = 0; i < outputNaluCnt; i++){
@@ -282,6 +271,7 @@ bool CLibx264::assemblePackage(int outputNALsDataSizeInBytes,
 			case NAL_PPS:
 				memcpy(pExtraData, outputNalus[i].p_payload, outputNalus[i].i_payload);
 				pExtraData += outputNalus[i].i_payload;
+				break;
 			default:
 				memcpy(pOutData, outputNalus[i].p_payload, outputNalus[i].i_payload);
 				pOutData += outputNalus[i].i_payload;
@@ -289,31 +279,31 @@ bool CLibx264::assemblePackage(int outputNALsDataSizeInBytes,
 			}
 		}
 
-		encodedPackage.pts = outputPic->i_pts;
-		encodedPackage.dts = outputPic->i_dts;
+		outPackage->SetPts(outputPic->i_pts);
+		outPackage->SetDts(outputPic->i_dts);
 
 		switch (outputPic->i_type){
 		case X264_TYPE_IDR:
-			encodedPackage.frameType = DwVideoPackage::IDR_FRAME;
+			frameType = IDR_FRAME;
 			break;
 		case X264_TYPE_I:
-			encodedPackage.frameType = DwVideoPackage::I_FRAME;
+			frameType = I_FRAME;
 			break;
 		case X264_TYPE_P:
-			encodedPackage.frameType = DwVideoPackage::P_FRAME;
+			frameType = P_FRAME;
 			break;
 		case X264_TYPE_BREF: // make b_ref as P
 		case X264_TYPE_B:
-			encodedPackage.frameType = DwVideoPackage::B_FRAME;
+			frameType = B_FRAME;
 			break;
-		default: /* just header ?*/
-			encodedPackage.frameType = DwVideoPackage::ERR_FRAME;
+		default: /* just header ? Fix ME:*/
+			frameType = ERR_FRAME;
 			break;
 		}
-		lock.Lock();
-		mPackages.push_back(encodedPackage);
-		lock.Unlock();
-	}else if (outputNALsDataSizeInBytes == 0){
+// 		lock.Lock();
+// 		mPackages.push_back(outPackage);
+// 		lock.Unlock();
+	}else if (uNALsDataSizeInBytes == 0){
 	}else{
 		ret = false;
 	}
