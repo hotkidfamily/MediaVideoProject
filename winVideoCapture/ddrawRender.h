@@ -1,7 +1,9 @@
 #pragma once
 
 #include "SampleBuffer.h"
+#include <timeApi.h>
 #include <ddraw.h>
+
 #include "SlidingWindowCalc.h"
 
 #ifndef CHECK_HR
@@ -47,6 +49,8 @@ private:
 	SIZE mScreenSizeInPixel;
 
 	int64_t mLastPts;
+	CSlidingWindowCalc mInputStatis;
+	DWORD mLastTime;
 	CSlidingWindowCalc mRenderStatis;
 	int32_t mCanvasBpp;
 };

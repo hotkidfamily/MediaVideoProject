@@ -306,6 +306,7 @@ HRESULT DDrawRender::InitDDrawInterface(int width, int height, DWORD pixelFormat
 	}
 
 	mLastPts = 0;
+	mLastTime = 0;
 	mScreenSizeInPixel.cx = width;
 	mScreenSizeInPixel.cy = height;
 
@@ -333,11 +334,17 @@ HRESULT DDrawRender::PushFrame(CSampleBuffer *frame)
 {
 	HRESULT hr = DD_OK;
 	DDSURFACEDESC2 desc;
+	DWORD renderBefore = 0;
 	RECT rect;
 	RECT srcRect = { 0, 0, frame->GetWidth(), frame->GetHeight() };
-	uint32_t interval = (frame->GetPts() - mLastPts) / 10000;
+	uint32_t interval = (uint32_t)(frame->GetPts() - mLastPts) / 10000;
+	renderBefore = timeGetTime();
 
-	mRenderStatis.AppendSample(interval);
+	if (mLastPts){
+		mInputStatis.AppendSample(interval);
+		mRenderStatis.AppendSample(renderBefore - mLastTime);
+	}
+	mLastTime = renderBefore;
 
 	ZeroMemory(&desc, sizeof(DDSURFACEDESC));
 	desc.dwSize = sizeof(DDSURFACEDESC);
@@ -369,11 +376,13 @@ HRESULT DDrawRender::PushFrame(CSampleBuffer *frame)
 	ddblfx.dwROP = SRCCOPY;
 
 	CHECK_HR(hr = mPrimarySurface->Blt(&rect, mCanvasSurface, NULL, DDBLT_WAIT, NULL));
-
 	mLastPts = frame->GetPts();
 	HDC dc = NULL;
 	CHECK_HR(hr = mPrimarySurface->GetDC(&dc));
-	OSDText(dc, "pts %lld,itv %d avg %08u, fps %.2f", mLastPts, interval, mRenderStatis.Bitrate(), mRenderStatis.Frequency());
+	OSDText(dc, "pts %lld,itv %d, fps %.2f, avg %u(%d~%d), r %u(%d~%d)", 
+		mLastPts, interval, mInputStatis.Frequency(),
+		mInputStatis.Bitrate(), mInputStatis.MinSample(), mInputStatis.MaxSample(),
+		mRenderStatis.AvgSampleSize(), mRenderStatis.MinSample(), mRenderStatis.MaxSample());
 	mPrimarySurface->ReleaseDC(dc);
 
 done:
