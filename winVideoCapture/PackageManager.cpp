@@ -40,6 +40,7 @@ BOOL CPackageBufferManager::GetPackage(CPackageBuffer *&buf)
 	if (emptyList.size()){
 		buf = emptyList.front();
 		emptyList.pop_front();
+		readyList.push_back(buf);
 	}
 
 	return TRUE;

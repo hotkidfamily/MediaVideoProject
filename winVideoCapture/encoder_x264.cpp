@@ -159,10 +159,10 @@ bool CLibx264::addFrame(const CSampleBuffer &inputFrame)
 	switch (inputFrame.GetPixelFormat())
 	{
 	case PIXEL_FORMAT_RGB24:
-		inpic.img.i_csp = X264_CSP_RGB;
+		inpic.img.i_csp = X264_CSP_BGR;
 		inpic.img.i_plane = 1;
 		inpic.img.plane[0] = inputFrame.GetDataPtr();
-		inpic.img.i_stride[0] = inputFrame.GetWidth()*3;
+		inpic.img.i_stride[0] = inputFrame.GetLineSize();
 		break;
 	case PIXEL_FORMAT_I420:
 		inpic.img.i_csp = X264_CSP_I420;
@@ -240,7 +240,7 @@ bool CLibx264::assemblePackage(int uNALsDataSizeInBytes,
 	{
 		int i = 0;
 		CPackageBuffer *outPackage;
-		if (mPackages.GetPackage(outPackage)){
+		if (!mPackages.GetPackage(outPackage)){
 			return false;
 		}
 		uint8_t *pOutData = NULL;
@@ -300,9 +300,7 @@ bool CLibx264::assemblePackage(int uNALsDataSizeInBytes,
 			frameType = ERR_FRAME;
 			break;
 		}
-// 		lock.Lock();
-// 		mPackages.push_back(outPackage);
-// 		lock.Unlock();
+		outPackage->SetFrameType(frameType);
 	}else if (uNALsDataSizeInBytes == 0){
 	}else{
 		ret = false;
@@ -349,8 +347,8 @@ void CLibx264::flushEncodeCache()
 		default:\
 			break;\
 			}\
-						}\
-			} while (0)
+		}\
+	} while (0)
 
 #include <comutil.h>
 bool CLibx264::parseConfigString()

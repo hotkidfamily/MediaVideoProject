@@ -74,5 +74,4 @@ private:
 	CPackageBufferManager mPackages;
 
 	ENCODEC_CFG mWorkConfig;
-	CLock lock;
 };

@@ -67,8 +67,9 @@ BOOL StopEncodeWork(THIS_CONTEXT *ctx)
 DWORD WINAPI EncoderThread(LPVOID args)
 {
 	THIS_CONTEXT * ctx = (THIS_CONTEXT *)args;
- 	std::ofstream encodeFile;
- 	encodeFile.open(TEXT("C:\\Users\\hotkid\\desktop\\capture.h264"), std::ios::binary);
+	std::ofstream encodeFile;
+	//encodeFile.open(TEXT("C:\\Users\\hotkid\\desktop\\capture.h264"), std::ios::binary);
+ 	encodeFile.open(TEXT("C:\\Users\\Administrator\\desktop\\capture.h264"), std::ios::binary);
 
 	while (ctx->bRuning){
 		CSampleBuffer *frame ;
