@@ -198,6 +198,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			case IDM_EXIT:
 				DestroyWindow(hWnd);
 				break;
+			case ID_WINDOW_STATIS:
+				break;
+			case ID_WINDOW_VIDEO:
+				break;
+			case ID_TOOLS_RANDOMRENDER:
+				break;
 			default:
 				{
 					UINT status = 0;

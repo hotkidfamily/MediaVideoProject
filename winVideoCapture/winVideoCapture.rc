@@ -53,7 +53,11 @@ BEGIN
     BEGIN
         MENUITEM "&Random Render",              ID_TOOLS_RANDOMRENDER
     END
-    MENUITEM "&Window",                     0
+    POPUP "&Window"
+    BEGIN
+        MENUITEM "&Statis",                     ID_WINDOW_STATIS
+        MENUITEM "&Video",                      ID_WINDOW_VIDEO
+    END
     POPUP "&Help"
     BEGIN
         MENUITEM "&About ...",                  IDM_ABOUT
