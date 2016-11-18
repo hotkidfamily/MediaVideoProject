@@ -34,6 +34,32 @@ BOOL convertYUY2toI420(x264_picture_t &dstPic, const CSampleBuffer *srcPic)
 	return TRUE;
 }
 
+BOOL convertYUY2toNV16(x264_picture_t &dstPic, const CSampleBuffer *srcPic)
+{
+	uint8_t *y = NULL, *uv = NULL;
+	uint8_t *yp = NULL;
+	int step = 0;
+
+	int32_t width = srcPic->GetWidth();
+	int32_t height = srcPic->GetHeight();
+	int32_t linSize = srcPic->GetLineSize();
+
+	for (int32_t j = 0; j < height; j ++){
+		y = dstPic.img.plane[0] + j * dstPic.img.i_stride[0];
+		uv = dstPic.img.plane[1] + j * dstPic.img.i_stride[1];
+		yp = srcPic->GetDataPtr() + j * linSize;
+
+		for (int32_t i = 0, k= 0; i < linSize; i+=4, k+=2){
+			y[k] = yp[i];
+			uv[k] = yp[i + 1];
+			y[k + 1] = yp[i + 2];
+			uv[k + 1] = yp[i + 3];
+		}
+	}
+
+	return TRUE;
+}
+
 CLibx264::CLibx264()
 	: mCodecHandle(NULL)
 {
@@ -77,13 +103,13 @@ bool CLibx264::setConfig(const ENCODEC_CFG &config)
 
 	ZeroMemory(&mCodecParams, sizeof(x264_param_t));
 
-	x264_param_default(&mCodecParams);
-	x264_param_default_preset(&mCodecParams, "faster", "zerolatency");
+ 	x264_param_default(&mCodecParams);
 
 	mCodecParams.rc.i_vbv_max_bitrate = config.maxBitrateInKb;
 	mCodecParams.rc.i_vbv_buffer_size = config.maxBitrateInKb;
 	mCodecParams.rc.i_bitrate = config.avgBitrateInKb;
 	mCodecParams.rc.i_rc_method = X264_RC_ABR;
+
 	switch (config.pixelFormatInFourCC){
 	case PIXEL_FORMAT_RGB24:
 		mCodecParams.i_csp = X264_CSP_RGB;
@@ -95,15 +121,24 @@ bool CLibx264::setConfig(const ENCODEC_CFG &config)
 		mCodecParams.i_csp = X264_CSP_BGRA;
 		break;
 	case PIXEL_FORMAT_YUY2:
-		mCodecParams.i_csp = X264_CSP_I420;
+		mCodecParams.i_csp = X264_CSP_NV16;
 		break;
 	}
 
+	mCodecParams.b_annexb = 1;
 	mCodecParams.i_width = config.width;
 	mCodecParams.i_height = config.height;
 
 	mCodecParams.i_fps_num = config.fps;
 	mCodecParams.i_fps_den = 1;
+// 	mCodecParams.i_timebase_num = 1;
+// 	mCodecParams.i_timebase_den = 10000000;// only in apple camera
+	mCodecParams.b_open_gop = 0;
+	mCodecParams.b_cabac = 1;
+	mCodecParams.i_keyint_min = config.fps;
+	mCodecParams.i_keyint_max = config.fps * 5;
+	mCodecParams.i_frame_reference = 6;
+	mCodecParams.i_threads = 0;
 
 	mCodecParams.b_repeat_headers = 1;
 	x264_picture_alloc(&mInPic, mCodecParams.i_csp, mCodecParams.i_width, mCodecParams.i_height);
@@ -147,14 +182,14 @@ bool CLibx264::addFrame(const CSampleBuffer &inputFrame)
 		inpic.img.i_stride[0] = inputFrame.GetWidth()*4;
 		break;
 	case PIXEL_FORMAT_YUY2:
-		convertYUY2toI420(mInPic, &inputFrame);
+		convertYUY2toNV16(mInPic, &inputFrame);
 		break;
 	default:
 		return false;
 	}
 
 	if (inputFrame.GetPixelFormat() == PIXEL_FORMAT_YUY2){
-		mInPic.i_pts = inputFrame.GetPts()/10000;
+		mInPic.i_pts = inputFrame.GetPts() / 10000;
 		mInPic.i_type = X264_TYPE_AUTO;
 		encodeFrame(&mInPic);
 	}
