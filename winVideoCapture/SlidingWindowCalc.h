@@ -11,9 +11,12 @@ public:
 
 	void Reset();
 	void Reset(uint32_t durationInMS);
+
+	int AppendSample(uint32_t size);
+
 	uint32_t Bitrate() const;
 	double Frequency() const;
-	int AppendSample(uint32_t size);
+	uint64_t AvgSampleSize() const;
 
 	uint32_t MaxSample() const;
 	uint32_t MinSample() const;

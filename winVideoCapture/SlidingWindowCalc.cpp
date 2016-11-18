@@ -53,9 +53,17 @@ double CSlidingWindowCalc::Frequency() const
 
 uint32_t CSlidingWindowCalc::Bitrate() const
 {
-	uint64_t bitrate = SampleSize()*1000 / Duration();
+	uint64_t bitrate = SampleSize() / Duration();
 
 	return (uint32_t)bitrate;
+}
+
+uint64_t CSlidingWindowCalc::AvgSampleSize() const
+{
+	uint64_t avg = 1;
+	if (mSampleList.size())
+		avg = SampleSize() / Samples();
+	return avg;
 }
 
 uint32_t CSlidingWindowCalc::MaxSample() const 
