@@ -64,12 +64,12 @@ public:
 	inline bool isPFrame() const { return frameType == P_FRAME; }
 	inline bool isErrFrame() const { return frameType == ERR_FRAME; }
 
-	inline uint8_t* Data() { return data; }
-	inline uint32_t DataSize() { return dataSize; }
-	inline uint8_t* ExtraData() { return extraData; }
-	inline uint32_t ExtraDataSize() { return extraDataSize; }
-	inline int64_t Pts() { return pts; };
-	inline int64_t Dts() { return dts; };
+	inline uint8_t* Data() const { return data; }
+	inline uint32_t DataSize() const { return dataSize; }
+	inline uint8_t* ExtraData() const { return extraData; }
+	inline uint32_t ExtraDataSize() const { return extraDataSize; }
+	inline int64_t Pts() const { return pts; };
+	inline int64_t Dts() const { return dts; };
 
 	inline void SetPts(int64_t pts) { this->pts = pts; };
 	inline void SetDts(int64_t dts) { this->dts = dts; };
