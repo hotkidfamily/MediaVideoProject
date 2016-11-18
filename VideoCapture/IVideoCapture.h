@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 #include <vector>
+#include "SampleBuffer.h"
 
 // capture output format
 #undef FMT
@@ -72,31 +73,12 @@ typedef struct tagEventParams{
 	void *param2;
 }EVENT_CONTEXT;
 
-typedef struct tagFrameDesc{
-	int32_t cbSize;
-	int32_t width;
-	int32_t height;
-	int32_t dataSize;
-	uint8_t *dataPtr;
-	DWORD pixelFormatInFourCC;
-	int32_t lineSize;
-	int64_t ptsStart;
-	int64_t ptsEnd;
-	int64_t frameStartIdx;
-	int64_t frameEndIdx;
-	tagFrameDesc(){
-		ZeroMemory(this, sizeof(struct tagFrameDesc));
-		cbSize = sizeof(struct tagFrameDesc);
-	}
-}FRAME_DESC;
-
 class VideoCaptureCallback
 {
 protected:
 	~VideoCaptureCallback(){};
 
 public:
-	virtual void OnFrame(FRAME_DESC) = 0;
 	virtual void OnEvent(EVENT_INDEX, EVENT_CONTEXT) = 0;
 };
 
@@ -118,6 +100,12 @@ public:
 	
 	// step 3.x other feature support: show property setting window
 	virtual HRESULT ShowPropertyWindow(HWND parentWindowHandle) = 0;
+
+	// step 3.x other feature support: show property setting window
+	virtual BOOL GetFrame(CSampleBuffer *&pSample) = 0;
+
+	// step 3.x other feature support: show property setting window
+	virtual BOOL ReleaseFrame(CSampleBuffer *&pSample) = 0;
 
 	// step 4, close capture
 	virtual HRESULT StopCapture() = 0;

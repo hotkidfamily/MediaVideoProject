@@ -77,6 +77,7 @@ DShowVideoCapture::DShowVideoCapture()
 	, mcb(NULL)
 	, mFrameInfo(NULL)
 {
+	
 }
 
 DShowVideoCapture::~DShowVideoCapture()
@@ -129,6 +130,10 @@ HRESULT DShowVideoCapture::Start(OPEN_DEVICE_PARAM &params)
 	ASSERT(mMediaControl);
 
 	mWorkParams = params;
+	if (!mBufferManager.Reset(RES1080P, 10)){
+		hr = E_OUTOFMEMORY;
+		goto done;
+	}
 
 	CHECK_HR(hr = BuildGraph());
 
@@ -215,12 +220,32 @@ HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 	desc.pixelFormatInFourCC = mWorkMediaType.subtype.Data1;
 	desc.lineSize = mWorkParams.width * mFrameInfo->bytePerPixel / 8;
 
-	mcb->OnFrame(desc);
+	mBufferManager.FillFrame(desc);
 
 done:
 	mFpsStats.appendDataSize(1);
 
 	return hr;
+}
+
+BOOL DShowVideoCapture::GetFrame(CSampleBuffer *&pSample)
+{
+	BOOL bRet = FALSE;
+	if (mBufferManager.LockFrame(pSample)){
+		bRet = TRUE;
+	}
+
+	return bRet;
+}
+
+BOOL DShowVideoCapture::ReleaseFrame(CSampleBuffer *&pSample)
+{
+	BOOL bRet = FALSE;
+	if (mBufferManager.UnlockFrame(pSample)){
+		bRet = TRUE;
+	}
+
+	return bRet;
 }
 
 HRESULT DShowVideoCapture::ShowCapturePropertyWindow()

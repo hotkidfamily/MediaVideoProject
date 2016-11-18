@@ -66,6 +66,25 @@ enum ColorMatrix
 	ColorMatrix_BT2020CL
 };
 
+
+typedef struct tagFrameDesc{
+	int32_t cbSize;
+	int32_t width;
+	int32_t height;
+	int32_t dataSize;
+	uint8_t *dataPtr;
+	DWORD pixelFormatInFourCC;
+	int32_t lineSize;
+	int64_t ptsStart;
+	int64_t ptsEnd;
+	int64_t frameStartIdx;
+	int64_t frameEndIdx;
+	tagFrameDesc(){
+		ZeroMemory(this, sizeof(struct tagFrameDesc));
+		cbSize = sizeof(struct tagFrameDesc);
+	}
+}FRAME_DESC;
+
 class CSampleBuffer
 {
 public:

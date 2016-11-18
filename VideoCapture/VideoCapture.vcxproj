@@ -102,6 +102,7 @@
     <ClCompile Include="ISampleGrabberCBImpl.cpp" />
     <ClCompile Include="logger.cpp" />
     <ClCompile Include="mtype.cpp" />
+    <ClCompile Include="SampleBufferManager.cpp" />
     <ClCompile Include="SlidingWindowCalc.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -110,12 +111,17 @@
     <ClCompile Include="VideoCapture.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AutoLock.h" />
+    <ClInclude Include="dshowutil.h" />
     <ClInclude Include="dshowVideoCapture.h" />
+    <ClInclude Include="ISampleGrabber.h" />
     <ClInclude Include="ISampleGrabberCBImpl.h" />
     <ClInclude Include="IVideoCapture.h" />
     <ClInclude Include="logger.h" />
     <ClInclude Include="mediafoundationVideoCapture.h" />
     <ClInclude Include="mtype.h" />
+    <ClInclude Include="SampleBuffer.h" />
+    <ClInclude Include="SampleBufferManager.h" />
     <ClInclude Include="SlidingWindowCalc.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />

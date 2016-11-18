@@ -111,7 +111,7 @@ bool CLibx264::setConfig(const ENCODEC_CFG &config)
 
 	switch (config.pixelFormatInFourCC){
 	case PIXEL_FORMAT_RGB24:
-		mCodecParams.i_csp = X264_CSP_RGB;
+		mCodecParams.i_csp = X264_CSP_BGR;
 		break;
 	case PIXEL_FORMAT_I420:
 		mCodecParams.i_csp = X264_CSP_I420;

@@ -13,6 +13,7 @@ bool IVideoCaptureDelegate::InitContext()
 	mDShowCapture = new DShowVideoCapture;
 	mMFCapture = new MediaFoundationVideoCapture; 
 	mDShowCapture->GetDShowInterfaces();
+	
 	return (!mDShowCapture && !mMFCapture);
 }
 
@@ -56,6 +57,16 @@ HRESULT IVideoCaptureDelegate::StopCapture()
 	HRESULT hr = S_OK;
 	mDShowCapture->Stop();
 	return hr;
+}
+
+BOOL IVideoCaptureDelegate::GetFrame(CSampleBuffer *&pSample)
+{
+	return mDShowCapture->GetFrame(pSample);
+}
+
+BOOL IVideoCaptureDelegate::ReleaseFrame(CSampleBuffer *&pSample)
+{
+	return mDShowCapture->ReleaseFrame(pSample);
 }
 
 HRESULT IVideoCaptureDelegate::ShowPropertyWindow(HWND parentWindowHandle)

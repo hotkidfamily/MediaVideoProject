@@ -5,6 +5,7 @@
 #include "logger.h"
 #include "dshowVideoCapture.h"
 #include "mediafoundationVideoCapture.h"
+#include "SampleBufferManager.h"
 
 class IVideoCaptureDelegate : 
 	public IVideoCapture
@@ -14,6 +15,8 @@ public:
 	virtual void RegisterCallback(VideoCaptureCallback *);
 	virtual HRESULT GetDeviceList(VECT &);
 	virtual HRESULT StartCaptureWithParam(OPEN_DEVICE_PARAM &);
+	virtual BOOL GetFrame(CSampleBuffer *&pSample);
+	virtual BOOL ReleaseFrame(CSampleBuffer *&pSample);
 	virtual HRESULT StopCapture();
 	virtual HRESULT ShowPropertyWindow(HWND parentWindowHandle);
 	virtual HRESULT UnRegisterCallback();

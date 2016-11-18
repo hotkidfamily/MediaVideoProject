@@ -9,6 +9,7 @@
 #include "ISampleGrabberCBImpl.h"
 #include "SlidingWindowCalc.h"
 #include "IVideoCapture.h"
+#include "SampleBufferManager.h"
 
 typedef struct tagFrameFormatInfo{
 	GUID subtype;
@@ -88,6 +89,8 @@ public:
 	HRESULT RegisterCallback(VideoCaptureCallback *cb);
 	HRESULT UnregisterCallback();
 	HRESULT GetDShowInterfaces();
+	BOOL GetFrame(CSampleBuffer *&pSample);
+	BOOL ReleaseFrame(CSampleBuffer *&pSample);
 
 private:
 	HRESULT RemoveFiltersFromGraph();
@@ -124,6 +127,7 @@ private:
 	const FRAMEFORAMTINFO *mFrameInfo;
 	CAMERALIST mCameraList;
 	CSlidingWindowCalc mFpsStats;
+	CSampleBufferManager mBufferManager;
 };
 
 #endif //__DSHOWVIDEOCAPTURE_H__
