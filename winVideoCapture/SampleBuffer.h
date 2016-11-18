@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "AutoLock.h"
 
@@ -14,6 +14,57 @@ attention:
 	pixelFormat is pixel format description in FOURCC
 
 */
+
+enum ColorRange
+{
+	ColorRange_Full = 0, // 0~255;0~1023,10bit;also define in PC
+	ColorRange_Video = 1, // 16~235；64~940；also mean TV
+	/*ColorPrimaries_smtp, */// 48~208, 192~832
+};
+
+enum ColorPrimaries
+{
+	ColorPrimaries_BT709 = 1,
+	ColorPrimaries_Unspecified,
+	ColorPrimaries_BT470M = 4,
+	ColorPrimaries_BT470BG,
+	ColorPrimaries_SMPTE170M,
+	ColorPrimaries_SMPTE240M,
+	ColorPrimaries_Film,
+	ColorPrimaries_BT2020
+};
+
+enum ColorTransfer
+{
+	ColorTransfer_BT709 = 1,
+	ColorTransfer_Unspecified,
+	ColorTransfer_BT470M = 4,
+	ColorTransfer_BT470BG,
+	ColorTransfer_SMPTE170M,
+	ColorTransfer_SMPTE240M,
+	ColorTransfer_Linear,
+	ColorTransfer_Log100,
+	ColorTransfer_Log316,
+	ColorTransfer_IEC6196624,
+	ColorTransfer_BT1361,
+	ColorTransfer_IEC6196621,
+	ColorTransfer_BT202010,
+	ColorTransfer_BT202012
+};
+
+enum ColorMatrix
+{
+	ColorMatrix_GBR = 0,
+	ColorMatrix_BT709,
+	ColorMatrix_Unspecified,
+	ColorMatrix_BT470M = 4,
+	ColorMatrix_BT470BG,
+	ColorMatrix_SMPTE170M,
+	ColorMatrix_SMPTE240M,
+	ColorMatrix_YCgCo,
+	ColorMatrix_BT2020NCL,
+	ColorMatrix_BT2020CL
+};
 
 class CSampleBuffer
 {
@@ -79,5 +130,8 @@ private:
 	int32_t capacity; // size of buffer 
 	int32_t sizeInUse; // size of data
 	uint8_t *dataPtr;
+	int32_t colorRange;
+	int32_t transferMatrix;
+	int32_t primaries;
 };
 
