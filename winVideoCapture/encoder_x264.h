@@ -68,7 +68,7 @@ struct DwVideoPackage
 	uint32_t extraDataSize;
 	FRAME_TYPE frameType;
 	int64_t pts;
-	int64_t dts; /* somethings dts is negative value */
+	int64_t dts; /* sometimes dts is negative value */
 
 	// reserved for future
 	void *extraParam;
