@@ -75,7 +75,7 @@ DShowVideoCapture::DShowVideoCapture()
 	, mGrabberFiler(NULL)
 	, mVideoGrabber(NULL)
 	, mcb(NULL)
-	, mFrameInfo(NULL)
+	, mWorkFrameInfo(NULL)
 {
 	
 }
@@ -143,7 +143,7 @@ HRESULT DShowVideoCapture::Start(OPEN_DEVICE_PARAM &params)
 	mWorkParams.height = mWorkMediaType.BitmapHeader()->biHeight;
 	mWorkParams.fps = RefTimeToFramesPerSec(mWorkMediaType.AvgReferenceTime());
 	mWorkParams.pixelFormatInFourCC = mWorkMediaType.subtype.Data1;
-	mFrameInfo = GetFrameInfoByFourCC(mWorkMediaType.subtype.Data1);
+	mWorkFrameInfo = GetFrameInfoByFourCC(mWorkMediaType.subtype.Data1);
 	params = mWorkParams;
 	
 	while ((hr = mMediaControl->Run()) != S_OK){
@@ -155,7 +155,7 @@ HRESULT DShowVideoCapture::Start(OPEN_DEVICE_PARAM &params)
 		mDropFrameStatus->GetNumNotDropped(&mCapFrames);
 	}
 
-	SaveGraphFile(mGraph, TEXT("d:\\my.grf"));
+	//SaveGraphFile(mGraph, TEXT("d:\\my.grf"));
 
 done:
 	ShowDShowError(hr);
@@ -179,7 +179,7 @@ HRESULT DShowVideoCapture::Stop()
 	while(FAILED(mMediaControl->Stop()));
 
 	RemoveFiltersFromGraph();
-	mFrameInfo = NULL;
+	mWorkFrameInfo = NULL;
 
 	return S_OK;
 }
@@ -218,7 +218,7 @@ HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 	desc.width = mWorkParams.width;
 	desc.height = mWorkParams.height;
 	desc.pixelFormatInFourCC = mWorkMediaType.subtype.Data1;
-	desc.lineSize = mWorkParams.width * mFrameInfo->bytePerPixel / 8;
+	desc.lineSize = mWorkParams.width * mWorkFrameInfo->bytePerPixel / 8;
 
 	mBufferManager.FillFrame(desc);
 
@@ -291,7 +291,8 @@ HRESULT DShowVideoCapture::ReleaseDShowInterfaces()
 
 	if (Runing())
 		Stop();
-
+	SAFE_RELEASE(mVideoGrabber);
+	SAFE_RELEASE(mCaptureFilter);
 	SAFE_RELEASE(mDropFrameStatus);
 	SAFE_RELEASE(mMediaEventEx);
 	SAFE_RELEASE(mMediaControl);
