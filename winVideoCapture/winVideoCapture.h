@@ -13,6 +13,8 @@ typedef struct tagProgramContext{
 	TCHAR szTitle[MAX_LOADSTRING];
 	TCHAR szWindowClass[MAX_LOADSTRING];
 	HWND hMainWnd;
+	HWND hDashboardWnd;
+	HWND hMediaInfoWnd;
 	OPEN_DEVICE_PARAM captureArgs;
 	IVideoCapture *pVideoCapture;
 	CVideoCallback *callBack;

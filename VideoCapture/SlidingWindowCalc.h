@@ -9,23 +9,25 @@ public:
 	CSlidingWindowCalc();
 	~CSlidingWindowCalc();
 
-	void reset();
-	void reset(uint32_t durationInMS);
-	uint32_t sizePerSecond() const;
-	double frequencyPerSecond() const;
-	int appendDataSize(uint32_t size);
+	void Reset();
+	void Reset(uint32_t durationInMS);
 
-	uint32_t getMaxSize() const;
-	uint32_t getMinSize() const;
+	int32_t AppendSample(uint32_t size);
 
-	uint64_t totalStreamSize() const;
-	uint64_t totalInCalcStreamSize() const;
+	uint32_t Bitrate() const;
+	double Frequency() const;
+	uint64_t AvgSampleSize() const;
 
-	uint64_t totalSamples() const;
-	uint64_t totalInCalcSamples() const;
+	BOOL MinMaxSample(int32_t &minV, int32_t &maxV) const;
 
-	uint64_t totalDuration() const;
-	uint64_t totalInCalcDuration() const;
+	uint64_t TotalSampleSize() const;
+	uint64_t SampleSize() const;
+
+	uint64_t TotalSamples() const;
+	uint64_t Samples() const;
+
+	uint64_t TotalDuration() const;
+	uint64_t Duration() const;
 
 protected:
 	struct RateSample {
@@ -34,10 +36,10 @@ protected:
 		uint64_t streamSize;
 	};
 
-	uint32_t m_duration;
-	std::list<RateSample> m_sampleList;
-	uint64_t m_totalSampleCount;
-	uint64_t m_totalStreamSize;
-	uint64_t m_startTickCount;
+	uint32_t mInterval;
+	std::list<RateSample> mSampleList;
+	uint64_t mTotalSampleCount;
+	uint64_t mTotalStreamSize;
+	uint64_t mStartTickCount;
 };
 

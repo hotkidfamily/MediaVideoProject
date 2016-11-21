@@ -82,7 +82,7 @@ DShowVideoCapture::DShowVideoCapture()
 
 DShowVideoCapture::~DShowVideoCapture()
 {
-	internel_log(Info, "fps %f", mFpsStats.frequencyPerSecond());
+	internel_log(Info, "fps %f", mFpsStats.Frequency());
 	ReleaseDShowInterfaces();
 }
 
@@ -223,7 +223,7 @@ HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 	mBufferManager.FillFrame(desc);
 
 done:
-	mFpsStats.appendDataSize(1);
+	mFpsStats.AppendSample(1);
 
 	return hr;
 }
