@@ -15,8 +15,9 @@ typedef struct tagProgramContext{
 	HWND hMainWnd;
 	HWND hDashboardWnd;
 	HWND hMediaInfoWnd;
+	int32_t totalCaptureDevices;
 	OPEN_DEVICE_PARAM captureArgs;
-	IVideoCapture *pVideoCapture;
+	IVideoCapture *capturer;
 	CVideoCallback *callBack;
 	BOOL bRuning;
 	HANDLE hWorkThread;

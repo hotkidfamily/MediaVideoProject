@@ -12,12 +12,12 @@ BOOL StartCaptureWork(THIS_CONTEXT *ctx)
 		ctx->callBack = new CVideoCallback;
 		assert(ctx->callBack);
 
-		ctx->pVideoCapture->RegisterCallback(ctx->callBack);
+		ctx->capturer->RegisterCallback(ctx->callBack);
 		ctx->captureArgs.parentWindow = ctx->hMainWnd;
 		ctx->captureArgs.fps = 30;
 		ctx->captureArgs.width = 640;
 		ctx->captureArgs.height = 480;
-		bRet = ctx->pVideoCapture->StartCaptureWithParam(ctx->captureArgs);
+		bRet = ctx->capturer->StartCaptureWithParam(ctx->captureArgs);
 
 		ctx->bRuning = TRUE;
 	}else{
@@ -29,12 +29,15 @@ BOOL StartCaptureWork(THIS_CONTEXT *ctx)
 
 BOOL StopCaptureWork(THIS_CONTEXT *ctx)
 {
-	ctx->bRuning = 0;
-	WaitForSingleObject(ctx->hWorkThread, INFINITE);
+	if (ctx->bRuning){
+		ctx->bRuning = 0;
+		if (WAIT_OBJECT_0 != WaitForSingleObject(ctx->hWorkThread, INFINITE)){
+			assert(NULL);
+		}
 
-	assert(ctx);
-	ctx->pVideoCapture->StopCapture();
-	ctx->pVideoCapture->UnRegisterCallback();
+		ctx->capturer->StopCapture();
+		ctx->capturer->UnRegisterCallback();
+	}
 
 	SAFE_DELETE(ctx->callBack);
 
@@ -69,15 +72,15 @@ DWORD WINAPI EncoderThread(LPVOID args)
 	THIS_CONTEXT * ctx = (THIS_CONTEXT *)args;
 	std::ofstream encodeFile;
 	//encodeFile.open(TEXT("C:\\Users\\hotkid\\desktop\\capture.h264"), std::ios::binary);
- 	encodeFile.open(TEXT("C:\\Users\\Administrator\\desktop\\capture.h264"), std::ios::binary);
+	encodeFile.open(TEXT("C:\\Users\\Administrator\\desktop\\capture.h264"), std::ios::binary);
 
 	while (ctx->bRuning){
 		CSampleBuffer *frame = NULL;
 		CPackageBuffer *packet = NULL;
-		if (ctx->pVideoCapture->GetFrame(frame)){
+		if (ctx->capturer->GetFrame(frame)){
 			ctx->encoder->addFrame(*frame);
 			ctx->render->PushFrame(frame);
-			ctx->pVideoCapture->ReleaseFrame(frame);
+			ctx->capturer->ReleaseFrame(frame);
 			if (ctx->encoder->getPackage(packet)){
 				if (packet->isIDRFrame())
 					encodeFile.write((const char*)(packet->ExtraData()), packet->ExtraDataSize());
@@ -111,7 +114,8 @@ BOOL StartRenderWork(THIS_CONTEXT *ctx)
 
 BOOL StopRenderWork(THIS_CONTEXT *ctx)
 {
-	ctx->render->DeinitDDrawInterface();
+	if (ctx->render)
+		ctx->render->DeinitDDrawInterface();
 	SAFE_DELETE(ctx->render);
 	return TRUE;
 }

@@ -12,9 +12,7 @@
 #define IDI_SMALL                       108
 #define IDC_WINVIDEOCAPTURE             109
 #define IDR_MAINFRAME                   128
-#define ID_DEVICE_DEVICE1               32771
-#define ID_DEVICE_DEVICE2               32772
-#define ID_DEVICE_DEVICE3               32773
+#define ID_DEVICE_DEVICE3               32771
 #define ID_TOOL_PREVIEW                 32774
 #define ID_TOOLS_RANDOMRENDER           32775
 #define ID_WINDOW_STATIS                32776

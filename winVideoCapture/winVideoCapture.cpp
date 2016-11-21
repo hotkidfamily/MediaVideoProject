@@ -33,7 +33,8 @@ void AddDevicesToMenu(THIS_CONTEXT *ctx)
 
 	VECT camlist;
 	VECT::iterator it;
-	ctx->pVideoCapture->GetDeviceList(camlist);
+	ctx->capturer->GetDeviceList(camlist);
+	ctx->totalCaptureDevices = camlist.size();
 
 	if (iMenuItems > 0){
 		for (int i = 0; i < iMenuItems; i++){
@@ -76,8 +77,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
 	hAccelTable = LoadAccelerators(gContext->hInst, MAKEINTRESOURCE(IDC_WINVIDEOCAPTURE));
 
-	gContext->pVideoCapture = GetVideoCaptureObj();
-	assert(gContext->pVideoCapture);
+	gContext->capturer = GetVideoCaptureObj();
+	assert(gContext->capturer);
 	AddDevicesToMenu(gContext);
 
 	// Main message loop:
@@ -90,7 +91,10 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		}
 	}
 
-	ReleaseVideoCaptureObj(gContext->pVideoCapture);
+	StopCaptureWork(gContext);
+	StopEncodeWork(gContext);
+	StopRenderWork(gContext);	
+	ReleaseVideoCaptureObj(gContext->capturer);
 
 	return (int) msg.wParam;
 }
@@ -205,6 +209,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			case ID_TOOLS_RANDOMRENDER:
 				break;
 			default:
+				if (wmId >= ID_DEVICE_DEVICE3 && wmId < ID_DEVICE_DEVICE3 + gContext->totalCaptureDevices)
 				{
 					UINT status = 0;
 					status = GetMenuState(hMenu, idx, MF_BYPOSITION);
@@ -225,8 +230,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 						StartRenderWork(gContext);
 						CreateWorkThread(gContext);
 					}
+				}else{
+					return DefWindowProc(hWnd, message, wParam, lParam);
 				}
-				return DefWindowProc(hWnd, message, wParam, lParam);
+				
 			}
 			
 		}
