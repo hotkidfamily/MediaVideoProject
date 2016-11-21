@@ -12,14 +12,13 @@ public:
 	void Reset();
 	void Reset(uint32_t durationInMS);
 
-	int AppendSample(uint32_t size);
+	int32_t AppendSample(uint32_t size);
 
 	uint32_t Bitrate() const;
 	double Frequency() const;
 	uint64_t AvgSampleSize() const;
 
-	uint32_t MaxSample() const;
-	uint32_t MinSample() const;
+	BOOL MinMaxSample(int32_t &minV, int32_t &maxV) const;
 
 	uint64_t TotalSampleSize() const;
 	uint64_t SampleSize() const;

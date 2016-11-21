@@ -29,7 +29,7 @@ void CSlidingWindowCalc::Reset(uint32_t durationInMS) {
 	mSampleList.clear();
 }
 
-int CSlidingWindowCalc::AppendSample(uint32_t size)
+int32_t CSlidingWindowCalc::AppendSample(uint32_t size)
 {
 	mTotalSampleCount++;
 	mTotalStreamSize += size;
@@ -66,26 +66,17 @@ uint64_t CSlidingWindowCalc::AvgSampleSize() const
 	return avg;
 }
 
-uint32_t CSlidingWindowCalc::MaxSample() const 
+BOOL CSlidingWindowCalc::MinMaxSample(int32_t &minV, int32_t &maxV) const
 {
+	uint32_t minSize = 0xffffffff;
 	uint32_t maxSize = 0;
 	for (std::list<RateSample>::const_iterator it = mSampleList.begin();
 		it != mSampleList.end(); ++it) {
+		minSize = min(minSize, it->sampleSize);
 		maxSize = max(maxSize, it->sampleSize);
 	}
-
-	return maxSize;
-}
-
-uint32_t CSlidingWindowCalc::MinSample() const
-{
-	uint32_t minSize = 0xffffffff;
-	for (std::list<RateSample>::const_iterator it = mSampleList.begin();
-		it != mSampleList.end(); ++it) {
-		minSize = min(minSize, it->sampleSize);
-	}
-
-	return minSize;
+	minV = minSize; maxV = maxSize;
+	return TRUE;
 }
 
 uint64_t CSlidingWindowCalc::TotalSampleSize() const
