@@ -75,7 +75,7 @@ BOOL CSlidingWindowCalc::MinMaxSample(int32_t &minV, int32_t &maxV) const
 		minSize = min(minSize, it->sampleSize);
 		maxSize = max(maxSize, it->sampleSize);
 	}
-	minV = minSize; maxV = maxSize;
+	minV = minSize == 0xffffffff?0:minSize; maxV = maxSize;
 	return TRUE;
 }
 

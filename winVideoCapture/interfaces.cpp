@@ -15,8 +15,8 @@ BOOL StartCaptureWork(THIS_CONTEXT *ctx)
 		ctx->capturer->RegisterCallback(ctx->callBack);
 		ctx->captureArgs.parentWindow = ctx->hMainWnd;
 		ctx->captureArgs.fps = 30;
-		ctx->captureArgs.width = 640;
-		ctx->captureArgs.height = 480;
+		ctx->captureArgs.width = 1280;
+		ctx->captureArgs.height = 720;
 		bRet = ctx->capturer->StartCaptureWithParam(ctx->captureArgs);
 
 		ctx->bRuning = TRUE;
@@ -80,15 +80,19 @@ DWORD WINAPI EncoderThread(LPVOID args)
 		CSampleBuffer *frame = NULL;
 		CPackageBuffer *packet = NULL;
 		if (ctx->capturer->GetFrame(frame)){
+#ifdef ENABLE_ENCODER
 			ctx->encoder->addFrame(*frame);
+#endif
 			ctx->render->PushFrame(frame);
 			ctx->capturer->ReleaseFrame(frame);
+#ifdef ENABLE_ENCODER
 			if (ctx->encoder->getPackage(packet)){
 				if (packet->isIDRFrame())
 					encodeFile.write((const char*)(packet->ExtraData()), packet->ExtraDataSize());
 				encodeFile.write((const char*)packet->Data(), packet->DataSize());
 				ctx->encoder->releasePackage(packet);
 			}
+#endif
 		}
 
 		Sleep(1);

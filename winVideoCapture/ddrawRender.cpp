@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "ddrawRender.h"
+#include <stdlib.h>
 
 #define to_pair(x) {x, #x}
 typedef struct tagddrawError{
@@ -156,6 +157,7 @@ DDrawRender::DDrawRender(HWND hWnd)
 
 DDrawRender::~DDrawRender()
 {
+	DeinitDDrawInterface();
 }
 
 void DDrawRender::FillddPixelFormatFromFourCC(LPDDPIXELFORMAT ddPixelFormat, DWORD dwFourCC)
@@ -264,15 +266,6 @@ DWORD WINAPI RenderThread(LPVOID args)
 	return pRender->RenderLoop();
 }
 
-DWORD DDrawRender::RenderLoop()
-{
-	while (bRender){
-		
-	}
-
-	return 0;
-}
-
 HRESULT DDrawRender::InitDDrawInterface(int width, int height, DWORD pixelFormatInFourCC)
 {
 	HRESULT hr = DD_OK;
@@ -320,6 +313,10 @@ HRESULT DDrawRender::DeinitDDrawInterface()
 {
 	HRESULT hr = S_OK;
 
+	bRender = FALSE;
+	if (mRenderThreadHandle)
+		WaitForSingleObject(mRenderThreadHandle, INFINITE);
+
 	SAFE_RELEASE(mCanvasSurface);
 	SAFE_RELEASE(mPrimarySurface);
 	SAFE_RELEASE(mDDrawClippper);
@@ -329,23 +326,56 @@ HRESULT DDrawRender::DeinitDDrawInterface()
 	return hr;
 }
 
+
+DWORD DDrawRender::RenderLoop()
+{
+	HRESULT hr = S_FALSE;
+	RECT rect = { 0 };
+	DWORD renderBefore = 0;
+	HDC dc = NULL;
+	uint32_t renderInterval = 0;
+
+	mLastTime = 0;
+
+	while (bRender){
+		int32_t minInputSample = 0, maxInputSample = 0, minRenderSample = 0, maxRenderSample = 0;
+		//Sleep(rand() % 15 + 20);
+		Sleep(15);
+		renderBefore = timeGetTime();
+
+		if (mLastTime){
+			renderInterval = renderBefore - mLastTime;
+			mRenderStatis.AppendSample(renderInterval);
+		}
+
+		GetWindowRect(mHwnd, &rect);
+		CHECK_HR(hr = mPrimarySurface->Blt(&rect, mCanvasSurface, NULL, DDBLT_WAIT, NULL));
+		if (mInputStatis.SampleSize() > 2){
+			mInputStatis.MinMaxSample(minInputSample, maxInputSample);
+			mRenderStatis.MinMaxSample(minRenderSample, maxRenderSample);
+		}
+
+		CHECK_HR(hr = mPrimarySurface->GetDC(&dc));
+		OSDText(dc, "fps %.2f, a:%lld(%2d~%2d), rd:%2u %2lld(%2d~%2d) %.2f",
+			mInputStatis.Frequency(), mInputStatis.AvgSampleSize(), minInputSample, maxInputSample,
+			renderInterval, mRenderStatis.AvgSampleSize(), minRenderSample, maxRenderSample, 1000.0/mRenderStatis.AvgSampleSize());
+		mPrimarySurface->ReleaseDC(dc);
+
+		mLastTime = renderBefore;
+
+	done:
+		continue;
+	}
+
+	return 0;
+}
+
 HRESULT DDrawRender::PushFrame(CSampleBuffer *frame)
 {
 	HRESULT hr = DD_OK;
 	DDSURFACEDESC2 desc;
-	DWORD renderBefore = 0;
-	RECT rect;
-	HDC dc = NULL;
-	int32_t minInputSample, maxInputSample, minRenderSample, maxRenderSample;
-	RECT srcRect = { 0, 0, frame->GetWidth(), frame->GetHeight() };
-	uint32_t interval = (uint32_t)(frame->GetPts() - mLastPts) / 10000;
-	renderBefore = timeGetTime();
-
-	if (mLastPts){
-		mInputStatis.AppendSample(interval);
-		mRenderStatis.AppendSample(renderBefore - mLastTime);
-	}
-	mLastTime = renderBefore;
+	uint32_t ptsInterval = (uint32_t)(frame->GetPts() - mLastPts);
+	mInputStatis.AppendSample(ptsInterval);
 
 	ZeroMemory(&desc, sizeof(DDSURFACEDESC));
 	desc.dwSize = sizeof(DDSURFACEDESC);
@@ -371,21 +401,8 @@ HRESULT DDrawRender::PushFrame(CSampleBuffer *frame)
 
 	mCanvasSurface->Unlock(NULL);
 
-	GetWindowRect(mHwnd, &rect);
-	CHECK_HR(hr = mPrimarySurface->Blt(&rect, mCanvasSurface, NULL, DDBLT_WAIT, NULL));
-
-	mInputStatis.MinMaxSample(minInputSample, maxInputSample);
-	mRenderStatis.MinMaxSample(minRenderSample, maxRenderSample);
-
-	CHECK_HR(hr = mPrimarySurface->GetDC(&dc));
-	OSDText(dc, "pts %lld,itv %d, fps %.2f, avg %u(%d~%d), r %u(%d~%d)", 
-		mLastPts, interval, mInputStatis.Frequency(),
-		mInputStatis.Bitrate(), minInputSample, maxInputSample,
-		mRenderStatis.AvgSampleSize(), minRenderSample, maxRenderSample);
-	mPrimarySurface->ReleaseDC(dc);
-
 	mLastPts = frame->GetPts();
-
+	
 done:
 	GetDDrawErrorString(hr);
 	return hr;
