@@ -1,65 +1,6 @@
 #include "stdafx.h"
 #include "encoder_x264.h"
 
-BOOL convertYUY2toI420(x264_picture_t &dstPic, const CSampleBuffer *srcPic)
-{
-	// yuyv ==> y + u + v
-	uint8_t *y = NULL, *u = NULL, *v = NULL;
-	uint8_t *yp = NULL;
-	int step = 0;
-
-	int32_t width = srcPic->GetWidth();
-	int32_t height = srcPic->GetHeight();
-	int32_t linSize = srcPic->GetLineSize();
-
-	y = dstPic.img.plane[0];
-	yp = srcPic->GetDataPtr();
-	for (int32_t i = 0; i < height*width; i++){
-		y[i] = yp[i * 2];
-	}
-
-	u = dstPic.img.plane[1];
-	v = dstPic.img.plane[2];
-	yp = srcPic->GetDataPtr();
-	for (int32_t j = 0; j < height; j += 2){
-		yp = srcPic->GetDataPtr() + j*linSize;
-		u = dstPic.img.plane[1] + j/2*dstPic.img.i_stride[1];
-		v = dstPic.img.plane[2] + j/2*dstPic.img.i_stride[2];
-		for (int32_t i = 0; i < width / 2; i++){
-			u[i] = (yp[i * 4 + 1] + yp[i * 4 + linSize + 1])/2;
-			v[i] = (yp[i * 4 + 3] + yp[i * 4 + linSize + 3])/2;
-		}
-	}
-
-	return TRUE;
-}
-
-BOOL convertYUY2toNV16(x264_picture_t &dstPic, const CSampleBuffer *srcPic)
-{
-	uint8_t *y = NULL, *uv = NULL;
-	uint8_t *yp = NULL;
-	int step = 0;
-
-	int32_t width = srcPic->GetWidth();
-	int32_t height = srcPic->GetHeight();
-	int32_t linSize = srcPic->GetLineSize();
-
-	for (int32_t j = 0; j < height; j ++){
-		y = dstPic.img.plane[0] + j * dstPic.img.i_stride[0];
-		uv = dstPic.img.plane[1] + j * dstPic.img.i_stride[1];
-		yp = srcPic->GetDataPtr() + j * linSize;
-
-		for (int32_t i = 0, k= 0; i < linSize; i+=4, k+=2){
-			y[k] = yp[i];
-			uv[k] = yp[i + 1];
-			y[k + 1] = yp[i + 2];
-			uv[k + 1] = yp[i + 3];
-		}
-	}
-
-	return TRUE;
-}
-
 CLibx264::CLibx264()
 	: mCodecHandle(NULL)
 {
@@ -181,7 +122,7 @@ bool CLibx264::addFrame(const CSampleBuffer &inputFrame)
 		inpic.img.i_stride[0] = inputFrame.GetWidth()*4;
 		break;
 	case PIXEL_FORMAT_YUY2:
-		convertYUY2toNV16(mInPic, &inputFrame);
+		mVpp.convertYUY2toNV16(mInPic, &inputFrame);
 		break;
 	default:
 		return false;
@@ -235,17 +176,17 @@ bool CLibx264::assemblePackage(int uNALsDataSizeInBytes,
 {
 	bool ret = true;
 	FRAME_TYPE frameType;
+	uint8_t *pOutData = NULL;
+	uint8_t *pExtraData = NULL;
+	uint32_t extraDataSize = 0;
+	CPackageBuffer *outPackage = NULL;
 
 	if (uNALsDataSizeInBytes > 0)// encode one frame.
 	{
 		int i = 0;
-		CPackageBuffer *outPackage;
 		if (!mPackages.GetPackage(outPackage)){
 			return false;
 		}
-		uint8_t *pOutData = NULL;
-		uint8_t *pExtraData = NULL;
-		uint32_t extraDataSize = 0;
 
 		// 1.calculate buffer size 
 		for (i = 0; i < outputNaluCnt; i++){
@@ -279,20 +220,15 @@ bool CLibx264::assemblePackage(int uNALsDataSizeInBytes,
 			}
 		}
 
-		outPackage->SetPts(outputPic->i_pts);
-		outPackage->SetDts(outputPic->i_dts);
-
 		switch (outputPic->i_type){
 		case X264_TYPE_IDR:
-			frameType = IDR_FRAME;
-			break;
 		case X264_TYPE_I:
-			frameType = I_FRAME;
-			break;
 		case X264_TYPE_P:
+			frameType = (FRAME_TYPE)outputPic->i_type;
+			break;
+		case X264_TYPE_BREF: // make b_ref as P ?
 			frameType = P_FRAME;
 			break;
-		case X264_TYPE_BREF: // make b_ref as P
 		case X264_TYPE_B:
 			frameType = B_FRAME;
 			break;
@@ -300,8 +236,13 @@ bool CLibx264::assemblePackage(int uNALsDataSizeInBytes,
 			frameType = ERR_FRAME;
 			break;
 		}
+
+		outPackage->SetPts(outputPic->i_pts);
+		outPackage->SetDts(outputPic->i_dts);
 		outPackage->SetFrameType(frameType);
+
 	}else if (uNALsDataSizeInBytes == 0){
+		// cache
 	}else{
 		ret = false;
 	}

@@ -20,9 +20,9 @@ attention:
 
 enum FRAME_TYPE{
 	ERR_FRAME = 0,
-	P_FRAME = 1,
-	I_FRAME = 2,
-	IDR_FRAME = 3,
+	IDR_FRAME = 1,
+	P_FRAME = 2,
+	I_FRAME = 3,
 	B_FRAME = 4
 };
 
@@ -82,6 +82,7 @@ public:
 		}
 
 		if (mCapbility < totalSize){
+			// realloc
 			ReleaseMemory();
 			if (!AllocMemoryBySizeInByte(totalSize)){
 				goto done;

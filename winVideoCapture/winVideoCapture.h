@@ -9,7 +9,7 @@
 #define MAX_LOADSTRING 100
 
 typedef struct tagProgramContext{
-	HINSTANCE hInst;
+	HINSTANCE hInstance;
 	TCHAR szTitle[MAX_LOADSTRING];
 	TCHAR szWindowClass[MAX_LOADSTRING];
 	HWND hMainWnd;

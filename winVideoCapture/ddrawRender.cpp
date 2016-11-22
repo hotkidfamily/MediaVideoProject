@@ -406,7 +406,7 @@ BOOL DDrawRender::OSDText(HDC hdc, char* format, ...)
 	GetWindowRect(mHwnd, &rect);
 
 	int mode = SetBkMode(hdc, OPAQUE);
-	TextOutA(hdc, rect.left + mScreenSizeInPixel.cx /4, rect.top + mScreenSizeInPixel.cy /4, buff, strlen(buff));
+	TextOutA(hdc, rect.left, rect.bottom - 26, buff, strlen(buff));
 	SetBkMode(hdc, mode);
 	return TRUE;
 }

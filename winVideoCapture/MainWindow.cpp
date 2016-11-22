@@ -57,7 +57,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	UNREFERENCED_PARAMETER(lpCmdLine);
 	gContext = new THIS_CONTEXT;
 	assert(gContext);
-	gContext->hInst = hInstance;
+	gContext->hInstance = hInstance;
 
 
  	// TODO: Place code here.
@@ -65,8 +65,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	HACCEL hAccelTable;
 
 	// Initialize global strings
-	LoadString(gContext->hInst, IDS_APP_TITLE, gContext->szTitle, MAX_LOADSTRING);
-	LoadString(gContext->hInst, IDC_WINVIDEOCAPTURE, gContext->szWindowClass, MAX_LOADSTRING);
+	LoadString(gContext->hInstance, IDS_APP_TITLE, gContext->szTitle, MAX_LOADSTRING);
+	LoadString(gContext->hInstance, IDC_WINVIDEOCAPTURE, gContext->szWindowClass, MAX_LOADSTRING);
 	MyRegisterClass(gContext);
 
 	// Perform application initialization:
@@ -75,7 +75,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		return FALSE;
 	}
 
-	hAccelTable = LoadAccelerators(gContext->hInst, MAKEINTRESOURCE(IDC_WINVIDEOCAPTURE));
+	hAccelTable = LoadAccelerators(gContext->hInstance, MAKEINTRESOURCE(IDC_WINVIDEOCAPTURE));
 
 	gContext->capturer = GetVideoCaptureObj();
 	assert(gContext->capturer);
@@ -124,8 +124,8 @@ ATOM MyRegisterClass(PTHIS_CONTEXT ctx)
 	wcex.lpfnWndProc	= WndProc;
 	wcex.cbClsExtra		= 0;
 	wcex.cbWndExtra		= 0;
-	wcex.hInstance		= ctx->hInst;
-	wcex.hIcon			= LoadIcon(ctx->hInst, MAKEINTRESOURCE(IDI_WINVIDEOCAPTURE));
+	wcex.hInstance		= ctx->hInstance;
+	wcex.hIcon			= LoadIcon(ctx->hInstance, MAKEINTRESOURCE(IDI_WINVIDEOCAPTURE));
 	wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
 	wcex.hbrBackground	= (HBRUSH)(COLOR_WINDOW+1);
 	wcex.lpszMenuName	= MAKEINTRESOURCE(IDC_WINVIDEOCAPTURE);
@@ -149,7 +149,7 @@ BOOL InitInstance(THIS_CONTEXT *ctx, int nCmdShow)
 {
 
 	ctx->hMainWnd = CreateWindow(ctx->szWindowClass, ctx->szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, ctx->hInst, NULL);
+      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, ctx->hInstance, NULL);
 
 	if (!ctx->hMainWnd)
    {
@@ -160,6 +160,36 @@ BOOL InitInstance(THIS_CONTEXT *ctx, int nCmdShow)
 	UpdateWindow(ctx->hMainWnd);
 
    return TRUE;
+}
+
+LRESULT CALLBACK StatusDlgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	switch (message)
+	{
+	case WM_DESTROY:
+	case WM_CLOSE:
+		ShowWindow(hWnd, SW_HIDE);
+		break;
+	default:
+		break;
+	}
+
+	return  DefWindowProc(hWnd, message, wParam, lParam);
+}
+
+LRESULT CALLBACK MediaDlgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	switch (message)
+	{
+	case WM_DESTROY:
+	case WM_CLOSE:
+		ShowWindow(hWnd, SW_HIDE);
+		break;
+	default:
+		break;
+	}
+
+	return  DefWindowProc(hWnd, message, wParam, lParam);
 }
 
 //
@@ -177,6 +207,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	int wmId;
 	PAINTSTRUCT ps;
 	HDC hdc;
+	UINT status = 0;
 
 	switch (message)
 	{
@@ -197,21 +228,40 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			switch (wmId)
 			{
 			case IDM_ABOUT:
-				DialogBox(gContext->hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+				DialogBox(gContext->hInstance, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
 				break;
 			case IDM_EXIT:
 				DestroyWindow(hWnd);
 				break;
 			case ID_WINDOW_STATIS:
+				status = GetMenuState(hMenu, idx, MF_BYPOSITION);
+				if (status & MF_CHECKED){
+					CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_UNCHECKED);
+					//ShowWindow(gContext->hDashboardWnd, SW_HIDE);
+				}else{
+					CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_CHECKED);
+					if (!gContext->hDashboardWnd)
+						gContext->hDashboardWnd = CreateDialog(gContext->hInstance, MAKEINTRESOURCE(IDD_DIALOG_STATUS), hWnd, (DLGPROC)StatusDlgProc);
+					ShowWindow(gContext->hDashboardWnd, SW_SHOW);
+				}
 				break;
 			case ID_WINDOW_VIDEO:
+				status = GetMenuState(hMenu, idx, MF_BYPOSITION);
+				if (status & MF_CHECKED){
+					CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_UNCHECKED);
+					//ShowWindow(gContext->hMediaInfoWnd, SW_HIDE);
+				}else{
+					CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_CHECKED);
+					if (!gContext->hMediaInfoWnd)
+						gContext->hMediaInfoWnd = CreateDialog(gContext->hInstance, MAKEINTRESOURCE(IDD_DIALOG_MEDIA), hWnd, (DLGPROC)MediaDlgProc);
+					ShowWindow(gContext->hMediaInfoWnd, SW_SHOW);
+				}
 				break;
 			case ID_TOOLS_RANDOMRENDER:
 				break;
 			default:
 				if (wmId >= ID_DEVICE_DEVICE3 && wmId < ID_DEVICE_DEVICE3 + gContext->totalCaptureDevices)
 				{
-					UINT status = 0;
 					status = GetMenuState(hMenu, idx, MF_BYPOSITION);
 					if (status & MF_CHECKED){
 						CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_UNCHECKED);
@@ -233,9 +283,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				}else{
 					return DefWindowProc(hWnd, message, wParam, lParam);
 				}
-				
 			}
-			
 		}
 		break;
 	default:

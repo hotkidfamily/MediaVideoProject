@@ -9,6 +9,9 @@ extern "C" {
 #include "x264.h"
 }
 
+#include "VPP.h"
+
+
 typedef struct tagEncodecConfig
 {
 	tagEncodecConfig(){
@@ -74,4 +77,6 @@ private:
 	CPackageBufferManager mPackages;
 
 	ENCODEC_CFG mWorkConfig;
+
+	CVPP mVpp;
 };
