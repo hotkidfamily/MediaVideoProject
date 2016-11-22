@@ -25,11 +25,11 @@ public:
 	HRESULT DeinitDDrawInterface();
 
 	HRESULT PushFrame(CSampleBuffer *frame);
+	DWORD RenderLoop();
 
 protected:
 	HRESULT CreateSurfaces(int, int, DWORD);
 	const char* GetDDrawErrorString(HRESULT );
-	DWORD RenderLoop();
 	void FillddPixelFormatFromFourCC(LPDDPIXELFORMAT ddPixelFormat, DWORD dwFourCC);
 	BOOL OSDText(HDC, char *, ...);
 

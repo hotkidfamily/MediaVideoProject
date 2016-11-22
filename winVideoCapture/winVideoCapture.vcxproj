@@ -106,7 +106,6 @@
     <ClCompile Include="MainWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AutoLock.h" />
     <ClInclude Include="ddrawRender.h" />
     <ClInclude Include="encoder_x264.h" />
     <ClInclude Include="PackageBuffer.h" />

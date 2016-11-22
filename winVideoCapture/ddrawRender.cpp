@@ -261,8 +261,7 @@ done:
 DWORD WINAPI RenderThread(LPVOID args)
 {
 	DDrawRender *pRender = (DDrawRender*)args;
-
-	return TRUE;
+	return pRender->RenderLoop();
 }
 
 DWORD DDrawRender::RenderLoop()
@@ -336,6 +335,7 @@ HRESULT DDrawRender::PushFrame(CSampleBuffer *frame)
 	DDSURFACEDESC2 desc;
 	DWORD renderBefore = 0;
 	RECT rect;
+	HDC dc = NULL;
 	int32_t minInputSample, maxInputSample, minRenderSample, maxRenderSample;
 	RECT srcRect = { 0, 0, frame->GetWidth(), frame->GetHeight() };
 	uint32_t interval = (uint32_t)(frame->GetPts() - mLastPts) / 10000;
@@ -349,7 +349,6 @@ HRESULT DDrawRender::PushFrame(CSampleBuffer *frame)
 
 	ZeroMemory(&desc, sizeof(DDSURFACEDESC));
 	desc.dwSize = sizeof(DDSURFACEDESC);
-	GetWindowRect(mHwnd, &rect);
 
 	CHECK_HR(hr = mCanvasSurface->Lock(NULL, &desc, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL));
 
@@ -364,30 +363,28 @@ HRESULT DDrawRender::PushFrame(CSampleBuffer *frame)
 					rgb24Buffer += 3;
 				}
 			}
-		}else{
+		}
+		else{
 			memcpy(surfaceBuffer, frame->GetDataPtr(), frame->GetDataSize());
 		}
 	}
 
 	mCanvasSurface->Unlock(NULL);
 
-	DDBLTFX ddblfx;
-	ZeroMemory(&ddblfx, sizeof(DDBLTFX));
-	ddblfx.dwSize = sizeof(DDBLTFX);
-	ddblfx.dwROP = SRCCOPY;
-
+	GetWindowRect(mHwnd, &rect);
 	CHECK_HR(hr = mPrimarySurface->Blt(&rect, mCanvasSurface, NULL, DDBLT_WAIT, NULL));
-	mLastPts = frame->GetPts();
-	HDC dc = NULL;
-	CHECK_HR(hr = mPrimarySurface->GetDC(&dc));
 
 	mInputStatis.MinMaxSample(minInputSample, maxInputSample);
 	mRenderStatis.MinMaxSample(minRenderSample, maxRenderSample);
+
+	CHECK_HR(hr = mPrimarySurface->GetDC(&dc));
 	OSDText(dc, "pts %lld,itv %d, fps %.2f, avg %u(%d~%d), r %u(%d~%d)", 
 		mLastPts, interval, mInputStatis.Frequency(),
 		mInputStatis.Bitrate(), minInputSample, maxInputSample,
 		mRenderStatis.AvgSampleSize(), minRenderSample, maxRenderSample);
 	mPrimarySurface->ReleaseDC(dc);
+
+	mLastPts = frame->GetPts();
 
 done:
 	GetDDrawErrorString(hr);

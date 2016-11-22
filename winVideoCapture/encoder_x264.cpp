@@ -79,6 +79,10 @@ bool CLibx264::setConfig(const ENCODEC_CFG &config)
 	mCodecParams.i_keyint_max = config.fps * 5;
 	mCodecParams.i_frame_reference = 6;
 	mCodecParams.i_threads = 0;
+	mCodecParams.vui.b_fullrange = 0;
+	mCodecParams.vui.i_colorprim = 5;
+	mCodecParams.vui.i_colmatrix = 5;
+	mCodecParams.vui.i_transfer = 5;
 
 	mCodecParams.b_repeat_headers = 1;
 	x264_picture_alloc(&mInPic, mCodecParams.i_csp, mCodecParams.i_width, mCodecParams.i_height);

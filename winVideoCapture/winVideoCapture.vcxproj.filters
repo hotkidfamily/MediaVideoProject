@@ -56,9 +56,6 @@
     <ClInclude Include="winVideoCapture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="AutoLock.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="VideoCallback.h">
       <Filter>Header Files</Filter>
     </ClInclude>
