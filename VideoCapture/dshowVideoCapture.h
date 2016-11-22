@@ -107,6 +107,7 @@ private:
 
 private:
 	IGraphBuilder *mGraph;
+	ICaptureGraphBuilder2 *mGraphBuiler;
 	IMediaControl *mMediaControl;
 	IMediaEventEx *mMediaEventEx;
 

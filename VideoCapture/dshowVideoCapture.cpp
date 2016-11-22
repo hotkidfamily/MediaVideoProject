@@ -213,10 +213,10 @@ HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 	if (FAILED(hr) || (desc.ptsStart == 0)){
 		desc.ptsStart = timeGetTime(); // convert to 100ns
 		desc.ptsEnd = desc.ptsStart + FramesPerSecToRefTime(mWorkParams.fps) / 10000;
-	}
-	else{
+	}else{
 		desc.ptsStart = timeGetTime(); // convert to 100ns
-		desc.ptsEnd = desc.ptsStart + FramesPerSecToRefTime(mWorkParams.fps) / 10000;
+		if (hr == VFW_S_NO_STOP_TIME)
+			desc.ptsEnd = desc.ptsStart + FramesPerSecToRefTime(mWorkParams.fps) / 10000;
 	}
 
 	desc.width = mWorkParams.width;
@@ -302,6 +302,7 @@ HRESULT DShowVideoCapture::ReleaseDShowInterfaces()
 	SAFE_RELEASE(mMediaControl);
 	SAFE_RELEASE(mGrabberFiler);
 	SAFE_RELEASE(mGraph);
+	SAFE_RELEASE(mGraphBuiler);
 
 	return hr;
 }
@@ -355,6 +356,11 @@ HRESULT DShowVideoCapture::GetDShowInterfaces()
 
 	CHECK_HR(hr = CoCreateInstance(CLSID_SystemClock, NULL, CLSCTX_INPROC_SERVER, IID_IReferenceClock, (void**)&pClock));
 
+	CHECK_HR(hr = CoCreateInstance(CLSID_CaptureGraphBuilder2, NULL,
+		CLSCTX_INPROC_SERVER, IID_ICaptureGraphBuilder2, (void**)&mGraphBuiler));
+
+	CHECK_HR(hr = mGraphBuiler->SetFiltergraph(mGraph));
+
 	CHECK_HR(hr = CoCreateInstance(CLSID_SampleGrabber, NULL,
 		CLSCTX_INPROC_SERVER, IID_ISampleGrabber, (void**)&mVideoGrabber));
 	CHECK_HR(hr = mVideoGrabber->QueryInterface(IID_IBaseFilter, (void**)&mGrabberFiler));
@@ -381,11 +387,10 @@ HRESULT DShowVideoCapture::BuildGraph()
 	CComPtr<IPin> pGrabberInPin = NULL;
 	CComPtr<IPin> pGrabberOutPin = NULL;
 
-	CMediaType mediaType;
 	CMediaType mediaTypeFound;
-	mediaType.majortype = MEDIATYPE_Video;
-	mediaType.subtype = MEDIASUBTYPE_NULL;
-	CHECK_HR(hr = mVideoGrabber->SetMediaType(&mediaType));
+	mediaTypeFound.majortype = MEDIATYPE_Video;
+	mediaTypeFound.subtype = MEDIASUBTYPE_NULL;
+	CHECK_HR(hr = mVideoGrabber->SetMediaType(&mediaTypeFound));
 
 	CHECK_HR(hr = CoCreateInstance(CLSID_NullRenderer, NULL, CLSCTX_INPROC_SERVER, IID_IBaseFilter, (void**)&pNullRenderFilter));
 
