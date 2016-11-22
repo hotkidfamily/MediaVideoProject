@@ -210,9 +210,13 @@ HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 	hr = pSample->GetMediaTime(&desc.frameStartIdx, &desc.frameEndIdx);
 
 	hr = pSample->GetTime(&desc.ptsStart, &desc.ptsEnd);
-	if (FAILED(hr)){
-		desc.ptsStart = timeGetTime();
-		desc.ptsEnd = desc.ptsStart + FramesPerSecToRefTime(mWorkParams.fps);
+	if (FAILED(hr) || (desc.ptsStart == 0)){
+		desc.ptsStart = timeGetTime(); // convert to 100ns
+		desc.ptsEnd = desc.ptsStart + FramesPerSecToRefTime(mWorkParams.fps) / 10000;
+	}
+	else{
+		desc.ptsStart = timeGetTime(); // convert to 100ns
+		desc.ptsEnd = desc.ptsStart + FramesPerSecToRefTime(mWorkParams.fps) / 10000;
 	}
 
 	desc.width = mWorkParams.width;
@@ -343,9 +347,13 @@ HRESULT DShowVideoCapture::SaveGraphFile(IGraphBuilder *pGraph, TCHAR *wszPath)
 HRESULT DShowVideoCapture::GetDShowInterfaces()
 {
 	HRESULT hr = S_OK;
+	CComPtr<IReferenceClock> pClock;
+	CComPtr<IMediaFilter> pMediaFilter;
 
 	CHECK_HR(hr = CoCreateInstance(CLSID_FilterGraph, NULL,
 		CLSCTX_INPROC_SERVER, IID_IGraphBuilder, (void**)&mGraph));
+
+	CHECK_HR(hr = CoCreateInstance(CLSID_SystemClock, NULL, CLSCTX_INPROC_SERVER, IID_IReferenceClock, (void**)&pClock));
 
 	CHECK_HR(hr = CoCreateInstance(CLSID_SampleGrabber, NULL,
 		CLSCTX_INPROC_SERVER, IID_ISampleGrabber, (void**)&mVideoGrabber));
@@ -353,10 +361,13 @@ HRESULT DShowVideoCapture::GetDShowInterfaces()
 
 	CHECK_HR(hr = mGraph->QueryInterface(IID_IMediaControl, (void**)&mMediaControl));
 	CHECK_HR(hr = mGraph->QueryInterface(IID_IMediaEventEx, (void**)&mMediaEventEx));
-
+	CHECK_HR(hr = mGraph->QueryInterface(IID_IMediaFilter, (void**)&pMediaFilter));
+	CHECK_HR(hr = pMediaFilter->SetSyncSource(pClock));
+	
 done:
 	ShowDShowError(hr);
-
+	pClock.Release();
+	pMediaFilter.Release();
 	return hr;
 }
 

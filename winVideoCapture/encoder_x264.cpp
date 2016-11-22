@@ -52,7 +52,7 @@ bool CLibx264::setConfig(const ENCODEC_CFG &config)
 
 	switch (config.pixelFormatInFourCC){
 	case PIXEL_FORMAT_RGB24:
-		mCodecParams.i_csp = X264_CSP_BGR;
+		mCodecParams.i_csp = X264_CSP_BGR | X264_CSP_VFLIP;
 		break;
 	case PIXEL_FORMAT_I420:
 		mCodecParams.i_csp = X264_CSP_I420;
@@ -71,18 +71,14 @@ bool CLibx264::setConfig(const ENCODEC_CFG &config)
 
 	mCodecParams.i_fps_num = config.fps;
 	mCodecParams.i_fps_den = 1;
-// 	mCodecParams.i_timebase_num = 1;
-// 	mCodecParams.i_timebase_den = 10000000;// only in apple camera
+	mCodecParams.i_timebase_num = 1;
+	mCodecParams.i_timebase_den = config.fps; // ms
 	mCodecParams.b_open_gop = 0;
 	mCodecParams.b_cabac = 1;
 	mCodecParams.i_keyint_min = config.fps;
 	mCodecParams.i_keyint_max = config.fps * 5;
 	mCodecParams.i_frame_reference = 6;
 	mCodecParams.i_threads = 0;
-	mCodecParams.vui.b_fullrange = 0;
-	mCodecParams.vui.i_colorprim = 5;
-	mCodecParams.vui.i_colmatrix = 5;
-	mCodecParams.vui.i_transfer = 5;
 
 	mCodecParams.b_repeat_headers = 1;
 	x264_picture_alloc(&mInPic, mCodecParams.i_csp, mCodecParams.i_width, mCodecParams.i_height);
@@ -104,7 +100,7 @@ bool CLibx264::addFrame(const CSampleBuffer &inputFrame)
 	switch (inputFrame.GetPixelFormat())
 	{
 	case PIXEL_FORMAT_RGB24:
-		inpic.img.i_csp = X264_CSP_BGR;
+		inpic.img.i_csp = X264_CSP_BGR | X264_CSP_VFLIP;
 		inpic.img.i_plane = 1;
 		inpic.img.plane[0] = inputFrame.GetDataPtr();
 		inpic.img.i_stride[0] = inputFrame.GetLineSize();
@@ -123,7 +119,7 @@ bool CLibx264::addFrame(const CSampleBuffer &inputFrame)
 		inpic.img.i_csp = X264_CSP_BGRA;
 		inpic.img.i_plane = 1;
 		inpic.img.plane[0] = inputFrame.GetDataPtr();
-		inpic.img.i_stride[0] = inputFrame.GetWidth()*4;
+		inpic.img.i_stride[0] = inputFrame.GetLineSize();
 		break;
 	case PIXEL_FORMAT_YUY2:
 		mVpp.convertYUY2toNV16(mInPic, &inputFrame);
@@ -133,12 +129,12 @@ bool CLibx264::addFrame(const CSampleBuffer &inputFrame)
 	}
 
 	if (inputFrame.GetPixelFormat() == PIXEL_FORMAT_YUY2){
-		mInPic.i_pts = inputFrame.GetPts() / 10000;
+		mInPic.i_pts = inputFrame.GetPts();
 		mInPic.i_type = X264_TYPE_AUTO;
 		encodeFrame(&mInPic);
 	}
 	else{
-		inpic.i_pts = inputFrame.GetPts() / 10000;
+		inpic.i_pts = inputFrame.GetPts();
 		inpic.i_type = X264_TYPE_AUTO;
 		encodeFrame(&inpic);
 	}

@@ -63,6 +63,8 @@ BOOL SetupEncodeWork(THIS_CONTEXT *ctx)
 
 BOOL StopEncodeWork(THIS_CONTEXT *ctx)
 {
+	if (ctx->encoder)
+		ctx->encoder->close();
 	SAFE_DELETE(ctx->encoder);
 	return TRUE;
 }
