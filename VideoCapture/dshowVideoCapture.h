@@ -97,16 +97,18 @@ private:
 	HRESULT RemoveFiltersFromGraph();
 	BOOL Runing();
 	HRESULT ReleaseDShowInterfaces();
-	HRESULT FindFilterByIndex(int, IBaseFilter *&);
+	HRESULT FindCaptureFilterByIndex(int, IBaseFilter *&);
 	HRESULT BuildGraph();
 	void ShowDShowError(HRESULT hr);
 	STDMETHODIMP SampleCB(double SampleTime, IMediaSample *pSample);
-	HRESULT FindMediaTypeInPin(CComPtr<IPin> &pOutPin, CMediaType &);
+	HRESULT FindMediaTypeInPinOrStreamConfig(CComPtr<IPin> &pOutPin, CMediaType &, IAMStreamConfig *);
 	inline BOOL IsFormatSupport(CMediaType &, FRAMEABILITY&);
 	HRESULT SaveGraphFile(IGraphBuilder*, TCHAR* path);
 	const FRAMEFORAMTINFO* GetFrameInfoByFourCC(DWORD);
+	HRESULT GetFilterFriendlyName(IBaseFilter * &filter, STRING name);
 
 private:
+	DWORD mGraphRegisterHandler;
 	IGraphBuilder *mGraph;
 	ICaptureGraphBuilder2 *mGraphBuiler;
 	IMediaControl *mMediaControl;

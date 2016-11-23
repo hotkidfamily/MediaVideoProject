@@ -5,9 +5,9 @@
 #include "dshowutil.h"
 
 #define CAPTURE_FILTER_NAME_STR (TEXT("Capture Filter"))
-#define RENDER_FILTER_NAME_STR (TEXT("NULL Render Filter"))
-#define GRABBER_FILTER_NAME_STR (TEXT("Grabber Filter"))
-#define JPEGDEC_FILTER_NAME_STR (TEXT("JPEG DEC"))
+#define RENDER_FILTER_NAME_STR (TEXT("Null Renderer"))
+#define GRABBER_FILTER_NAME_STR (TEXT("SampleGrabber"))
+#define JPEGDEC_FILTER_NAME_STR (TEXT("MJPEG Decompressor"))
 
 /*
 Reference :https://msdn.microsoft.com/zh-cn/library/windows/desktop/dd391027(v=vs.85).aspx
@@ -76,6 +76,7 @@ DShowVideoCapture::DShowVideoCapture()
 	, mVideoGrabber(NULL)
 	, mcb(NULL)
 	, mWorkFrameInfo(NULL)
+	, mGraphRegisterHandler(0)
 {
 	
 }
@@ -137,15 +138,18 @@ HRESULT DShowVideoCapture::Start(OPEN_DEVICE_PARAM &params)
 
 	CHECK_HR(hr = BuildGraph());
 
+	CHECK_HR(hr = mVideoGrabber->SetBufferSamples(FALSE));
+	CHECK_HR(hr = mVideoGrabber->SetCallback(this, 0));
+	CHECK_HR(hr = mVideoGrabber->SetOneShot(FALSE));
+
 	// update work parameters 
-	mVideoGrabber->GetConnectedMediaType(&mWorkMediaType);
+	CHECK_HR(hr = mVideoGrabber->GetConnectedMediaType(&mWorkMediaType));
 	mWorkParams.width = mWorkMediaType.BitmapHeader()->biWidth;
 	mWorkParams.height = mWorkMediaType.BitmapHeader()->biHeight;
 	mWorkParams.fps = RefTimeToFramesPerSec(mWorkMediaType.AvgReferenceTime());
 	mWorkParams.pixelFormatInFourCC = mWorkMediaType.subtype.Data1;
 	mWorkFrameInfo = GetFrameInfoByFourCC(mWorkMediaType.subtype.Data1);
 	params = mWorkParams;
-	
 	
 	do{
 		Sleep(100);
@@ -159,8 +163,6 @@ HRESULT DShowVideoCapture::Start(OPEN_DEVICE_PARAM &params)
 		mDropFrameStatus->GetNumDropped(&mDropFrames);
 		mDropFrameStatus->GetNumNotDropped(&mCapFrames);
 	}
-
-	//SaveGraphFile(mGraph, TEXT("c:\\users\\hotkid\\desktop\\my.grf"));
 
 done:
 	if (FAILED(hr)){
@@ -185,7 +187,9 @@ HRESULT DShowVideoCapture::Stop()
 	}
 
 	while(FAILED(mMediaControl->Stop()));
-
+	if (mGraphRegisterHandler)
+		RemoveGraphFromRot(mGraphRegisterHandler);
+	mGraphRegisterHandler = 0;
 	RemoveFiltersFromGraph();
 	mWorkFrameInfo = NULL;
 
@@ -282,7 +286,6 @@ HRESULT DShowVideoCapture::RemoveFiltersFromGraph()
 	CComPtr<IBaseFilter> pFilter = NULL;
 
 	ASSERT(mGraph);
-	mVideoGrabber->SetOneShot(TRUE);
 	mVideoGrabber->SetCallback(NULL, 0);
 	CHECK_HR(mGraph->EnumFilters(&pFilterEnum));
 	while (pFilterEnum->Next(1, &pFilter, NULL) == S_OK){
@@ -356,13 +359,10 @@ HRESULT DShowVideoCapture::SaveGraphFile(IGraphBuilder *pGraph, TCHAR *wszPath)
 HRESULT DShowVideoCapture::GetDShowInterfaces()
 {
 	HRESULT hr = S_OK;
-	CComPtr<IReferenceClock> pClock;
 	CComPtr<IMediaFilter> pMediaFilter;
 
 	CHECK_HR(hr = CoCreateInstance(CLSID_FilterGraph, NULL,
 		CLSCTX_INPROC_SERVER, IID_IGraphBuilder, (void**)&mGraph));
-
-	CHECK_HR(hr = CoCreateInstance(CLSID_SystemClock, NULL, CLSCTX_INPROC_SERVER, IID_IReferenceClock, (void**)&pClock));
 
 	CHECK_HR(hr = CoCreateInstance(CLSID_CaptureGraphBuilder2, NULL,
 		CLSCTX_INPROC_SERVER, IID_ICaptureGraphBuilder2, (void**)&mGraphBuiler));
@@ -376,11 +376,11 @@ HRESULT DShowVideoCapture::GetDShowInterfaces()
 	CHECK_HR(hr = mGraph->QueryInterface(IID_IMediaControl, (void**)&mMediaControl));
 	CHECK_HR(hr = mGraph->QueryInterface(IID_IMediaEventEx, (void**)&mMediaEventEx));
 	CHECK_HR(hr = mGraph->QueryInterface(IID_IMediaFilter, (void**)&pMediaFilter));
-	CHECK_HR(hr = pMediaFilter->SetSyncSource(pClock));
+	// not set sync clock
+	CHECK_HR(hr = pMediaFilter->SetSyncSource(NULL));
 	
 done:
 	ShowDShowError(hr);
-	pClock.Release();
 	pMediaFilter.Release();
 	return hr;
 }
@@ -394,23 +394,20 @@ HRESULT DShowVideoCapture::BuildGraph()
 	CComPtr<IPin> pNullRenderInPin = NULL;
 	CComPtr<IPin> pGrabberInPin = NULL;
 	CComPtr<IPin> pGrabberOutPin = NULL;
-
 	CMediaType mediaTypeFound;
-	mediaTypeFound.majortype = MEDIATYPE_Video;
-	mediaTypeFound.subtype = MEDIASUBTYPE_NULL;
-	CHECK_HR(hr = mVideoGrabber->SetMediaType(&mediaTypeFound));
+	CComPtr<IAMStreamConfig> pStreamConfig = NULL;
 
 	CHECK_HR(hr = CoCreateInstance(CLSID_NullRenderer, NULL, CLSCTX_INPROC_SERVER, IID_IBaseFilter, (void**)&pNullRenderFilter));
 
-	CHECK_HR(hr = FindFilterByIndex(mWorkParams.index, mCaptureFilter));
+	CHECK_HR(hr = FindCaptureFilterByIndex(mWorkParams.index, mCaptureFilter));
 	ASSERT(mCaptureFilter);
 
-	CHECK_HR(hr = mGraph->AddFilter(mCaptureFilter, CAPTURE_FILTER_NAME_STR));
+	CHECK_HR(hr = mGraph->AddFilter(mCaptureFilter, mCameraList[mWorkParams.index].name.c_str()));
 	CHECK_HR(hr = mGraph->AddFilter(mGrabberFiler, GRABBER_FILTER_NAME_STR));
 	CHECK_HR(hr = mGraph->AddFilter(pNullRenderFilter, RENDER_FILTER_NAME_STR));
-
+#if 0
 	CHECK_HR(hr = FindPinByCategory(mCaptureFilter, PIN_CATEGORY_CAPTURE, PINDIR_OUTPUT, &pCaptureOutPin));
-	CHECK_HR(hr = FindMediaTypeInPin(pCaptureOutPin, mediaTypeFound));
+	CHECK_HR(hr = FindMediaTypeInPinOrStreamConfig(pCaptureOutPin, mediaTypeFound, NULL));
 
 	CHECK_HR(hr = FindUnconnectedPin(mGrabberFiler, PINDIR_OUTPUT, &pGrabberOutPin));
 	CHECK_HR(hr = FindUnconnectedPin(mGrabberFiler, PINDIR_INPUT, &pGrabberInPin));
@@ -426,16 +423,38 @@ HRESULT DShowVideoCapture::BuildGraph()
 		CHECK_HR(hr = mGraph->Connect(pCaptureOutPin, pJpegDecInPin));
 		CHECK_HR(hr = mGraph->Connect(pJpegDecOutPin, pGrabberInPin));
 		CHECK_HR(hr = mGraph->Connect(pGrabberOutPin, pNullRenderInPin));
+		mediaTypeFound.majortype = MEDIATYPE_Video;
+		mediaTypeFound.subtype = MEDIASUBTYPE_RGB32;
+
 	}else{
 		CHECK_HR(hr = mGraph->Connect(pCaptureOutPin, pGrabberInPin));
 		CHECK_HR(hr = mGraph->Connect(pGrabberOutPin, pNullRenderInPin));
 	}
 
-	CHECK_HR(hr = mVideoGrabber->SetCallback(this, 0));
-	CHECK_HR(hr = mVideoGrabber->SetOneShot(FALSE));
-	mGraphBuiler->RenderStream(&PIN_CATEGORY_CAPTURE, NULL, mCaptureFilter, mGrabberFiler, pNullRenderFilter);
+	CHECK_HR(hr = mVideoGrabber->SetMediaType(&mediaTypeFound));
+#else
+	CHECK_HR(hr = mGraphBuiler->FindInterface(&PIN_CATEGORY_CAPTURE, &MEDIATYPE_Video, mCaptureFilter, IID_IAMStreamConfig, (void**)&pStreamConfig));
+	CHECK_HR(hr = FindMediaTypeInPinOrStreamConfig(pCaptureOutPin, mediaTypeFound, pStreamConfig));
+	if (mediaTypeFound.subTypeEqual(MEDIASUBTYPE_MJPG)){
+		CHECK_HR(hr = CoCreateInstance(CLSID_MjpegDec, NULL, CLSCTX_INPROC_SERVER, IID_IBaseFilter, (void**)&pJpegDecFilter));
+		CHECK_HR(hr = mGraph->AddFilter(pJpegDecFilter, JPEGDEC_FILTER_NAME_STR));
+		mediaTypeFound.majortype = MEDIATYPE_Video;
+		mediaTypeFound.subtype = MEDIASUBTYPE_RGB32;
+	}
+
+	CHECK_HR(hr = mVideoGrabber->SetMediaType(&mediaTypeFound));
+	CHECK_HR(hr = mGraphBuiler->RenderStream(&PIN_CATEGORY_CAPTURE, &MEDIATYPE_Video, mCaptureFilter, mGrabberFiler, pNullRenderFilter));
+#endif
+
+	CHECK_HR(hr = AddGraphToRot(mGraph, &mGraphRegisterHandler));
 
 done:
+	TCHAR Buffer[MAX_PATH];
+	if (GetCurrentDirectory(MAX_PATH, Buffer) != 0){
+		STRING path(Buffer);
+		path.append(TEXT("\\my.grf"));
+		SaveGraphFile(mGraph, (TCHAR*)path.c_str());
+	}
 	ShowDShowError(hr);
 	return hr;
 }
@@ -470,7 +489,7 @@ inline BOOL DShowVideoCapture::IsFormatSupport(CMediaType &mediaType, FRAMEABILI
 /*
  * resolution is priority
  */
-HRESULT DShowVideoCapture::FindMediaTypeInPin(CComPtr<IPin> &pOutPin, CMediaType &requestMediaType)
+HRESULT DShowVideoCapture::FindMediaTypeInPinOrStreamConfig(CComPtr<IPin> &pOutPin, CMediaType &requestMediaType,  IAMStreamConfig* pStreamConfig)
 {
 	HRESULT hr = S_OK;
 	HRESULT hrRet = E_FAIL;
@@ -479,7 +498,14 @@ HRESULT DShowVideoCapture::FindMediaTypeInPin(CComPtr<IPin> &pOutPin, CMediaType
 	int cfgSize = 0;
 	std::list<FRAMEABILITY> supportFrameFormatList;
 
-	CHECK_HR(hr = pOutPin->QueryInterface(IID_IAMStreamConfig, (void**)&pConfig));
+	if (!pStreamConfig){
+		CHECK_HR(hr = pOutPin->QueryInterface(IID_IAMStreamConfig, (void**)&pConfig));
+	}
+	else{
+		pStreamConfig->AddRef();
+		pConfig = pStreamConfig;
+	}
+
 	CHECK_HR(hr = pConfig->GetNumberOfCapabilities(&cfgCnt, &cfgSize));
 
 	/*
@@ -560,7 +586,13 @@ done:
 	return hrRet;
 }
 
-HRESULT DShowVideoCapture::FindFilterByIndex(int index, IBaseFilter * &filter)
+HRESULT DShowVideoCapture::GetFilterFriendlyName(IBaseFilter * &filter, STRING name)
+{
+	HRESULT hr = S_OK;
+	return hr;
+}
+
+HRESULT DShowVideoCapture::FindCaptureFilterByIndex(int index, IBaseFilter * &filter)
 {
 	HRESULT hr = S_OK;
 	CComPtr<ICreateDevEnum> pDevEnum = NULL;
