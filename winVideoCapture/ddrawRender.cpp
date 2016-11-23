@@ -136,10 +136,12 @@ DDrawRender::DDrawRender()
 	, mPrimarySurface(NULL)
 	, mCanvasSurface(NULL)
 	, mHwnd(NULL)
-	, mRenderThreadHandle(NULL)
+	, mRenderThreadHandle(INVALID_HANDLE_VALUE)
 	, mRenderThreadId(0)
 	, mRenderEvent(NULL)
 	, mDDrawClippper(NULL)
+	, mRenderThreadRuning(FALSE)
+	, mSupportVSync(FALSE)
 {
 }
 
@@ -148,10 +150,12 @@ DDrawRender::DDrawRender(HWND hWnd)
 	, mPrimarySurface(NULL)
 	, mCanvasSurface(NULL)
 	, mHwnd(hWnd)
-	, mRenderThreadHandle(NULL)
+	, mRenderThreadHandle(INVALID_HANDLE_VALUE)
 	, mRenderThreadId(0)
 	, mRenderEvent(NULL)
 	, mDDrawClippper(NULL)
+	, mRenderThreadRuning(FALSE)
+	, mSupportVSync(FALSE)
 {
 }
 
@@ -278,17 +282,17 @@ HRESULT DDrawRender::InitDDrawInterface(int width, int height, DWORD pixelFormat
 	CHECK_HR(hr = CoCreateInstance(CLSID_DirectDraw, NULL, CLSCTX_ALL, IID_IDirectDraw, (void**)&mDDrawObj));
 	CHECK_HR(hr = mDDrawObj->Initialize(NULL));
 	CHECK_HR(hr = mDDrawObj->SetCooperativeLevel(mHwnd, DDSCL_NORMAL));
-	
+
 	mHwCaps.dwSize = sizeof(DDCAPS);
 	mHelCaps.dwSize = sizeof(DDCAPS);
 	mDDrawObj->GetCaps(&mHwCaps, &mHelCaps);
-	
+
 	CHECK_HR(hr = CreateSurfaces(width, height, pixelFormatInFourCC));
 
 	CHECK_HR(hr = mDDrawObj->CreateClipper(0, &mDDrawClippper, NULL));
 	CHECK_HR(hr = mDDrawClippper->SetHWnd(0, mHwnd));
 	CHECK_HR(hr = mPrimarySurface->SetClipper(mDDrawClippper));
-	
+
 	/* clear screen */
 	ddbltfx.dwSize = sizeof(ddbltfx);
 	ddbltfx.dwFillColor = RGB(0, 0, 0);
@@ -301,8 +305,17 @@ HRESULT DDrawRender::InitDDrawInterface(int width, int height, DWORD pixelFormat
 	mLastTime = 0;
 	mScreenSizeInPixel.cx = width;
 	mScreenSizeInPixel.cy = height;
-
+	mRenderEvent = CreateEvent(NULL, FALSE, FALSE, TEXT("Render Event"));
+	if (mRenderEvent == INVALID_HANDLE_VALUE){
+		hr = E_FAIL;
+		goto done;
+	}
+	mRenderThreadRuning = TRUE;
 	mRenderThreadHandle = CreateThread(NULL, 0, RenderThread, this, NULL, &mRenderThreadId);
+
+	if (FAILED(hr = mDDrawObj->WaitForVerticalBlank(DDWAITVB_BLOCKBEGINEVENT, mRenderEvent))){
+		mSupportVSync = FALSE;
+	}
 
 done:
 	GetDDrawErrorString(hr);
@@ -313,9 +326,18 @@ HRESULT DDrawRender::DeinitDDrawInterface()
 {
 	HRESULT hr = S_OK;
 
-	bRender = FALSE;
-	if (mRenderThreadHandle)
+	mRenderThreadRuning = FALSE;
+	if (mRenderThreadHandle != INVALID_HANDLE_VALUE){
+		SetEvent(mRenderEvent);
 		WaitForSingleObject(mRenderThreadHandle, INFINITE);
+		mRenderThreadHandle = INVALID_HANDLE_VALUE;
+	}
+
+	if (mRenderEvent){
+		CloseHandle(mRenderEvent);
+		mRenderEvent = NULL;
+		mSupportVSync = FALSE;
+	}
 
 	SAFE_RELEASE(mCanvasSurface);
 	SAFE_RELEASE(mPrimarySurface);
@@ -337,10 +359,17 @@ DWORD DDrawRender::RenderLoop()
 
 	mLastTime = 0;
 
-	while (bRender){
+	while (mRenderThreadRuning){
 		int32_t minInputSample = 0, maxInputSample = 0, minRenderSample = 0, maxRenderSample = 0;
-		//Sleep(rand() % 15 + 20);
-		Sleep(15);
+		if (mRenderEvent && mSupportVSync){
+			if (WAIT_OBJECT_0 != WaitForSingleObject(mRenderEvent, INFINITE)){
+				Sleep(10);
+				continue;
+			}
+		} else {
+			Sleep(rand() % 15 + 20);
+		}
+
 		renderBefore = timeGetTime();
 
 		if (mLastTime){

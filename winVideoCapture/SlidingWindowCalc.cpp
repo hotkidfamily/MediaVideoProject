@@ -68,12 +68,15 @@ uint64_t CSlidingWindowCalc::AvgSampleSize() const
 
 BOOL CSlidingWindowCalc::MinMaxSample(int32_t &minV, int32_t &maxV) const
 {
+	std::list<RateSample>::const_iterator it;
 	uint32_t minSize = 0xffffffff;
 	uint32_t maxSize = 0;
-	for (std::list<RateSample>::const_iterator it = mSampleList.begin();
-		it != mSampleList.end(); ++it) {
-		minSize = min(minSize, it->sampleSize);
-		maxSize = max(maxSize, it->sampleSize);
+	for (it = mSampleList.begin();it != mSampleList.end(); ++it) {
+		if (minSize > it->sampleSize)
+			minSize = it->sampleSize;
+
+		if (maxSize < it->sampleSize)
+			maxSize = it->sampleSize;
 	}
 	minV = minSize == 0xffffffff?0:minSize; maxV = maxSize;
 	return TRUE;

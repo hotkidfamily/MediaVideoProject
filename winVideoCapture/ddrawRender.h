@@ -41,11 +41,12 @@ private:
 	DDCAPS mHwCaps, mHelCaps;
 
 	HANDLE mRenderEvent;
+	BOOL mSupportVSync;
 	HANDLE mRenderThreadHandle;
 	DWORD mRenderThreadId;
 
 	HWND mHwnd;
-	BOOL bRender;
+	BOOL mRenderThreadRuning;
 	SIZE mScreenSizeInPixel;
 
 	int64_t mLastPts;
