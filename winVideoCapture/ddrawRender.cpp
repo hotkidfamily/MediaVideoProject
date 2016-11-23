@@ -229,7 +229,7 @@ void DDrawRender::FillddPixelFormatFromFourCC(LPDDPIXELFORMAT ddPixelFormat, DWO
 	default:
 		ddPixelFormat->dwFlags = DDPF_FOURCC | DDPF_YUV;
 		ddPixelFormat->dwFourCC = dwFourCC;
-		ddPixelFormat->dwRGBBitCount = 8;
+		ddPixelFormat->dwRGBBitCount = 12;
 		break;
 	}
 }
@@ -375,19 +375,23 @@ HRESULT DDrawRender::PushFrame(CSampleBuffer *frame)
 	HRESULT hr = DD_OK;
 	DDSURFACEDESC2 desc;
 	uint32_t ptsInterval = (uint32_t)(frame->GetPts() - mLastPts);
-	mInputStatis.AppendSample(ptsInterval);
+	if (mLastPts)
+		mInputStatis.AppendSample(ptsInterval);
 
 	ZeroMemory(&desc, sizeof(DDSURFACEDESC));
 	desc.dwSize = sizeof(DDSURFACEDESC);
-
+	
+	if (!mCanvasSurface){
+		return S_FALSE;
+	}
 	CHECK_HR(hr = mCanvasSurface->Lock(NULL, &desc, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL));
 
 	if (!((uint32_t)frame->GetWidth() > desc.dwWidth || (uint32_t)frame->GetHeight() > desc.dwHeight)){
 		uint8_t *surfaceBuffer = (uint8_t*)desc.lpSurface;
 		if (frame->GetPixelFormat() == PIXEL_FORMAT_RGB24){
 			for (int i = 0; i < frame->GetHeight(); i++){
-				DWORD *rgb32Buffer = rgb32Buffer = (DWORD*)(surfaceBuffer + (frame->GetHeight() - i)*desc.lPitch);
-				uint8_t* rgb24Buffer = frame->GetDataPtr() + frame->GetLineSize()*i;
+				DWORD *rgb32Buffer = rgb32Buffer = (DWORD*)(surfaceBuffer + i*desc.lPitch);
+				uint8_t* rgb24Buffer = frame->GetDataPtr() + frame->GetLineSize()*(frame->GetHeight()-i);
 				for (int j = 0; j < frame->GetWidth(); j++){
 					rgb32Buffer[j] = RGB(rgb24Buffer[0], rgb24Buffer[1], rgb24Buffer[2]);
 					rgb24Buffer += 3;
