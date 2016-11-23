@@ -63,6 +63,7 @@ typedef struct tagFrameBility{
 		SU_FPS_LARGE = 1<< 10,
 
 		SU_RES_LARGE_INAREA = 1 << 9,
+		SU_RES_SMALL_INAREA = 1 << 8,
 	};
 	int32_t Priority;
 	int32_t Ability;

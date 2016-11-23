@@ -95,6 +95,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	StopEncodeWork(gContext);
 	StopRenderWork(gContext);	
 	ReleaseVideoCaptureObj(gContext->capturer);
+	delete gContext;
+	gContext = NULL;
 
 	return (int) msg.wParam;
 }
@@ -272,17 +274,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 						StopRenderWork(gContext);
 					}
 					else{
-						CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_CHECKED);
 						gContext->captureArgs.index = idx;
-						StartCaptureWork(gContext);
-						RECT rect = {0};
-						GetWindowRect(gContext->hMainWnd, &rect);
-						MoveWindow(gContext->hMainWnd, rect.left, rect.top, gContext->captureArgs.width, gContext->captureArgs.height + 16, TRUE);
+						if (StartCaptureWork(gContext)){
+							CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_CHECKED);
+							RECT rect = { 0 };
+							GetWindowRect(gContext->hMainWnd, &rect);
+							MoveWindow(gContext->hMainWnd, rect.left, rect.top, gContext->captureArgs.width, gContext->captureArgs.height + 16, TRUE);
 #ifdef ENABLE_ENCODER
-						SetupEncodeWork(gContext);
+							SetupEncodeWork(gContext);
 #endif
-						StartRenderWork(gContext);
-						CreateWorkThread(gContext);
+							StartRenderWork(gContext);
+							CreateWorkThread(gContext);
+						}
+
 					}
 				}else{
 					return DefWindowProc(hWnd, message, wParam, lParam);

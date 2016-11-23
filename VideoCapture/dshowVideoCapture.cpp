@@ -146,18 +146,26 @@ HRESULT DShowVideoCapture::Start(OPEN_DEVICE_PARAM &params)
 	mWorkFrameInfo = GetFrameInfoByFourCC(mWorkMediaType.subtype.Data1);
 	params = mWorkParams;
 	
-	while ((hr = mMediaControl->Run()) != S_OK){
+	
+	do{
 		Sleep(100);
-	}
+		hr = mMediaControl->Run();
+		if (hr == HRESULT_FROM_WIN32(ERROR_SHARING_VIOLATION)){
+			break;
+		}
+	} while (hr != S_OK);
 
 	if (mDropFrameStatus){
 		mDropFrameStatus->GetNumDropped(&mDropFrames);
 		mDropFrameStatus->GetNumNotDropped(&mCapFrames);
 	}
 
-	//SaveGraphFile(mGraph, TEXT("d:\\my.grf"));
+	//SaveGraphFile(mGraph, TEXT("c:\\users\\hotkid\\desktop\\my.grf"));
 
 done:
+	if (FAILED(hr)){
+		Stop();
+	}
 	ShowDShowError(hr);
 
 	return hr;
@@ -425,6 +433,7 @@ HRESULT DShowVideoCapture::BuildGraph()
 
 	CHECK_HR(hr = mVideoGrabber->SetCallback(this, 0));
 	CHECK_HR(hr = mVideoGrabber->SetOneShot(FALSE));
+	mGraphBuiler->RenderStream(&PIN_CATEGORY_CAPTURE, NULL, mCaptureFilter, mGrabberFiler, pNullRenderFilter);
 
 done:
 	ShowDShowError(hr);

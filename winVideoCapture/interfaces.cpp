@@ -6,10 +6,11 @@
 
 BOOL StartCaptureWork(THIS_CONTEXT *ctx)
 {
-	BOOL bRet = FALSE;
+	HRESULT hr = E_FAIL;
 
 	if (!ctx->bRuning){
-		ctx->callBack = new CVideoCallback;
+		if (!ctx->callBack)
+			ctx->callBack = new CVideoCallback;
 		assert(ctx->callBack);
 
 		ctx->capturer->RegisterCallback(ctx->callBack);
@@ -17,14 +18,16 @@ BOOL StartCaptureWork(THIS_CONTEXT *ctx)
 		ctx->captureArgs.fps = 30;
 		ctx->captureArgs.width = 1280;
 		ctx->captureArgs.height = 720;
-		bRet = ctx->capturer->StartCaptureWithParam(ctx->captureArgs);
-
-		ctx->bRuning = TRUE;
-	}else{
-		bRet = TRUE;
+		hr = ctx->capturer->StartCaptureWithParam(ctx->captureArgs);
+		if (hr == HRESULT_FROM_WIN32(ERROR_SHARING_VIOLATION)){
+			MessageBox(ctx->hMainWnd, TEXT("Device have been occured."), TEXT("ERROR"), MB_OK);
+		}
+		if (hr == S_OK){
+			ctx->bRuning = TRUE;
+		}
 	}
 
-	return bRet;
+	return hr == S_OK;
 }
 
 BOOL StopCaptureWork(THIS_CONTEXT *ctx)
