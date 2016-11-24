@@ -10,7 +10,7 @@ public:
 	~CSlidingWindowCalc();
 
 	void Reset();
-	void Reset(uint32_t durationInMS);
+	void Reset(uint32_t durationInMS, uint32_t fps);
 
 	int32_t AppendSample(uint32_t size);
 
@@ -30,16 +30,28 @@ public:
 	uint64_t Duration() const;
 
 protected:
+	void Destory();
+
+protected:
 	struct RateSample {
 		uint64_t timestamp;
 		uint32_t sampleSize;
 		uint64_t streamSize;
+		RateSample(){
+			ZeroMemory(this, sizeof(struct  RateSample));
+		}
 	};
 
-	uint32_t mInterval;
-	std::list<RateSample> mSampleList;
-	uint64_t mTotalSampleCount;
-	uint64_t mTotalStreamSize;
-	uint64_t mStartTickCount;
+	// common
+	uint32_t mIntervalInMs;
+	volatile uint64_t mTotalSampleCount;
+	volatile uint64_t mTotalStreamSize;
+	volatile uint64_t mStartTickCount;
+
+	// new method: ring buffer
+	RateSample *mSampleRingBuffer;
+	long mSampleRingCapability;
+	volatile long mRingWirtePos;
+	volatile long mRingReadPos;
 };
 
