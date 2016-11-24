@@ -310,11 +310,13 @@ HRESULT DDrawRender::InitDDrawInterface(int width, int height, DWORD pixelFormat
 		hr = E_FAIL;
 		goto done;
 	}
+
+	mSupportVSync = FALSE;
 	mRenderThreadRuning = TRUE;
 	mRenderThreadHandle = CreateThread(NULL, 0, RenderThread, this, NULL, &mRenderThreadId);
 
-	if (FAILED(hr = mDDrawObj->WaitForVerticalBlank(DDWAITVB_BLOCKBEGINEVENT, mRenderEvent))){
-		mSupportVSync = FALSE;
+	if ((hr = mDDrawObj->WaitForVerticalBlank(DDWAITVB_BLOCKBEGINEVENT, mRenderEvent)) == DD_OK){
+		mSupportVSync = TRUE;
 	}
 
 done:
@@ -385,7 +387,7 @@ DWORD DDrawRender::RenderLoop()
 		}
 
 		CHECK_HR(hr = mPrimarySurface->GetDC(&dc));
-		OSDText(dc, "fps %.2f, a:%lld(%2d~%2d), rd:%2u %2lld(%2d~%2d) %.2f",
+		OSDText(dc, "fps %.2f, a:%llu(%2d~%2d), rd:%2u %2llu(%2d~%2d) %.2f",
 			mInputStatis.Frequency(), mInputStatis.AvgSampleSize(), minInputSample, maxInputSample,
 			renderInterval, mRenderStatis.AvgSampleSize(), minRenderSample, maxRenderSample, 1000.0/mRenderStatis.AvgSampleSize());
 		mPrimarySurface->ReleaseDC(dc);
