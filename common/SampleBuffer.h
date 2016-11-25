@@ -93,7 +93,11 @@ public:
 		, pixelFormat(0)
 		, capacity(0)
 		, sizeInUse(0)
-		, dataPtr(NULL){};
+		, dataPtr(NULL)
+		, colorRange(0)
+		, transferMatrix(0)
+		, primaries(0)
+	{};
 
 	CSampleBuffer(uint8_t *bufferPtr, int32_t capacityInBytes)
 		: pts(0)
@@ -101,6 +105,9 @@ public:
 		, capacity(capacityInBytes)
 		, sizeInUse(0)
 		, dataPtr(bufferPtr)
+		, colorRange(0)
+		, transferMatrix(0)
+		, primaries(0)
 	{};
 
 	~CSampleBuffer(){};
