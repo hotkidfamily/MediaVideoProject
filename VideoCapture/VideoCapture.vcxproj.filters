@@ -39,9 +39,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="SlidingWindowCalc.cpp">
-      <Filter>Source Files\utils</Filter>
-    </ClCompile>
     <ClCompile Include="dshowVideoCapture.cpp">
       <Filter>Source Files\dshowInterface</Filter>
     </ClCompile>
@@ -50,9 +47,6 @@
     </ClCompile>
     <ClCompile Include="mtype.cpp">
       <Filter>Source Files\dshowInterface</Filter>
-    </ClCompile>
-    <ClCompile Include="logger.cpp">
-      <Filter>Source Files\utils</Filter>
     </ClCompile>
     <ClCompile Include="VideoCapture.cpp">
       <Filter>Source Files</Filter>
@@ -71,9 +65,6 @@
     <ClInclude Include="IVideoCapture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="logger.h">
-      <Filter>Header Files\utils</Filter>
-    </ClInclude>
     <ClInclude Include="dshowVideoCapture.h">
       <Filter>Header Files\dshowinterface</Filter>
     </ClInclude>
@@ -85,9 +76,6 @@
     </ClInclude>
     <ClInclude Include="mediafoundationVideoCapture.h">
       <Filter>Header Files\mediafoundationinterface</Filter>
-    </ClInclude>
-    <ClInclude Include="SlidingWindowCalc.h">
-      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="stdafx.h">
       <Filter>Header Files\utils</Filter>

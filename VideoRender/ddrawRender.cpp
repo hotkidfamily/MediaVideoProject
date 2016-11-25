@@ -2,6 +2,9 @@
 #include "ddrawRender.h"
 #include <stdlib.h>
 
+#pragma comment(lib, "dxguid.lib")
+#pragma comment(lib, "ddraw.lib")
+
 #define to_pair(x) {x, #x}
 typedef struct tagddrawError{
 	HRESULT hr;

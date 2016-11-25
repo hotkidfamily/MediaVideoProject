@@ -4,11 +4,29 @@
 
 D3D9Render::D3D9Render()
 	: mhWnd(NULL)
+	, mPD3D9DOBj(NULL)
+	, mPD3DDevice(NULL)
+	, mPFont(NULL)
+
+	, mRenderEvent(NULL)
+	, mSupportVSync(FALSE)
+	, mRenderThreadHandle(INVALID_HANDLE_VALUE)
+	, mRenderThreadId(0)
+	, mRenderThreadRuning(FALSE)
 {
 }
 
 D3D9Render::D3D9Render(HWND hWnd)
 	: mhWnd(hWnd)
+	, mPD3D9DOBj(NULL)
+	, mPD3DDevice(NULL)
+	, mPFont(NULL)
+
+	, mRenderEvent(NULL)
+	, mSupportVSync(FALSE)
+	, mRenderThreadHandle(INVALID_HANDLE_VALUE)
+	, mRenderThreadId(0)
+	, mRenderThreadRuning(FALSE)
 {
 
 }

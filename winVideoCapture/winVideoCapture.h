@@ -2,7 +2,6 @@
 
 #include "resource.h"
 #include "IVideoCapture.h"
-#include "DdrawRender.h"
 #include "VideoCallback.h"
 #include "encoder_x264.h"
 #include "D3D9Render.h"

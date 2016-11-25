@@ -1,6 +1,7 @@
 #include "StdAfx.h"
-#include "IVideoCapture.h"
 #include "logger.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 static PVIDEO_CAPTURE_LOG_CALLBACK_FUNC gLogCallback = NULL;
 

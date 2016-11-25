@@ -3,6 +3,9 @@
 #include "SampleBuffer.h"
 #include <timeApi.h>
 #include <ddraw.h>
+#include <stdint.h>
+#include "PixelFormat.h"
+#include "utils.h"
 
 #include "SlidingWindowCalc.h"
 

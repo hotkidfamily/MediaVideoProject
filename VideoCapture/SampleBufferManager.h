@@ -2,6 +2,7 @@
 
 #include <list>
 #include "SampleBuffer.h"
+#include "AutoLock.h"
 
 enum resList{
 	RES320P,

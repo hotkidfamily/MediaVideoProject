@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VideoProcess", "VideoProces
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VideoCodec", "VideoCodec\VideoCodec.vcxproj", "{43CBC9D4-BB34-48F8-999F-944E18FBCF7A}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Common", "common\Common.vcxproj", "{0CE91C5F-A6EE-4A73-BAF7-92736850D563}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -39,6 +41,10 @@ Global
 		{43CBC9D4-BB34-48F8-999F-944E18FBCF7A}.Debug|Win32.Build.0 = Debug|Win32
 		{43CBC9D4-BB34-48F8-999F-944E18FBCF7A}.Release|Win32.ActiveCfg = Release|Win32
 		{43CBC9D4-BB34-48F8-999F-944E18FBCF7A}.Release|Win32.Build.0 = Release|Win32
+		{0CE91C5F-A6EE-4A73-BAF7-92736850D563}.Debug|Win32.ActiveCfg = Debug|Win32
+		{0CE91C5F-A6EE-4A73-BAF7-92736850D563}.Debug|Win32.Build.0 = Debug|Win32
+		{0CE91C5F-A6EE-4A73-BAF7-92736850D563}.Release|Win32.ActiveCfg = Release|Win32
+		{0CE91C5F-A6EE-4A73-BAF7-92736850D563}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

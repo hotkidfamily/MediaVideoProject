@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "AutoLock.h"
+#include <stdint.h>
 
 /*
 step 1: lock
