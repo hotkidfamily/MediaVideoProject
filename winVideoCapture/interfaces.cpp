@@ -112,9 +112,9 @@ BOOL CreateWorkThread(THIS_CONTEXT *ctx)
 
 BOOL StartRenderWork(THIS_CONTEXT *ctx)
 {
-	ctx->render = new DDrawRender(ctx->hMainWnd);
+	ctx->render = new D3D9Render(ctx->hMainWnd);
 	assert(ctx->render != NULL);
-	if (ctx->render->InitDDrawInterface(ctx->captureArgs.width, ctx->captureArgs.height, ctx->captureArgs.pixelFormatInFourCC) < 0){
+	if (ctx->render->InitializeRenderContext(ctx->captureArgs.width, ctx->captureArgs.height, ctx->captureArgs.pixelFormatInFourCC) < 0){
 		return FALSE;
 	}
 
@@ -124,7 +124,7 @@ BOOL StartRenderWork(THIS_CONTEXT *ctx)
 BOOL StopRenderWork(THIS_CONTEXT *ctx)
 {
 	if (ctx->render)
-		ctx->render->DeinitDDrawInterface();
+		ctx->render->DeinitRenderContext();
 	SAFE_DELETE(ctx->render);
 	return TRUE;
 }

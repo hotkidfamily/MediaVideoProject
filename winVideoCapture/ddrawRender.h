@@ -6,14 +6,6 @@
 
 #include "SlidingWindowCalc.h"
 
-#ifndef CHECK_HR
-#define CHECK_HR(hr) if (FAILED(hr)) { goto done; }
-#endif
-
-#ifndef SAFE_RELEASE
-#define SAFE_RELEASE(x) { if(x) x->Release(); x=NULL; }
-#endif
-
 class DDrawRender
 {
 public:
@@ -21,8 +13,8 @@ public:
 	DDrawRender(HWND);
 	~DDrawRender();
 
-	HRESULT InitDDrawInterface(int, int, DWORD);
-	HRESULT DeinitDDrawInterface();
+	HRESULT InitializeRenderContext(int, int, DWORD);
+	HRESULT DeinitRenderContext();
 
 	HRESULT PushFrame(CSampleBuffer *frame);
 	DWORD RenderLoop();
