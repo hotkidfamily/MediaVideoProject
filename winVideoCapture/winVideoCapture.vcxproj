@@ -44,6 +44,8 @@
     <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
     <IntDir>$(Configuration)\</IntDir>
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(DXSDK_DIR)include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(DXSDK_DIR)Lib\x86</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
@@ -92,6 +94,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="D3D9Render.cpp" />
     <ClCompile Include="ddrawRender.cpp" />
     <ClCompile Include="encoder_x264.cpp" />
     <ClCompile Include="interfaces.cpp" />
@@ -106,6 +109,7 @@
     <ClCompile Include="MainWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="D3D9Render.h" />
     <ClInclude Include="ddrawRender.h" />
     <ClInclude Include="encoder_x264.h" />
     <ClInclude Include="PackageBuffer.h" />
