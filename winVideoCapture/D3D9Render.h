@@ -20,11 +20,13 @@ public:
 
 protected:
 	BOOL OSDText(HDC, TCHAR *, ...);
+	void FourCCtoD3DFormat(D3DFORMAT *pd3dPixelFormat, DWORD dwFourCC);
 
 private:
 	HWND mhWnd;
 	IDirect3D9* mPD3D9DOBj;
 	IDirect3DDevice9* mPD3DDevice;
+	IDirect3DSurface9* mPrimerySurface;
 	LPD3DXFONT mPFont;
 
 
