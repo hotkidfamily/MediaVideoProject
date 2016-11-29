@@ -2,6 +2,7 @@
 
 #include <d3d9.h>
 #include <d3dx9.h>
+#include "AutoLock.h"
 
 #pragma comment(lib, "d3dx9.lib") //link the library
 #pragma comment(lib, "d3d9.lib") //link the library
@@ -29,6 +30,7 @@ private:
 	IDirect3DSurface9* mPrimerySurface;
 	LPD3DXFONT mPFont;
 
+	CRITICAL_SECTION cs;
 
 	HANDLE mRenderEvent;
 	BOOL mSupportVSync;
