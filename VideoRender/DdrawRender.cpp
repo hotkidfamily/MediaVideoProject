@@ -457,7 +457,7 @@ BOOL DDrawRender::OSDText(HDC hdc, char* format, ...)
 	return TRUE;
 }
 
-const char* DDrawRender::GetErrorString(HRESULT hr)
+const TCHAR* DDrawRender::GetErrorString(HRESULT hr)
 {
 	const COMERROR *prr = &ddrawErrorList[DD_OK];
 

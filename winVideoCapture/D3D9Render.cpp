@@ -42,8 +42,8 @@ const COMERROR d3d9ErrorList[] = {
 
 D3D9Render::D3D9Render()
 	: mhWnd(NULL)
-	, mPD3D9DOBj(NULL)
-	, mPD3DDevice(NULL)
+	, mpD3D9OBj(NULL)
+	, mpD3DDevice(NULL)
 	, mPFont(NULL)
 	, mPrimerySurface(NULL)
 
@@ -58,8 +58,8 @@ D3D9Render::D3D9Render()
 
 D3D9Render::D3D9Render(HWND hWnd)
 	: mhWnd(hWnd)
-	, mPD3D9DOBj(NULL)
-	, mPD3DDevice(NULL)
+	, mpD3D9OBj(NULL)
+	, mpD3DDevice(NULL)
 	, mPFont(NULL)
 	, mPrimerySurface(NULL)
 
@@ -128,12 +128,12 @@ HRESULT D3D9Render::InitializeRenderContext(int width, int height, DWORD pixelFo
 	FourCCtoD3DFormat(&d3dpp.BackBufferFormat, pixelFormatInFourCC);
 	d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD; //SwapEffect
 
-	mPD3D9DOBj = Direct3DCreate9(D3D_SDK_VERSION); //Create the presentation parameters
+	mpD3D9OBj = Direct3DCreate9(D3D_SDK_VERSION); //Create the presentation parameters
 
-	CHECK_HR(hr = mPD3D9DOBj->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, mhWnd, D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, &mPD3DDevice));
-	CHECK_HR(hr = D3DXCreateFont(mPD3DDevice, 15, 0, FW_BOLD, 1, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &mPFont));
+	CHECK_HR(hr = mpD3D9OBj->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, mhWnd, D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, &mpD3DDevice));
+	CHECK_HR(hr = D3DXCreateFont(mpD3DDevice, 30, 0, FW_LIGHT, 1, TRUE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &mPFont));
 
-	CHECK_HR(hr = mPD3DDevice->CreateOffscreenPlainSurface(width, height, d3dpp.BackBufferFormat, D3DPOOL_SYSTEMMEM, &mPrimerySurface, NULL));
+	CHECK_HR(hr = mpD3DDevice->CreateOffscreenPlainSurface(width, height, d3dpp.BackBufferFormat, D3DPOOL_SYSTEMMEM, &mPrimerySurface, NULL));
 	//CHECK_HR(hr = mPD3DDevice->CreateRenderTarget(width, height, d3dpp.BackBufferFormat, 0, 0, TRUE, &mPrimerySurface, NULL));
 
 	mRenderEvent = CreateEvent(NULL, FALSE, FALSE, TEXT("Render Event"));
@@ -150,6 +150,8 @@ done:
 	if (FAILED(hr)){
 		DeinitRenderContext();
 	}
+
+	GetErrorString(hr);
 
 	return hr;
 }
@@ -170,8 +172,8 @@ HRESULT D3D9Render::DeinitRenderContext()
 	}
 
 	SAFE_RELEASE(mPFont);
-	SAFE_RELEASE(mPD3DDevice);
-	SAFE_RELEASE(mPD3D9DOBj);
+	SAFE_RELEASE(mpD3DDevice);
+	SAFE_RELEASE(mpD3D9OBj);
 
 	DeleteCriticalSection(&cs);
 
@@ -187,16 +189,16 @@ DWORD D3D9Render::RenderLoop()
 		IDirect3DSurface9 *pBackBuffer = NULL;
 		CAutoLock lock(cs);
 
-		if (SUCCEEDED(hr = mPD3DDevice->BeginScene())){
-			CHECK_HR(hr = mPD3DDevice->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer));
-			CHECK_HR(hr = mPD3DDevice->UpdateSurface(mPrimerySurface, NULL, pBackBuffer, NULL));
+		if (SUCCEEDED(hr = mpD3DDevice->BeginScene())){
+			CHECK_HR(hr = mpD3DDevice->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer));
+			CHECK_HR(hr = mpD3DDevice->UpdateSurface(mPrimerySurface, NULL, pBackBuffer, NULL));
 			SAFE_RELEASE(pBackBuffer);
 		done:
-			mPD3DDevice->EndScene();
+			mpD3DDevice->EndScene();
 		}
 		OSDText(NULL, TEXT("this is a test %d."), GetTickCount());
 
-		mPD3DDevice->Present(NULL, NULL, NULL, NULL);
+		mpD3DDevice->Present(NULL, NULL, NULL, NULL);
 	}
 
 	return 0;
@@ -228,7 +230,9 @@ HRESULT D3D9Render::PushFrame(CSampleBuffer *frame)
 	}
 	CHECK_HR(hr = mPrimerySurface->UnlockRect());
 
-done:	
+done:
+	GetErrorString(hr);
+
 	return hr;
 }
 
@@ -246,16 +250,17 @@ BOOL D3D9Render::OSDText(HDC, TCHAR *format, ...)
 	va_end(va_alist);
 
 	//CHECK_HR(hr = mPD3DDevice->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0));
-	CHECK_HR(hr = mPD3DDevice->BeginScene());
+	CHECK_HR(hr = mpD3DDevice->BeginScene());
 	hr = mPFont->DrawText(NULL, buf, -1, &FontPos,  DT_CENTER, D3DCOLOR_ARGB(255, 0, 255, 0));
-	CHECK_HR(hr = mPD3DDevice->EndScene());
+	CHECK_HR(hr = mpD3DDevice->EndScene());
 	
 
 done:
+	GetErrorString(hr);
 	return hr == S_OK;
 }
 
-const char* D3D9Render::GetErrorString(HRESULT hr)
+const TCHAR* D3D9Render::GetErrorString(HRESULT hr)
 {
 	const COMERROR *prr = &d3d9ErrorList[D3D_OK];
 

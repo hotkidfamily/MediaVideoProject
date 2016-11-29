@@ -18,7 +18,7 @@
 
 typedef struct tagCOMError{
 	HRESULT hr;
-	const char* desc;
+	const TCHAR* desc;
 }COMERROR;
 
-#define COMERROR2STR(x) {x, #x}
+#define COMERROR2STR(x) {x, TEXT(#x)}
