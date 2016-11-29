@@ -30,15 +30,15 @@ private:
 
 class CAutoLock{
 public:
-	CAutoLock() {
-		mLock.Lock();
+	CAutoLock(CRITICAL_SECTION &Cs):mCs(Cs) {
+		EnterCriticalSection(&mCs);
 	}
 
 	~CAutoLock(){
-		mLock.Unlock();
+		LeaveCriticalSection(&mCs);
 	}
 
 private:
-	CLock mLock;
+	CRITICAL_SECTION &mCs;
 };
 
