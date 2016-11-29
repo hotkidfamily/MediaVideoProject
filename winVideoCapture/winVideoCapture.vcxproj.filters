@@ -27,9 +27,6 @@
     <ClCompile Include="interfaces.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SlidingWindowCalc.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="VPP.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -60,9 +57,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="encoder_x264.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SlidingWindowCalc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="VPP.h">
