@@ -15,3 +15,10 @@
 #ifndef SAFE_RELEASE
 #define SAFE_RELEASE(x) { if(x) x->Release(); x=NULL; }
 #endif
+
+typedef struct tagCOMError{
+	HRESULT hr;
+	const char* desc;
+}COMERROR;
+
+#define COMERROR2STR(x) {x, #x}

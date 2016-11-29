@@ -2,6 +2,44 @@
 #include "D3D9Render.h"
 
 
+const COMERROR d3d9ErrorList[] = {
+	COMERROR2STR(D3D_OK),
+	COMERROR2STR(D3DERR_WRONGTEXTUREFORMAT),
+	COMERROR2STR(D3DERR_UNSUPPORTEDCOLOROPERATION),
+	COMERROR2STR(D3DERR_UNSUPPORTEDCOLORARG),
+	COMERROR2STR(D3DERR_UNSUPPORTEDALPHAOPERATION),
+	COMERROR2STR(D3DERR_UNSUPPORTEDALPHAARG),
+	COMERROR2STR(D3DERR_TOOMANYOPERATIONS),
+	COMERROR2STR(D3DERR_CONFLICTINGTEXTUREFILTER),
+	COMERROR2STR(D3DERR_UNSUPPORTEDFACTORVALUE),
+	COMERROR2STR(D3DERR_CONFLICTINGRENDERSTATE),
+	COMERROR2STR(D3DERR_UNSUPPORTEDTEXTUREFILTER),
+	COMERROR2STR(D3DERR_CONFLICTINGTEXTUREPALETTE),
+	COMERROR2STR(D3DERR_DRIVERINTERNALERROR),
+	COMERROR2STR(D3DERR_NOTFOUND),
+	COMERROR2STR(D3DERR_MOREDATA),
+	COMERROR2STR(D3DERR_DEVICELOST),
+	COMERROR2STR(D3DERR_DEVICENOTRESET),
+	COMERROR2STR(D3DERR_NOTAVAILABLE),
+	COMERROR2STR(D3DERR_OUTOFVIDEOMEMORY),
+	COMERROR2STR(D3DERR_INVALIDDEVICE),
+	COMERROR2STR(D3DERR_INVALIDCALL),
+	COMERROR2STR(D3DERR_DRIVERINVALIDCALL),
+	COMERROR2STR(D3DERR_WASSTILLDRAWING),
+	COMERROR2STR(D3DOK_NOAUTOGEN),
+	COMERROR2STR(D3DERR_DEVICEREMOVED),
+	COMERROR2STR(S_NOT_RESIDENT),
+	COMERROR2STR(S_RESIDENT_IN_SHARED_MEMORY),
+	COMERROR2STR(S_PRESENT_MODE_CHANGED),
+	COMERROR2STR(S_PRESENT_OCCLUDED),
+	COMERROR2STR(D3DERR_DEVICEHUNG),
+	COMERROR2STR(D3DERR_UNSUPPORTEDOVERLAY),
+	COMERROR2STR(D3DERR_UNSUPPORTEDOVERLAYFORMAT),
+	COMERROR2STR(D3DERR_CANNOTPROTECTCONTENT),
+	COMERROR2STR(D3DERR_UNSUPPORTEDCRYPTO),
+	COMERROR2STR(D3DERR_PRESENT_STATISTICS_DISJOINT)
+};
+
 D3D9Render::D3D9Render()
 	: mhWnd(NULL)
 	, mPD3D9DOBj(NULL)
@@ -14,6 +52,7 @@ D3D9Render::D3D9Render()
 	, mRenderThreadHandle(INVALID_HANDLE_VALUE)
 	, mRenderThreadId(0)
 	, mRenderThreadRuning(FALSE)
+	, cs({0})
 {
 }
 
@@ -29,6 +68,7 @@ D3D9Render::D3D9Render(HWND hWnd)
 	, mRenderThreadHandle(INVALID_HANDLE_VALUE)
 	, mRenderThreadId(0)
 	, mRenderThreadRuning(FALSE)
+	, cs({ 0 })
 {
 
 }
@@ -62,9 +102,9 @@ void D3D9Render::FourCCtoD3DFormat(D3DFORMAT* pd3dPixelFormat, DWORD dwFourCC)
 		break;
 	case PIXEL_FORMAT_UYVY:
 	case PIXEL_FORMAT_YUY2:
-	case PIXEL_FORMAT_YV12:
 		*pd3dPixelFormat = (D3DFORMAT)dwFourCC;
 		break;
+	case PIXEL_FORMAT_YV12:
 	default:
 		*pd3dPixelFormat = D3DFMT_UNKNOWN;
 		break;
@@ -76,6 +116,8 @@ HRESULT D3D9Render::InitializeRenderContext(int width, int height, DWORD pixelFo
 	HRESULT hr = S_OK;
 	RECT rect = { 0 };
 	D3DPRESENT_PARAMETERS d3dpp; //the presentation parameters that will be used when we will create the device
+
+	InitializeCriticalSection(&cs);
 
 	ZeroMemory(&d3dpp, sizeof(d3dpp)); //to be sure d3dpp is empty
 	d3dpp.Windowed = TRUE; //use our global windowed variable to tell if the program is windowed or not
@@ -93,8 +135,6 @@ HRESULT D3D9Render::InitializeRenderContext(int width, int height, DWORD pixelFo
 
 	CHECK_HR(hr = mPD3DDevice->CreateOffscreenPlainSurface(width, height, d3dpp.BackBufferFormat, D3DPOOL_SYSTEMMEM, &mPrimerySurface, NULL));
 	//CHECK_HR(hr = mPD3DDevice->CreateRenderTarget(width, height, d3dpp.BackBufferFormat, 0, 0, TRUE, &mPrimerySurface, NULL));
-
-	InitializeCriticalSection(&cs);
 
 	mRenderEvent = CreateEvent(NULL, FALSE, FALSE, TEXT("Render Event"));
 	if (mRenderEvent == INVALID_HANDLE_VALUE){
@@ -213,4 +253,19 @@ BOOL D3D9Render::OSDText(HDC, TCHAR *format, ...)
 
 done:
 	return hr == S_OK;
+}
+
+const char* D3D9Render::GetErrorString(HRESULT hr)
+{
+	const COMERROR *prr = &d3d9ErrorList[D3D_OK];
+
+	if (FAILED(hr)){
+		for (int i = 0; i < ARRAYSIZE(d3d9ErrorList); i++){
+			if (d3d9ErrorList[i].hr == hr){
+				prr = &d3d9ErrorList[i];
+			}
+		}
+	}
+
+	return prr->desc;
 }

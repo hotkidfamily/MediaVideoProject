@@ -22,6 +22,7 @@ public:
 protected:
 	BOOL OSDText(HDC, TCHAR *, ...);
 	void FourCCtoD3DFormat(D3DFORMAT *pd3dPixelFormat, DWORD dwFourCC);
+	const char* GetErrorString(HRESULT hr);
 
 private:
 	HWND mhWnd;

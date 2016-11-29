@@ -24,7 +24,7 @@ public:
 
 protected:
 	HRESULT CreateSurfaces(int, int, DWORD);
-	const char* GetDDrawErrorString(HRESULT );
+	const char* GetErrorString(HRESULT );
 	void FillddPixelFormatFromFourCC(LPDDPIXELFORMAT ddPixelFormat, DWORD dwFourCC);
 	BOOL OSDText(HDC, char *, ...);
 
