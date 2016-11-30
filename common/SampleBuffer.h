@@ -140,10 +140,12 @@ public:
 		this->height = desc.height;
 		this->lineSize = desc.lineSize;
 		this->planeCnt = desc.planeCnt;
+		this->planePtr[0] = dataPtr;
+		this->planeStride[0] = desc.lineSize;
 
-		for (int i = 0; i < desc.planeCnt; i++){
-			planePtr[i] = dataPtr + desc.lineSize*desc.height * (1<<desc.planeStride[i]);
-			planeStride[i] = desc.lineSize / (1 >> desc.planeStride[i]);
+		for (int i = 1; i < desc.planeCnt; i++){
+			planePtr[i] = planePtr[i-1] + desc.lineSize*desc.height / (1<<desc.planeStride[i-1]);
+			planeStride[i] = desc.lineSize / desc.planeStride[i];
 		}
 		
 		return TRUE;
