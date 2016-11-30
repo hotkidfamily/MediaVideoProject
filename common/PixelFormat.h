@@ -1,6 +1,11 @@
 #pragma once
 
 #include <dshow.h>
+#include <d3d9.h>
+extern "C" {
+#include "libswscale\swscale.h"
+}
+
 #include "mtype.h"
 
 // capture output format
@@ -31,14 +36,16 @@ enum CPPixelFormat{
 };
 #undef FMT
 
-
 typedef struct tagFrameFormatInfo{
 	GUID subtype;
 	DWORD pixelFormatInFourCC;
+	AVPixelFormat pixelFmtInFFmpeg;
+	D3DFORMAT pixelFmtInD3D9;
 	int priority;
 	int32_t bytePerPixel;
 	int32_t planeCnt;
 	uint32_t planeStride[4];
+
 }FRAMEFORAMTINFO;
 
 
