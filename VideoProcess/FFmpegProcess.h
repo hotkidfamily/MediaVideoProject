@@ -1,5 +1,6 @@
 #pragma once
 
+#include "IVPP.h"
 #include "FFmpegWrapper.h"
 
 typedef struct ctxParams{
@@ -50,17 +51,17 @@ typedef struct ctxParams{
 	}
 }FFmpegColorConvertParams;
 
-class FFmpegProcess
+class FFmpegProcess : public IVPP
 {
 public:
 	FFmpegProcess();
 	~FFmpegProcess();
 
-	BOOL InitiaContext(FFmpegColorConvertParams params);
+	virtual BOOL InitiaContext(FFmpegColorConvertParams params);
 
-	void DeinitContext();
+	virtual BOOL DeinitContext();
 
-	BOOL process(uint8_t* sBuf[4], int sStride[4], uint8_t* dBuf[4], int dStride[4]);
+	virtual BOOL ProcessFrame(uint8_t* sBuf[4], int sStride[4], uint8_t* dBuf[4], int dStride[4]);
 
 private:
 	SwsContext *mScaleCtx;

@@ -26,15 +26,17 @@ BOOL FFmpegProcess::InitiaContext(FFmpegColorConvertParams params)
 	return mScaleCtx != NULL;
 }
 
-void FFmpegProcess::DeinitContext()
+BOOL FFmpegProcess::DeinitContext()
 {
 	if (mScaleCtx)
 		FFmpegWrapper::sws_freeContext((SwsContext*)mScaleCtx);
 
 	mScaleCtx = NULL;
+
+	return TRUE;
 }
 
-BOOL FFmpegProcess::process(uint8_t* sBuf[4], int sStride[4], uint8_t* dBuf[4], int dStride[4])
+BOOL FFmpegProcess::ProcessFrame(uint8_t* sBuf[4], int sStride[4], uint8_t* dBuf[4], int dStride[4])
 {
 	int oheight = FFmpegWrapper::sws_scale(mScaleCtx, sBuf, sStride, 0, mParams.sourceHeight(), dBuf, dStride);
 

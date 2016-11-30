@@ -6,12 +6,22 @@
 #define VIDEOPROCESS_API __declspec(dllimport)
 #endif
 
+class VPPFactory
+{
+public:
+	VPPFactory();
+	~VPPFactory();
+
+	BOOL CreateVPP();
+	BOOL DestoryVPP();
+};
+
 class IVPP {
 public:
-	virtual BOOL open() = 0;
-	virtual BOOL close() = 0;
+	virtual BOOL InitContext() = 0;
+	virtual BOOL DeinitContext() = 0;
 
-	virtual BOOL process() = 0;
+	virtual BOOL ProcessFrame() = 0;
 
 protected:
 	~IVPP(){};
@@ -19,7 +29,7 @@ protected:
 
 extern "C" {
 
-	VIDEOPROCESS_API IVPP *GetVPPObj();
-	VIDEOPROCESS_API void ReleaseVPPObj();
+	VIDEOPROCESS_API  VPPFactory *GetVPPFactoryObj();
+	VIDEOPROCESS_API void ReleaseVPPFctoryObj();
 
 }

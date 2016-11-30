@@ -2,8 +2,7 @@
 //
 
 #include "stdafx.h"
-
-#include "VideoProcess.h"
+#include "IVPP.h"
 
 VPPFactory::VPPFactory()
 {
@@ -15,7 +14,7 @@ VPPFactory::~VPPFactory()
 	
 }
 
-BOOL VPPFactory::open()
+BOOL VPPFactory::CreateVPP()
 {
 	BOOL bRet = TRUE;
 
@@ -23,14 +22,7 @@ BOOL VPPFactory::open()
 }
 
 
-BOOL VPPFactory::close()
-{
-	BOOL bRet = FALSE;
-
-	return bRet;
-}
-
-BOOL VPPFactory::process()
+BOOL VPPFactory::DestoryVPP()
 {
 	BOOL bRet = FALSE;
 
