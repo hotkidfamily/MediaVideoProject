@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="源文件\Wrapper">
+      <UniqueIdentifier>{29b65e59-f404-429e-a0a4-89f0145e968c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -22,6 +25,18 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="targetver.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="IVPP.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="FFmpegProcess.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="FFmpegWrapper.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="wrappercommon.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -34,6 +49,15 @@
     </ClCompile>
     <ClCompile Include="dllmain.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="FFmpegProcess.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="wrappercommon.cpp">
+      <Filter>源文件\Wrapper</Filter>
+    </ClCompile>
+    <ClCompile Include="FFmpegWrapper.cpp">
+      <Filter>源文件\Wrapper</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
