@@ -142,6 +142,8 @@ public:
 	inline uint32_t GetDataSize() const { return sizeInUse; };
 	inline uint8_t *GetDataPtr() const { return dataPtr; };
 	inline int32_t GetLineSize() const { return lineSize; };
+	inline uint8_t* *GetPlanePtr() const { return (uint8_t**)planePtr; };
+	inline int32_t* GetStride() const { return (int32_t*)planeStride; };
 	inline int64_t  GetPts() const { return pts; };
 	inline int32_t GetWidth() const { return width; };
 	inline int32_t GetHeight() const { return height; };
@@ -159,5 +161,8 @@ private:
 	int32_t colorRange;
 	int32_t transferMatrix;
 	int32_t primaries;
+	int32_t planeCnt;
+	uint8_t *planePtr[4];
+	int32_t *planeStride[4];
 };
 
