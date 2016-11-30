@@ -11,6 +11,9 @@
 #ifndef __MTYPE__
 #define __MTYPE__
 
+#include <stdint.h>
+#include <dvdmedia.h>
+
 #ifndef ASSERT
 #define ASSERT assert
 #endif
