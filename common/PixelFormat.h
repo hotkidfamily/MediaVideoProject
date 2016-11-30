@@ -1,5 +1,8 @@
 #pragma once
 
+#include <dshow.h>
+#include "mtype.h"
+
 // capture output format
 #undef FMT
 #define FMT(X,Y) PIXEL_FORMAT_##X=Y
@@ -27,3 +30,43 @@ enum CPPixelFormat{
 	FMT(AYUV, 0x56555941)
 };
 #undef FMT
+
+
+typedef struct tagFrameFormatInfo{
+	GUID subtype;
+	DWORD pixelFormatInFourCC;
+	int priority;
+	int32_t bytePerPixel;
+	int32_t planeCnt;
+	uint32_t planeStride[4];
+}FRAMEFORAMTINFO;
+
+
+typedef struct tagFrameBility{
+	enum ability{
+		SU_RES = 1 << 15,
+		SU_FPS = 1 << 14,
+		SU_RES_RATIO = 1 << 13,
+		SU_FPS_SMALL = 1 << 12,
+
+		SU_RES_LARGE = 1 << 11,
+		SU_FPS_LARGE = 1 << 10,
+
+		SU_RES_LARGE_INAREA = 1 << 9,
+		SU_RES_SMALL_INAREA = 1 << 8,
+	};
+	int32_t Priority;
+	int32_t Ability;
+	SIZE ImageSize;
+	LONGLONG MinFrameInterval;
+	LONGLONG MaxFrameInterval;
+	CMediaType MediaType;
+	tagFrameBility(){
+		ZeroMemory(this, sizeof(tagFrameBility));
+	}
+}FRAMEABILITY, *PFRAMEABILITY;
+
+extern "C" {
+	const FRAMEFORAMTINFO* GetFrameInfoByFourCC(DWORD fourcc);
+	BOOL IsFormatSupport(CMediaType &mediaType, FRAMEABILITY & bility);
+}

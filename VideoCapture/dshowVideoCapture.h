@@ -11,14 +11,6 @@
 #include "IVideoCapture.h"
 #include "SampleBufferManager.h"
 
-typedef struct tagFrameFormatInfo{
-	GUID subtype;
-	DWORD pixelFormatInFourCC;
-	int priority;
-	int32_t bytePerPixel;
-	int32_t planeCnt;
-	uint32_t planeStride[4];
-}FRAMEFORAMTINFO;
 
 typedef struct tagCameraDevDesc{
 	int32_t index;
@@ -54,30 +46,6 @@ typedef struct tagCameraDevDesc{
 
 typedef std::vector<CAMERADESC> CAMERALIST;
 
-typedef struct tagFrameBility{
-	enum ability{
-		SU_RES = 1 << 15,
-		SU_FPS = 1 << 14,
-		SU_RES_RATIO = 1 << 13,
-		SU_FPS_SMALL = 1 << 12,
-
-		SU_RES_LARGE = 1 << 11,
-		SU_FPS_LARGE = 1<< 10,
-
-		SU_RES_LARGE_INAREA = 1 << 9,
-		SU_RES_SMALL_INAREA = 1 << 8,
-	};
-	int32_t Priority;
-	int32_t Ability;
-	SIZE ImageSize;
-	LONGLONG MinFrameInterval;
-	LONGLONG MaxFrameInterval;
-	CMediaType MediaType;
-	tagFrameBility(){
-		ZeroMemory(this, sizeof(tagFrameBility));
-	}
-}FRAMEABILITY, *PFRAMEABILITY;
-
 class DShowVideoCapture : 
 	public ISampleGrabberCBImpl
 {
@@ -104,9 +72,7 @@ private:
 	void ShowDShowError(HRESULT hr);
 	STDMETHODIMP SampleCB(double SampleTime, IMediaSample *pSample);
 	HRESULT FindMediaTypeInPinOrStreamConfig(CComPtr<IPin> &pOutPin, CMediaType &, IAMStreamConfig *);
-	inline BOOL IsFormatSupport(CMediaType &, FRAMEABILITY&);
 	HRESULT SaveGraphFile(IGraphBuilder*, TCHAR* path);
-	const FRAMEFORAMTINFO* GetFrameInfoByFourCC(DWORD);
 	HRESULT GetFilterFriendlyName(IBaseFilter * &filter, STRING name);
 
 private:

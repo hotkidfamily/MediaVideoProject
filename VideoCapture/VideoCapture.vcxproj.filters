@@ -45,9 +45,6 @@
     <ClCompile Include="ISampleGrabberCBImpl.cpp">
       <Filter>Source Files\dshowInterface</Filter>
     </ClCompile>
-    <ClCompile Include="mtype.cpp">
-      <Filter>Source Files\dshowInterface</Filter>
-    </ClCompile>
     <ClCompile Include="VideoCapture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -69,9 +66,6 @@
       <Filter>Header Files\dshowinterface</Filter>
     </ClInclude>
     <ClInclude Include="ISampleGrabberCBImpl.h">
-      <Filter>Header Files\dshowinterface</Filter>
-    </ClInclude>
-    <ClInclude Include="mtype.h">
       <Filter>Header Files\dshowinterface</Filter>
     </ClInclude>
     <ClInclude Include="mediafoundationVideoCapture.h">
