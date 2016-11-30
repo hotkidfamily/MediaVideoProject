@@ -16,6 +16,8 @@ typedef struct tagFrameFormatInfo{
 	DWORD pixelFormatInFourCC;
 	int priority;
 	int32_t bytePerPixel;
+	int32_t planeCnt;
+	uint32_t planeStride[4];
 }FRAMEFORAMTINFO;
 
 typedef struct tagCameraDevDesc{

@@ -79,6 +79,8 @@ typedef struct tagFrameDesc{
 	int64_t ptsEnd;
 	int64_t frameStartIdx;
 	int64_t frameEndIdx;
+	int32_t planeCnt;
+	uint32_t planeStride[4];
 	tagFrameDesc(){
 		ZeroMemory(this, sizeof(struct tagFrameDesc));
 		cbSize = sizeof(struct tagFrameDesc);
@@ -119,6 +121,8 @@ public:
 		this->capacity = capacityInBytes;
 		this->pixelFormat = 0;
 		this->dataPtr = bufferPtr;
+		ZeroMemory(this->planePtr, sizeof(this->planePtr));
+		ZeroMemory(this->planeStride, sizeof(this->planeStride));
 
 		return TRUE;
 	}
@@ -135,7 +139,13 @@ public:
 		this->width = desc.width;
 		this->height = desc.height;
 		this->lineSize = desc.lineSize;
+		this->planeCnt = desc.planeCnt;
 
+		for (int i = 0; i < desc.planeCnt; i++){
+			planePtr[i] = dataPtr + desc.lineSize*desc.height * (1<<desc.planeStride[i]);
+			planeStride[i] = desc.lineSize / (1 >> desc.planeStride[i]);
+		}
+		
 		return TRUE;
 	}
 
@@ -163,6 +173,6 @@ private:
 	int32_t primaries;
 	int32_t planeCnt;
 	uint8_t *planePtr[4];
-	int32_t *planeStride[4];
+	int32_t planeStride[4];
 };
 
