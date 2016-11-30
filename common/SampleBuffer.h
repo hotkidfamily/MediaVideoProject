@@ -147,14 +147,14 @@ public:
 	inline int64_t  GetPts() const { return pts; };
 	inline int32_t GetWidth() const { return width; };
 	inline int32_t GetHeight() const { return height; };
-	inline int32_t  GetPixelFormat() const{ return pixelFormat; };
+	inline DWORD  GetPixelFormat() const{ return pixelFormat; };
 
 private:
 	int32_t width;
 	int32_t lineSize;
 	int32_t height;
 	int64_t pts;
-	int32_t pixelFormat;
+	DWORD pixelFormat;
 	int32_t capacity; // size of buffer 
 	int32_t sizeInUse; // size of data
 	uint8_t *dataPtr;

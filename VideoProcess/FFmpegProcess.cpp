@@ -38,15 +38,15 @@ BOOL FFmpegProcess::DeinitContext()
 
 BOOL FFmpegProcess::ProcessFrame(const CSampleBuffer *srcPic, CSampleBuffer *outPic)
 {
-	uint8_t *sBuf[4] = { 0 };
-	int32_t sStride[4] = { 0 };
-	uint8_t *dBuf[4] = { 0 };
-	int32_t dStride[4] = { 0 };
+	uint8_t **sBuf = NULL;
+	int32_t *sStride = NULL;
+	uint8_t **dBuf = NULL;
+	int32_t *dStride = NULL;
 
-	sBuf[0] = srcPic->GetDataPtr();
-	sStride[0] = srcPic->GetLineSize();
-	dBuf[0] = outPic->GetDataPtr();
-	dStride[0] = outPic->GetLineSize();
+	sBuf = srcPic->GetPlanePtr();
+	sStride = srcPic->GetStride();
+	dBuf = outPic->GetPlanePtr();
+	dStride = outPic->GetStride();
 
 	int oheight = FFmpegWrapper::sws_scale(mScaleCtx, sBuf, sStride, 0, mParams.sourceHeight(), dBuf, dStride);
 
