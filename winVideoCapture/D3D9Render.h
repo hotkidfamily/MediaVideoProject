@@ -27,7 +27,8 @@ protected:
 private:
 	HWND mhWnd;
 	IDirect3D9* mpD3D9OBj;
-	IDirect3DDevice9* mpD3DDevice;
+	IDirect3DDevice9* mpD3D9Device;
+	D3DCAPS9 mpD3D9DeviceCaps;
 	IDirect3DSurface9* mPrimerySurface;
 	LPD3DXFONT mPFont;
 
