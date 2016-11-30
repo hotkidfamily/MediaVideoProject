@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include "IVPP.h"
+#include "FFmpegProcess.h"
 
 VPPFactory::VPPFactory()
 {
@@ -14,17 +15,19 @@ VPPFactory::~VPPFactory()
 	
 }
 
-BOOL VPPFactory::CreateVPP()
+IVPP* VPPFactory::CreateVPP()
 {
 	BOOL bRet = TRUE;
-
-	return bRet;
+	IVPP *vpp = new FFmpegProcess();
+	return vpp;
 }
 
 
-BOOL VPPFactory::DestoryVPP()
+void VPPFactory::DestoryVPP(IVPP *ctx)
 {
-	BOOL bRet = FALSE;
-
-	return bRet;
+	if (ctx){
+		FFmpegProcess *proc = static_cast<FFmpegProcess*>(ctx);
+		delete proc;
+		proc = NULL;
+	}
 }

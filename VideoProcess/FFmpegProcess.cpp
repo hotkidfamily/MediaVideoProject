@@ -12,16 +12,16 @@ FFmpegProcess::~FFmpegProcess()
 {
 }
 
-BOOL FFmpegProcess::InitiaContext(FFmpegColorConvertParams params)
+BOOL FFmpegProcess::InitContext(IVPPPARAMETER params)
 {
 	if ((mParams == params) && mScaleCtx){
 		return TRUE;
 	}
-		
-	mScaleCtx = FFmpegWrapper::sws_getContext(params.sourceWidth(), params.sourceHeight(), params.spFormat,
-		params.destWidth(), params.destHeight(), params.destFormat(), params.flag(), 0, 0, 0);
 
 	mParams = params;
+		
+	mScaleCtx = FFmpegWrapper::sws_getContext(mParams.sourceWidth(), mParams.sourceHeight(), mParams.sourceFormat(),
+		mParams.destWidth(), mParams.destHeight(), mParams.destFormat(), mParams.flag(), 0, 0, 0);
 
 	return mScaleCtx != NULL;
 }
@@ -36,8 +36,18 @@ BOOL FFmpegProcess::DeinitContext()
 	return TRUE;
 }
 
-BOOL FFmpegProcess::ProcessFrame(uint8_t* sBuf[4], int sStride[4], uint8_t* dBuf[4], int dStride[4])
+BOOL FFmpegProcess::ProcessFrame(const CSampleBuffer *srcPic, CSampleBuffer *outPic)
 {
+	uint8_t *sBuf[4] = { 0 };
+	int32_t sStride[4] = { 0 };
+	uint8_t *dBuf[4] = { 0 };
+	int32_t dStride[4] = { 0 };
+
+	sBuf[0] = srcPic->GetDataPtr();
+	sStride[0] = srcPic->GetLineSize();
+	dBuf[0] = outPic->GetDataPtr();
+	dStride[0] = outPic->GetLineSize();
+
 	int oheight = FFmpegWrapper::sws_scale(mScaleCtx, sBuf, sStride, 0, mParams.sourceHeight(), dBuf, dStride);
 
 	return true;

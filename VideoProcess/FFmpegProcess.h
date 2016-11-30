@@ -2,54 +2,93 @@
 
 #include "IVPP.h"
 #include "FFmpegWrapper.h"
+#include "PixelFormat.h"
+#include <d3d9.h>
 
-typedef struct ctxParams{
-	int32_t srcWidth;
-	int32_t srcHeight;
-	AVPixelFormat spFormat;
-	int32_t dstWidth;
-	int32_t dstHeight;
-	AVPixelFormat dpFormat;
-	uint32_t flags; /* no scale not care */
+typedef struct PIXELFORMATtable{
+	DWORD pixelFmtFourCC;
+	AVPixelFormat pixelFmtInFFmpeg;
+	D3DFORMAT pixelFmtInD3D9;
+}PIXELFORMATCONVERT;
 
+const PIXELFORMATCONVERT pixelFormatTable[] = {
+		{ PIXEL_FORMAT_I420, AV_PIX_FMT_YUV420P, D3DFMT_UNKNOWN },
+		{ PIXEL_FORMAT_YUYV, AV_PIX_FMT_YUV422P, D3DFMT_UYVY },
+		{ PIXEL_FORMAT_RGB24, AV_PIX_FMT_RGB24, D3DFMT_R8G8B8 },
+		{ PIXEL_FORMAT_RGB32, AV_PIX_FMT_RGB32, D3DFMT_A8R8G8B8 },
+		{ PIXEL_FORMAT_NV12, AV_PIX_FMT_NV12, D3DFMT_UNKNOWN },
+};
+
+class FFmpegScaleParams : public IVPPPARAMETER
+{
+public:
 	/**/
 	inline int32_t sourceWidth() const { return abs(srcWidth); };
 	inline int32_t sourceHeight() const { return abs(srcHeight); };
-	inline AVPixelFormat sourceFormat() const { return spFormat; };
+	inline AVPixelFormat sourceFormat() const { return srcPixelFormat; };
 	inline int32_t destWidth() const { return abs(dstWidth); };
 	inline int32_t destHeight() const { return abs(dstHeight); };
-	inline AVPixelFormat destFormat() const { return dpFormat; };
+	inline AVPixelFormat destFormat() const { return dstPixelFormat; };
 	inline int flag() const { return flags; };
 
-	ctxParams(){} /* do nothing */
+	FFmpegScaleParams(){}
 
-	ctxParams(int32_t nsw, int32_t nsh, AVPixelFormat nspfmt,
-		int32_t ndw, int32_t ndh, AVPixelFormat ndpfmt, int32_t flag)
-		:srcWidth(nsw), srcHeight(nsh), spFormat(nspfmt),
-		dstWidth(ndw), dstHeight(ndh), dpFormat(ndpfmt), flags(flag){};
-
-	void reset(int32_t nsw, int32_t nsh, AVPixelFormat nspfmt,
-		int32_t ndw, int32_t ndh, AVPixelFormat ndpfmt, int32_t flag)
+	void reset(int32_t nsw, int32_t nsh, DWORD nspfmt,
+		int32_t ndw, int32_t ndh, DWORD ndpfmt, int32_t flag)
 	{
-		ZeroMemory(this, sizeof(struct ctxParams));
 		srcWidth = nsw;
 		srcHeight = nsh;
-		spFormat = nspfmt;
+		srcPixelInFormatFourCC = nspfmt;
+		srcPixelFormat = GetPixFmtByFourCC(nspfmt);
 		dstWidth = ndw;
 		dstHeight = ndh;
-		dpFormat = ndpfmt;
+		dstPixelInFormatFourCC = ndpfmt;
+		dstPixelFormat = GetPixFmtByFourCC(ndpfmt);
 		flags = flag;
 	}
 
-	bool operator == (struct ctxParams& np){
+	bool operator == (FFmpegScaleParams& np)
+	{
 		return (srcWidth == np.srcWidth
 			&& srcHeight == np.srcHeight
-			&& spFormat == np.spFormat
+			&& srcPixelFormat == np.srcPixelFormat
 			&& dstWidth == np.dstWidth
 			&& dstHeight == np.dstHeight
-			&& dpFormat == np.dpFormat);
+			&& dstPixelFormat == np.dstPixelFormat);
 	}
-}FFmpegColorConvertParams;
+
+	bool operator == (const IVPPPARAMETER& np)
+	{
+		return (srcWidth == np.srcWidth
+			&& srcHeight == np.srcHeight
+			&& srcPixelInFormatFourCC == np.srcPixelInFormatFourCC
+			&& dstWidth == np.dstWidth
+			&& dstHeight == np.dstHeight
+			&& dstPixelInFormatFourCC == np.dstPixelInFormatFourCC);
+	}
+
+	FFmpegScaleParams &operator = (const IVPPPARAMETER &params)
+	{
+		reset(params.srcWidth, params.srcHeight, params.srcPixelInFormatFourCC,
+			params.dstWidth, params.dstHeight, params.dstPixelInFormatFourCC, params.flags);
+		return *this;
+	}
+
+	AVPixelFormat GetPixFmtByFourCC(DWORD fourCC)
+	{
+		AVPixelFormat fmt = AV_PIX_FMT_NONE;
+		for (int i = 0; i < ARRAYSIZE(pixelFormatTable); i++){
+			if (fourCC == pixelFormatTable[i].pixelFmtFourCC){
+				fmt = pixelFormatTable[i].pixelFmtInFFmpeg;
+			}
+		}
+		return fmt;
+	}
+
+private:
+	AVPixelFormat srcPixelFormat;
+	AVPixelFormat dstPixelFormat;
+};
 
 class FFmpegProcess : public IVPP
 {
@@ -57,14 +96,14 @@ public:
 	FFmpegProcess();
 	~FFmpegProcess();
 
-	virtual BOOL InitiaContext(FFmpegColorConvertParams params);
+	virtual BOOL InitContext(IVPPPARAMETER params);
 
 	virtual BOOL DeinitContext();
 
-	virtual BOOL ProcessFrame(uint8_t* sBuf[4], int sStride[4], uint8_t* dBuf[4], int dStride[4]);
+	virtual BOOL ProcessFrame(const CSampleBuffer *srcPic, CSampleBuffer *outPic);
 
 private:
 	SwsContext *mScaleCtx;
-	FFmpegColorConvertParams mParams;
+	FFmpegScaleParams mParams;
 };
 
