@@ -10,7 +10,7 @@ CSlidingWindowCalc::CSlidingWindowCalc()
 	, mStartTickCount(GetTickCount())
 	, mRingReadPos(0)
 {
-	mSampleRingCapability = mIntervalInMs / 1000 * SAMPLE_COUNT_FPS;
+	mSampleRingCapability = mIntervalInMs / 1000 * SAMPLE_COUNT_FPS + SAMPLE_COUNT_FPS;
 	mSampleRingBuffer = new RateSample[mSampleRingCapability];
 	mRingWirtePos = 0;
 }
@@ -47,7 +47,7 @@ void CSlidingWindowCalc::Reset(uint32_t durationInMS, uint32_t fps) {
 
 	Destory();
 
-	mSampleRingCapability = mIntervalInMs / 1000 * fps + 30;
+	mSampleRingCapability = mIntervalInMs / 1000 * fps + SAMPLE_COUNT_FPS;
 
 	mSampleRingBuffer = new RateSample[mSampleRingCapability];
 	mRingWirtePos = 0;
