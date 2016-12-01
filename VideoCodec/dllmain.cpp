@@ -4,7 +4,7 @@
 #include "VideoCodec.h"
 
 static long refCount = 1;
-static ICodecFactory *factory = NULL;
+static ICodecFactoryImpl *factory = NULL;
 
 BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
@@ -37,10 +37,10 @@ BOOL GetCodecFactoryOBj(ICodecFactory* &factoryPtr)
 BOOL ReleaseCodecFactoryOBj(ICodecFactory *factoryPtr)
 {
 	BOOL bRet = TRUE;
-	if ((factoryPtr != NULL) && (factoryPtr == factory)){
+	if (factoryPtr == factory){
 		if (!InterlockedDecrement(&refCount)){
 			if (factory){
-				delete static_cast<ICodecFactoryImpl*>(factory);
+				delete factory;
 				factory = NULL;
 			}
 		}
