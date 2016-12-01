@@ -40,7 +40,7 @@ public:
 	/* step all */
 	uint32_t getLastError() { return mLastError; }
 
-	const char* getCodecNameStr() { return "libx264"; };
+	const char* getCodecDescriptor() { return "libx264"; };
 
 	CodecID getCodecId() { return VCODEC_H264; };
 
