@@ -36,8 +36,8 @@ protected:
 	~IVPPFactory(){};
 
 public:
-	virtual IVPP *CreateVPP() = 0;
-	virtual void DestoryVPP(IVPP *) = 0;
+	virtual IVPP *CreateVPPObj() = 0;
+	virtual void DestoryVPPObj(IVPP *) = 0;
 };
 
 #ifdef __cplusplus

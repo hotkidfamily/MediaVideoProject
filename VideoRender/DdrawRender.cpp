@@ -158,7 +158,7 @@ DDrawRender::DDrawRender(HWND hWnd)
 
 DDrawRender::~DDrawRender()
 {
-	DeinitRenderContext();
+	DeinitRender();
 }
 
 void DDrawRender::FillddPixelFormatFromFourCC(LPDDPIXELFORMAT ddPixelFormat, DWORD dwFourCC)
@@ -267,7 +267,7 @@ DWORD WINAPI RenderThread(LPVOID args)
 	return pRender->RenderLoop();
 }
 
-HRESULT DDrawRender::InitializeRenderContext(int width, int height, DWORD pixelFormatInFourCC)
+HRESULT DDrawRender::InitRender(int width, int height, DWORD pixelFormatInFourCC)
 {
 	HRESULT hr = DD_OK;
 	DDBLTFX ddbltfx = { 0 };
@@ -321,7 +321,7 @@ done:
 	return hr;
 }
 
-HRESULT DDrawRender::DeinitRenderContext()
+HRESULT DDrawRender::DeinitRender()
 {
 	HRESULT hr = S_OK;
 

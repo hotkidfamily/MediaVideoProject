@@ -26,14 +26,14 @@ ICodecFactoryImpl::~ICodecFactoryImpl()
 
 }
 
-BOOL ICodecFactoryImpl::CreateCodec(ICodec* &codec)
+BOOL ICodecFactoryImpl::CreateCodecObj(ICodec* &codec)
 {
 	BOOL bRet = TRUE;
 	codec = new CLibx264();
 	return bRet;
 }
 
-BOOL ICodecFactoryImpl::DestoryCodec(ICodec *&codec)
+BOOL ICodecFactoryImpl::DestoryCodecObj(ICodec *&codec)
 {
 	BOOL bRet = TRUE;
 

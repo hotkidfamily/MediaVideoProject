@@ -56,7 +56,7 @@ BOOL SetupEncodeWork(THIS_CONTEXT *ctx)
 	if (!GetCodecFactoryOBj(ctx->encFactory)){
 		bRet = FALSE;
 	} else{
-		if (!ctx->encFactory->CreateCodec(ctx->codec)){
+		if (!ctx->encFactory->CreateCodecObj(ctx->codec)){
 			bRet = FALSE;
 		}
 	}
@@ -89,7 +89,7 @@ BOOL StopEncodeWork(THIS_CONTEXT *ctx)
 	}
 	
 	if (ctx->encFactory){
-		ctx->encFactory->DestoryCodec(ctx->codec);
+		ctx->encFactory->DestoryCodecObj(ctx->codec);
 		ctx->codec = NULL;
 		ReleaseCodecFactoryOBj(ctx->encFactory);
 		ctx->encFactory = NULL;

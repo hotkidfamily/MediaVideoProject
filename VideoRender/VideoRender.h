@@ -1,15 +1,14 @@
+#pragma once
+
 #include "IRender.h"
 
-class IRenderDelegate :
-	public IRender
+class IRenderFactoryImpl :
+	public IRenderFactory
 {
 public:
-	HRESULT Repaint();
-	HRESULT InitRender();
-	HRESULT DeinitRender();
+	IRenderFactoryImpl();
+	~IRenderFactoryImpl();
 
-	HRESULT PushFrame(RENDER_FRAME &frame);
-	HRESULT GetRenderNameStr(const char* &);
-protected:
-private:
+	BOOL CreateRenderObj(IRender *);
+	BOOL DestoryRenderObj(IRender *);
 };

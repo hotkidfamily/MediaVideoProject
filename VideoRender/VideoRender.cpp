@@ -1,32 +1,28 @@
 #include "stdafx.h"
 #include "VideoRender.h"
+#include "DdrawRender.h"
 
-HRESULT IRenderDelegate::Repaint()
+IRenderFactoryImpl::IRenderFactoryImpl()
 {
-	HRESULT hr = S_OK;
-	return hr;
-}
-HRESULT IRenderDelegate::InitRender()
-{
-	HRESULT hr = S_OK;
-	return hr;
+
 }
 
-HRESULT IRenderDelegate::DeinitRender()
+IRenderFactoryImpl::~IRenderFactoryImpl()
 {
-	HRESULT hr = S_OK;
-	return hr;
+
 }
 
-HRESULT IRenderDelegate::PushFrame(RENDER_FRAME &frame)
+BOOL IRenderFactoryImpl::CreateRenderObj(IRender *render)
 {
-	HRESULT hr = S_OK;
-	return hr;
+	render = new DDrawRender();
+
+	return render != NULL;
 }
 
-HRESULT IRenderDelegate::GetRenderNameStr(const char* &name)
+BOOL IRenderFactoryImpl::DestoryRenderObj(IRender *render)
 {
-	HRESULT hr = S_OK;
-	return E_FAIL;
-}
+	if (render)
+		delete static_cast<DDrawRender*>(render);
 
+	return TRUE;
+}

@@ -7,8 +7,8 @@ public:
 	IVPPFactoryImpl();
 	~IVPPFactoryImpl();
 
-	IVPP* IVPPFactoryImpl::CreateVPP();
-	void IVPPFactoryImpl::DestoryVPP(IVPP *ctx);
+	IVPP* IVPPFactoryImpl::CreateVPPObj();
+	void IVPPFactoryImpl::DestoryVPPObj(IVPP *ctx);
 
 private:
 };

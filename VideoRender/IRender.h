@@ -6,9 +6,7 @@
 #define VIDEORENDER_API __declspec(dllimport)
 #endif
 
-typedef struct tagRenderFrame{
-
-}RENDER_FRAME, *PRENDER_FRAME;
+#include "SampleBuffer.h"
 
 class IRender{
 protected:
@@ -16,22 +14,28 @@ protected:
 
 public:
 	virtual HRESULT Repaint() = 0;
-	virtual HRESULT InitRender() = 0;
+	virtual HRESULT InitRender(int, int, DWORD) = 0;
 	virtual HRESULT DeinitRender() = 0;
 
-	virtual HRESULT PushFrame(RENDER_FRAME &frame) = 0;
-	virtual HRESULT GetRenderNameStr(const char* &) = 0;
+	virtual HRESULT PushFrame(CSampleBuffer *frame) = 0;
+	virtual const char *GetRenderDescriptor() = 0;
+};
+
+class IRenderFactory
+{
+protected:
+	~IRenderFactory(){};
+
+public:
+	virtual BOOL CreateRenderObj(IRender *) = 0;
+	virtual BOOL DestoryRenderObj(IRender *) = 0;
 };
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-	typedef void(*PVIDEO_RENDER_LOG_CALLBACK_FUNC)(int, const char* format, va_list);
-	VIDEORENDER_API void SetLogCallback(PVIDEO_RENDER_LOG_CALLBACK_FUNC);
-
-	VIDEORENDER_API IRender *GetRenderObj();
-	VIDEORENDER_API void ReleaseRenderObj(IRender *);
+	VIDEORENDER_API BOOL GetRenderFactoryObj(IRenderFactory *&);
+	VIDEORENDER_API BOOL ReleaseRenderFactoryObj(IRenderFactory *);
 
 #ifdef __cplusplus
 }

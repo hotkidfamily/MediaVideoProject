@@ -1,4 +1,5 @@
 #pragma once
+#include "IRender.h"
 
 #include "SampleBuffer.h"
 #include <timeApi.h>
@@ -9,17 +10,21 @@
 
 #include "SlidingWindowCalc.h"
 
-class DDrawRender
+class DDrawRender :public IRender
 {
 public:
 	DDrawRender();
 	DDrawRender(HWND);
 	~DDrawRender();
 
-	HRESULT InitializeRenderContext(int, int, DWORD);
-	HRESULT DeinitRenderContext();
+	HRESULT InitRender(int, int, DWORD);
+	HRESULT DeinitRender();
+	HRESULT Repaint() { return S_OK; };
 
-	HRESULT PushFrame(CSampleBuffer *frame);
+	HRESULT PushFrame(CSampleBuffer *);
+
+	const char *GetRenderDescriptor() { return "Ddraw Render"; };
+
 	DWORD RenderLoop();
 
 protected:
