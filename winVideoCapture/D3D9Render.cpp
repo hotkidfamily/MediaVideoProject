@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "D3D9Render.h"
 
+#pragma comment(lib, "videoprocess.lib")
 
 const COMERROR d3d9ErrorList[] = {
 	COMERROR2STR(D3D_OK),
@@ -106,6 +107,31 @@ void D3D9Render::SetupMatrices()
 	mpD3D9Device->SetTransform(D3DTS_PROJECTION, &projectMatrix);
 }
 
+HRESULT D3D9Render::GetDisplayMode()
+{
+	D3DDISPLAYMODE mode;
+	HRESULT hr = S_OK;
+
+	mpD3D9OBj->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &mode);
+
+	mD3D9DeviceType = D3DDEVTYPE_HAL;
+	hr = mpD3D9OBj->CheckDeviceType(D3DADAPTER_DEFAULT, mD3D9DeviceType, mode.Format, mode.Format, TRUE);
+
+	// software device
+	if (FAILED(hr)){
+		mD3D9DeviceType = D3DDEVTYPE_SW;
+		hr = mpD3D9OBj->CheckDeviceType(D3DADAPTER_DEFAULT, mD3D9DeviceType, mode.Format, mode.Format, TRUE);
+	}
+
+	// reference rasterizer device
+	if (FAILED(hr)){
+		mD3D9DeviceType = D3DDEVTYPE_REF;
+		hr = mpD3D9OBj->CheckDeviceType(D3DADAPTER_DEFAULT, mD3D9DeviceType, mode.Format, mode.Format, TRUE);
+	}
+
+	return hr;
+}
+
 // check windowed mode color convert ability
 HRESULT D3D9Render::IfSupportedFormat(D3DFORMAT pixelFormat)
 {
@@ -189,6 +215,21 @@ HRESULT D3D9Render::InitializeRenderContext(int width, int height, DWORD pixelFo
 	
 	if (FAILED(hr = IfSupportedFormat(d3dpp.BackBufferFormat))){
 		// Create VPP Support
+		if (GetVPPFactoryObj(vppFactory)) {
+			vpp = vppFactory->CreateVPPObj();
+		}
+		vppParams.srcWidth = width;
+		vppParams.srcHeight = height;
+		vppParams.srcPixelInFormatFourCC = pixelFormatInFourCC;
+		vppParams.dstWidth = width;
+		vppParams.dstHeight = height;
+		vppParams.dstPixelInFormatFourCC = PIXEL_FORMAT_RGB32;
+		vppParams.flags = SWS_POINT;
+		if (!vpp->InitContext(vppParams)){
+			hr = E_FAIL;
+			goto done;
+		}
+		CHECK_HR(hr = GetDisplayMode());
 	}
 
 	mpD3D9OBj->GetDeviceCaps(D3DADAPTER_DEFAULT, mD3D9DeviceType, &mpD3D9DeviceCaps);
@@ -244,6 +285,17 @@ HRESULT D3D9Render::DeinitRenderContext()
 		mRenderEvent = NULL;
 		mSupportVSync = FALSE;
 	}
+
+	if (vpp){
+		vpp->DeinitContext();
+		vppFactory->DestoryVPPObj(vpp);
+		vpp = NULL;
+	}
+
+	ReleaseVPPFctoryObj(vppFactory);
+	vppFactory = NULL;
+
+	
 
 	SAFE_RELEASE(mPrimerySurface);
 	SAFE_RELEASE(mPrimeryTexture);

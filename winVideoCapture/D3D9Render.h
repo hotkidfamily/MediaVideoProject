@@ -3,6 +3,7 @@
 #include <d3d9.h>
 #include <d3dx9.h>
 #include "AutoLock.h"
+#include "IVPP.h"
 
 #pragma comment(lib, "d3dx9.lib") //link the library
 #pragma comment(lib, "d3d9.lib") //link the library
@@ -25,6 +26,7 @@ protected:
 	const TCHAR* GetErrorString(HRESULT hr);
 	void SetupMatrices();
 	HRESULT IfSupportedFormat(D3DFORMAT);
+	HRESULT GetDisplayMode();
 
 private:
 	HWND mhWnd;
@@ -41,5 +43,10 @@ private:
 	HANDLE mRenderThreadHandle;
 	DWORD mRenderThreadId;
 	BOOL mRenderThreadRuning;
+
+	// VPP 
+	IVPPFactory *vppFactory;
+	IVPP *vpp;
+	IVPPPARAMETER vppParams;
 };
 
