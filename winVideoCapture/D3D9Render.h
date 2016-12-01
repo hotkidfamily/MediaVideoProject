@@ -23,16 +23,18 @@ protected:
 	BOOL OSDText(HDC, TCHAR *, ...);
 	void FourCCtoD3DFormat(D3DFORMAT *pd3dPixelFormat, DWORD dwFourCC);
 	const TCHAR* GetErrorString(HRESULT hr);
+	void SetupMatrices();
+	HRESULT IfSupportedFormat(D3DFORMAT);
 
 private:
 	HWND mhWnd;
 	IDirect3D9* mpD3D9OBj;
 	IDirect3DDevice9* mpD3D9Device;
+	D3DDEVTYPE mD3D9DeviceType;
 	D3DCAPS9 mpD3D9DeviceCaps;
 	IDirect3DSurface9* mPrimerySurface;
 	LPD3DXFONT mPFont;
-
-	CRITICAL_SECTION cs;
+	IDirect3DTexture9* mPrimeryTexture;
 
 	HANDLE mRenderEvent;
 	BOOL mSupportVSync;
