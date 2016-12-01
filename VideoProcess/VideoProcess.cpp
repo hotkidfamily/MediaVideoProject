@@ -2,20 +2,20 @@
 //
 
 #include "stdafx.h"
-#include "IVPP.h"
+#include "VideoProcess.h"
 #include "FFmpegProcess.h"
 
-VPPFactory::VPPFactory()
+IVPPFactoryImpl::IVPPFactoryImpl()
 {
 
 }
 
-VPPFactory::~VPPFactory()
+IVPPFactoryImpl::~IVPPFactoryImpl()
 {
 	
 }
 
-IVPP* VPPFactory::CreateVPP()
+IVPP* IVPPFactoryImpl::CreateVPP()
 {
 	BOOL bRet = TRUE;
 	IVPP *vpp = new FFmpegProcess();
@@ -23,11 +23,11 @@ IVPP* VPPFactory::CreateVPP()
 }
 
 
-void VPPFactory::DestoryVPP(IVPP *ctx)
+void IVPPFactoryImpl::DestoryVPP(IVPP *ctx)
 {
 	if (ctx){
-		FFmpegProcess *proc = static_cast<FFmpegProcess*>(ctx);
-		delete proc;
-		proc = NULL;
+		FFmpegProcess *vpp = static_cast<FFmpegProcess*>(ctx);
+		delete vpp;
+		vpp = NULL;
 	}
 }

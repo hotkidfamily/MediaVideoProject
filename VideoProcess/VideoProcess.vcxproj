@@ -86,6 +86,7 @@
     <ClInclude Include="IVPP.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="VideoProcess.h" />
     <ClInclude Include="wrappercommon.h" />
   </ItemGroup>
   <ItemGroup>

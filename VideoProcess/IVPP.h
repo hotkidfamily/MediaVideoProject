@@ -20,29 +20,33 @@ typedef struct IVPPContext{
 }IVPPPARAMETER, *PIVPPPARAMETER;
 
 class IVPP {
+protected:
+	~IVPP(){};
+
 public:
 	virtual BOOL InitContext(IVPPPARAMETER) = 0;
 	virtual BOOL DeinitContext() = 0;
 
 	virtual BOOL ProcessFrame(const CSampleBuffer *, CSampleBuffer *) = 0;
-
-protected:
-	~IVPP(){};
 };
 
-class VPPFactory
+class IVPPFactory
 {
-public:
-	VPPFactory();
-	~VPPFactory();
+protected:
+	~IVPPFactory(){};
 
-	IVPP *CreateVPP();
-	void DestoryVPP(IVPP *);
+public:
+	virtual IVPP *CreateVPP() = 0;
+	virtual void DestoryVPP(IVPP *) = 0;
 };
 
+#ifdef __cplusplus
 extern "C" {
+#endif
 
-	VIDEOPROCESS_API  VPPFactory *GetVPPFactoryObj();
-	VIDEOPROCESS_API void ReleaseVPPFctoryObj();
+	VIDEOPROCESS_API BOOL GetVPPFactoryObj(IVPPFactory * &);
+	VIDEOPROCESS_API BOOL ReleaseVPPFctoryObj(IVPPFactory *);
 
+#ifdef __cplusplus
 }
+#endif

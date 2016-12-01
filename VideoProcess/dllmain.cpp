@@ -4,8 +4,7 @@
 #include "VideoProcess.h"
 
 static long refCount = 1;
-static VPPFactory *factory = NULL;
-static CRITICAL_SECTION opera;
+static IVPPFactoryImpl *factory = NULL;
 
 BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
@@ -15,40 +14,40 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	switch (ul_reason_for_call)
 	{
 	case DLL_PROCESS_ATTACH:
-		InitializeCriticalSection(&opera);
 		break;
 	case DLL_THREAD_ATTACH:
 	case DLL_THREAD_DETACH:
 		break;
 	case DLL_PROCESS_DETACH:
-		DeleteCriticalSection(&opera);
 		break;
 	}
 	return TRUE;
 }
 
-VPPFactory *GetVPPFactoryObj()
+BOOL GetVPPFactoryObj(IVPPFactory* &factoryPtr)
 {
-	IVPP *vpp = NULL;
-
-	EnterCriticalSection(&opera);
-	++refCount;
+	InterlockedAdd(&refCount, 1);
 	if (!factory){
-		factory = new VPPFactory;
+		factory = new IVPPFactoryImpl;
 	}
 
-	LeaveCriticalSection(&opera);
+	factoryPtr = factory;
 
-	return factory;
+	return factoryPtr != NULL;
 }
 
-void ReleaseVPPFctoryObj(VPPFactory *ctx)
+BOOL ReleaseVPPFctoryObj(IVPPFactory *ctx)
 {
-	EnterCriticalSection(&opera);
-	--refCount;
-	if (refCount <= 0){
-		delete ctx;
-		ctx = NULL;
+	BOOL bRet = FALSE;
+
+	if (ctx == factory){
+		if (!InterlockedDecrement(&refCount)){
+			delete factory;
+			factory = NULL;
+			ctx = NULL;
+		}
+		bRet = TRUE;
 	}
-	LeaveCriticalSection(&opera);
+	
+	return bRet;
 }

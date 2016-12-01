@@ -39,6 +39,9 @@
     <ClInclude Include="wrappercommon.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="VideoProcess.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
