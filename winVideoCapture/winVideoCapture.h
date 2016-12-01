@@ -3,7 +3,6 @@
 #include "resource.h"
 #include "IVideoCapture.h"
 #include "VideoCallback.h"
-#include "encoder_x264.h"
 #include "D3D9Render.h"
 
 #define MAX_LOADSTRING 100
@@ -22,8 +21,6 @@ typedef struct tagProgramContext{
 	BOOL bRuning;
 	HANDLE hWorkThread;
 	DWORD dwThreadId;
-	ENCODEC_CFG encoderArgs;
-	CLibx264 *encoder;
 	D3D9Render *render;
 	tagProgramContext(){
 		ZeroMemory(this, sizeof(struct tagProgramContext));

@@ -47,6 +47,7 @@ BOOL StopCaptureWork(THIS_CONTEXT *ctx)
 	return TRUE;
 }
 
+#if 0
 BOOL SetupEncodeWork(THIS_CONTEXT *ctx)
 {
 	ctx->encoder = new CLibx264;
@@ -72,6 +73,17 @@ BOOL StopEncodeWork(THIS_CONTEXT *ctx)
 	return TRUE;
 }
 
+CPackageBuffer *packet = NULL;
+ctx->encoder->addFrame(*frame);
+
+if (ctx->encoder->getPackage(packet)){
+	if (packet->isIDRFrame())
+		encodeFile.write((const char*)(packet->ExtraData()), packet->ExtraDataSize());
+	encodeFile.write((const char*)packet->Data(), packet->DataSize());
+	ctx->encoder->releasePackage(packet);
+}
+#endif
+
 DWORD WINAPI EncoderThread(LPVOID args)
 {
 	THIS_CONTEXT * ctx = (THIS_CONTEXT *)args;
@@ -81,21 +93,9 @@ DWORD WINAPI EncoderThread(LPVOID args)
 
 	while (ctx->bRuning){
 		CSampleBuffer *frame = NULL;
-		CPackageBuffer *packet = NULL;
 		if (ctx->capturer->GetFrame(frame)){
-#ifdef ENABLE_ENCODER
-			ctx->encoder->addFrame(*frame);
-#endif
 			ctx->render->PushFrame(frame);
 			ctx->capturer->ReleaseFrame(frame);
-#ifdef ENABLE_ENCODER
-			if (ctx->encoder->getPackage(packet)){
-				if (packet->isIDRFrame())
-					encodeFile.write((const char*)(packet->ExtraData()), packet->ExtraDataSize());
-				encodeFile.write((const char*)packet->Data(), packet->DataSize());
-				ctx->encoder->releasePackage(packet);
-			}
-#endif
 		}
 
 		Sleep(1);

@@ -21,16 +21,10 @@
     <ClCompile Include="VideoCallback.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="encoder_x264.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="interfaces.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="VPP.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="PackageManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MainWindow.cpp">
@@ -56,16 +50,10 @@
     <ClInclude Include="VideoCallback.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="encoder_x264.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="VPP.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PackageManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PackageBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="D3D9Render.h">
