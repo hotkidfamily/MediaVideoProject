@@ -70,6 +70,7 @@ public:
 	inline uint32_t ExtraDataSize() const { return extraDataSize; }
 	inline int64_t Pts() const { return pts; };
 	inline int64_t Dts() const { return dts; };
+	inline uint32_t StreamType() const { return streamType; };
 
 	inline void SetPts(int64_t pts) { this->pts = pts; };
 	inline void SetDts(int64_t dts) { this->dts = dts; };
@@ -89,7 +90,6 @@ public:
 			}
 		}
 		
-
 		data = mBufferPtr;
 		dataSize = mainDataSize;
 		extraData = mBufferPtr + mainDataSize;
@@ -112,6 +112,7 @@ protected:
 	uint32_t dataSize;
 	uint8_t *extraData;
 	uint32_t extraDataSize;
+	uint32_t streamType; /* avc hevc or etc... */
 
 	// reserved for future
 	void *extraParam;

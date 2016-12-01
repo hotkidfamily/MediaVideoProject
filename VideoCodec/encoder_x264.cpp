@@ -125,7 +125,7 @@ bool CLibx264::addFrame(const CSampleBuffer &inputFrame)
 		inpic.img.i_stride[0] = inputFrame.GetLineSize();
 		break;
 	case PIXEL_FORMAT_YUY2:
-		//mVpp.convertYUY2toNV16(mInPic, &inputFrame);
+		//mVpp->convertYUY2toNV16(mInPic, &inputFrame);
 		break;
 	default:
 		return false;

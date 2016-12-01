@@ -5,16 +5,6 @@
 #include "VideoCodec.h"
 #include "encoder_x264.h"
 
-enum CodecID{
-	VCODEC_NONE,
-	VCODEC_H264,
-	VCODEC_AVC = VCODEC_H264,
-	VCODEC_H265,
-	VCODEC_HEVC = VCODEC_H265,
-	VCODEC_VP8,
-	VCODEC_VP9,
-};
-
 const struct tagCodecList
 {
 	DWORD codecId;

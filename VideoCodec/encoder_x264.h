@@ -40,6 +40,10 @@ public:
 	/* step all */
 	uint32_t getLastError() { return mLastError; }
 
+	const char* getCodecNameStr() { return "libx264"; };
+
+	CodecID getCodecId() { return VCODEC_H264; };
+
 protected:
 	void setLastError(uint32_t v){ mLastError = v; };
 	bool parseConfigString();
@@ -59,4 +63,6 @@ private:
 	CPackageBufferManager mPackages;
 
 	ENCODECCFG mWorkConfig;
+
+	IVPP * mVpp;
 };

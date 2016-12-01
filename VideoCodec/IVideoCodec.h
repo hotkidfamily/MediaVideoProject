@@ -12,6 +12,16 @@
 #define VIDEOCODEC_API __declspec(dllimport)
 #endif
 
+enum CodecID{
+	VCODEC_NONE,
+	VCODEC_H264,
+	VCODEC_AVC = VCODEC_H264,
+	VCODEC_H265,
+	VCODEC_HEVC = VCODEC_H265,
+	VCODEC_VP8,
+	VCODEC_VP9,
+};
+
 typedef struct tagEncodecConfig
 {
 	tagEncodecConfig(){
@@ -60,6 +70,10 @@ public:
 
 	/* step all */
 	virtual uint32_t getLastError() = 0;
+
+	virtual const char* getCodecDescriptor() = 0;
+
+	virtual CodecID getCodecId() = 0;
 };
 
 class ICodecFactory
