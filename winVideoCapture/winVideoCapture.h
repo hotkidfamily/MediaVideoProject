@@ -4,6 +4,8 @@
 #include "IVideoCapture.h"
 #include "VideoCallback.h"
 #include "D3D9Render.h"
+#include "IVPP.h"
+#include "IVideoCodec.h"
 
 #define MAX_LOADSTRING 100
 
@@ -22,6 +24,11 @@ typedef struct tagProgramContext{
 	HANDLE hWorkThread;
 	DWORD dwThreadId;
 	D3D9Render *render;
+
+	ICodecFactory *encFactory;
+	ICodec *codec;
+	ENCODECCFG encoderArgs;
+
 	tagProgramContext(){
 		ZeroMemory(this, sizeof(struct tagProgramContext));
 	}

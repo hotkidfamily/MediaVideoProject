@@ -4,6 +4,8 @@
 #include <assert.h>
 #include <fstream>
 
+#pragma comment(lib, "VideoCodec.lib")
+
 BOOL StartCaptureWork(THIS_CONTEXT *ctx)
 {
 	HRESULT hr = E_FAIL;
@@ -47,32 +49,58 @@ BOOL StopCaptureWork(THIS_CONTEXT *ctx)
 	return TRUE;
 }
 
-#if 0
 BOOL SetupEncodeWork(THIS_CONTEXT *ctx)
 {
-	ctx->encoder = new CLibx264;
-	assert(ctx->encoder);
-	ctx->encoderArgs.fps = (uint32_t)(ctx->captureArgs.fps);
-	ctx->encoderArgs.width = ctx->captureArgs.width;
-	ctx->encoderArgs.height = ctx->captureArgs.height;
-	ctx->encoderArgs.avgBitrateInKb = 2000;
-	ctx->encoderArgs.minBitrateInKb = 2000;
-	ctx->encoderArgs.maxBitrateInKb = 2000;
-	ctx->encoderArgs.pixelFormatInFourCC = ctx->captureArgs.pixelFormatInFourCC;
-	ctx->encoderArgs.cfgStr.append(TEXT("keyint=75:min-keyint=75:scenecut=0:bframes=2:b-adapt=0:b-pyramid=none:threads=1:sliced-threads=0:ref=2:subme=2:me=hex:analyse=i4x4,i8x8,p8x8,p4x4,b8x8:direct=spatial:weightp=1:weightb=1:8x8dct=1:cabac=1:deblock=0,0:psy=0:trellis=0:aq-mode=1:rc-lookahead=0:sync-lookahead=0:mbtree=0:"));
+	BOOL bRet = TRUE;
 
-	ctx->encoder->setConfig(ctx->encoderArgs);
-	return ctx->encoder->open();
+	if (!GetCodecFactoryOBj(ctx->encFactory)){
+		bRet = FALSE;
+	} else{
+		if (!ctx->encFactory->CreateCodec(ctx->codec)){
+			bRet = FALSE;
+		}
+	}
+
+	if (bRet)
+	{
+		ctx->encoderArgs.fps = (uint32_t)(ctx->captureArgs.fps);
+		ctx->encoderArgs.width = ctx->captureArgs.width;
+		ctx->encoderArgs.height = ctx->captureArgs.height;
+		ctx->encoderArgs.avgBitrateInKb = 2000;
+		ctx->encoderArgs.minBitrateInKb = 2000;
+		ctx->encoderArgs.maxBitrateInKb = 2000;
+		ctx->encoderArgs.pixelFormatInFourCC = ctx->captureArgs.pixelFormatInFourCC;
+		ctx->encoderArgs.cfgStr.append(TEXT("keyint=75:min-keyint=75:scenecut=0:bframes=2:b-adapt=0:b-pyramid=none:threads=1:sliced-threads=0:ref=2:subme=2:me=hex:analyse=i4x4,i8x8,p8x8,p4x4,b8x8:direct=spatial:weightp=1:weightb=1:8x8dct=1:cabac=1:deblock=0,0:psy=0:trellis=0:aq-mode=1:rc-lookahead=0:sync-lookahead=0:mbtree=0:"));
+
+		ctx->codec->setConfig(ctx->encoderArgs);
+		bRet = ctx->codec->open();
+	}
+
+	if (!bRet){
+		StopEncodeWork(ctx);
+	}
+	return FALSE;
 }
 
 BOOL StopEncodeWork(THIS_CONTEXT *ctx)
 {
-	if (ctx->encoder)
-		ctx->encoder->close();
-	SAFE_DELETE(ctx->encoder);
+	if (ctx->codec){
+		ctx->codec->close();
+	}
+	
+	if (ctx->encFactory){
+		ctx->encFactory->DestoryCodec(ctx->codec);
+		ctx->codec = NULL;
+		ReleaseCodecFactoryOBj(ctx->encFactory);
+		ctx->encFactory = NULL;
+	}
+
+	ctx->encoderArgs.cfgStr.clear();
+
 	return TRUE;
 }
 
+#if 0
 CPackageBuffer *packet = NULL;
 ctx->encoder->addFrame(*frame);
 

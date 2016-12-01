@@ -1,6 +1,9 @@
 #include "stdafx.h"
 #include "encoder_x264.h"
 
+#pragma  comment(lib, "comsuppw.lib")
+#pragma comment(lib, "libx264.lib")
+
 CLibx264::CLibx264()
 	: mCodecHandle(NULL)
 {
@@ -37,7 +40,7 @@ void CLibx264::close()
 	x264_picture_clean(&mInPic);
 }
 
-bool CLibx264::setConfig(const ENCODEC_CFG &config)
+bool CLibx264::setConfig(const ENCODECCFG &config)
 {
 	mWorkConfig = config;
 
@@ -87,7 +90,7 @@ bool CLibx264::setConfig(const ENCODEC_CFG &config)
 	return true;
 }
 
-bool CLibx264::reset(const ENCODEC_CFG &config)
+bool CLibx264::reset(const ENCODECCFG &config)
 {
 	return false;
 }
@@ -122,7 +125,7 @@ bool CLibx264::addFrame(const CSampleBuffer &inputFrame)
 		inpic.img.i_stride[0] = inputFrame.GetLineSize();
 		break;
 	case PIXEL_FORMAT_YUY2:
-		mVpp.convertYUY2toNV16(mInPic, &inputFrame);
+		//mVpp.convertYUY2toNV16(mInPic, &inputFrame);
 		break;
 	default:
 		return false;

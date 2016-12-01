@@ -1,3 +1,8 @@
+#ifndef __VCUTILS_H__
+#define __VCUTILS_H__
+
+#include <string>
+
 #ifndef SAFE_DELETE
 #define SAFE_DELETE(x)  {if(x) delete (x); (x)= NULL;}
 #endif
@@ -22,3 +27,5 @@ typedef struct tagCOMError{
 }COMERROR;
 
 #define COMERROR2STR(x) {x, TEXT(#x)}
+
+#endif //__VCUTILS_H__

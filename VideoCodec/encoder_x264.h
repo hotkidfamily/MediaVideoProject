@@ -1,40 +1,22 @@
+#pragma once
 
+#include <stdint.h>
 #include <list>
+#include "PixelFormat.h"
 #include "samplebuffer.h"
 #include "PackageBuffer.h"
 #include "PackageManager.h"
+#include "utils.h"
+
+#include "IVideoCodec.h"
+#include "IVPP.h"
 
 extern "C" {
-#include <stdint.h>
-#include "x264.h"
+	#include "x264.h"
 }
 
-#include "VPP.h"
-
-
-typedef struct tagEncodecConfig
+class CLibx264 : public ICodec
 {
-	tagEncodecConfig(){
-		memset(this, 0, sizeof(struct tagEncodecConfig));
-	}
-
-	uint32_t width;
-	uint32_t height;
-	uint32_t fps;
-	uint32_t avgBitrateInKb;
-	uint32_t maxBitrateInKb;
-	uint32_t minBitrateInKb;
-	uint32_t pixelFormatInFourCC;
-	// pps sps vps etc.
-	uint8_t *extraData;
-	uint32_t extraDataSize;
-	// config string etc.
-	STRING cfgStr;
-	// reserved for future
-	void *extraParams;
-}ENCODEC_CFG, *PENCODEC_CFG;
-
-class CLibx264{
 public:
 	CLibx264();
 	~CLibx264();
@@ -45,9 +27,9 @@ public:
 	void close();
 
 	/* step 1 */
-	bool setConfig(const ENCODEC_CFG &config);
+	bool setConfig(const ENCODECCFG &config);
 	/* step 3.x */
-	bool reset(const ENCODEC_CFG &config);
+	bool reset(const ENCODECCFG &config);
 
 	/* step 3.x */
 	bool addFrame(const CSampleBuffer &inputFrame);
@@ -63,9 +45,9 @@ protected:
 	bool parseConfigString();
 	void flushEncodeCache();
 	bool assemblePackage(int outputNALsDataSizeInBytes,
-		const x264_nal_t *outputNalus,
-		int outputNaluCnt,
-		const x264_picture_t *outputPic);
+						const x264_nal_t *outputNalus,
+						int outputNaluCnt,
+						const x264_picture_t *outputPic);
 	bool encodeFrame(x264_picture_t *inpic);
 
 private:
@@ -76,7 +58,5 @@ private:
 
 	CPackageBufferManager mPackages;
 
-	ENCODEC_CFG mWorkConfig;
-
-	CVPP mVpp;
+	ENCODECCFG mWorkConfig;
 };
