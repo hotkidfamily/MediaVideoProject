@@ -47,7 +47,7 @@ void CSlidingWindowCalc::Reset(uint32_t durationInMS, uint32_t fps) {
 
 	Destory();
 
-	mSampleRingCapability = mIntervalInMs / 1000 * fps;
+	mSampleRingCapability = mIntervalInMs / 1000 * fps + 30;
 
 	mSampleRingBuffer = new RateSample[mSampleRingCapability];
 	mRingWirtePos = 0;
