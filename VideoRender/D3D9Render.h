@@ -25,10 +25,9 @@ public:
 
 protected:
 	BOOL OSDText(HDC, TCHAR *, ...);
-	void FourCCtoD3DFormat(D3DFORMAT *pd3dPixelFormat, DWORD dwFourCC);
 	const TCHAR* GetErrorString(HRESULT hr);
 	void SetupMatrices();
-	HRESULT IfSupportedFormat(D3DFORMAT);
+	HRESULT IfSupportedFormat(D3DDISPLAYMODE, D3DFORMAT, BOOL &);
 	HRESULT GetDisplayMode();
 
 private:
@@ -39,13 +38,14 @@ private:
 	D3DCAPS9 mpD3D9DeviceCaps;
 	IDirect3DSurface9* mPrimerySurface;
 	LPD3DXFONT mPFont;
-	IDirect3DTexture9* mPrimeryTexture;
+	IDirect3DTexture9* mPrimeryTexture[3]; /* for YUV */
 
 	HANDLE mRenderEvent;
 	BOOL mSupportVSync;
 	HANDLE mRenderThreadHandle;
 	DWORD mRenderThreadId;
 	BOOL mRenderThreadRuning;
+	BOOL mbNeedConversion;
 
 	// VPP 
 	IVPPFactory *mVppFactory;

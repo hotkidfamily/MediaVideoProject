@@ -130,7 +130,7 @@ DWORD WINAPI RenderThread(LPVOID args)
 
 	while (ctx->bRuning){
 		CSampleBuffer *frame = nullptr;
-		if (captureList.size()){
+		if (!captureList.empty()){
 			EnterCriticalSection(&ctx->listLock);
 			frame = captureList.front();
 			ctx->render->PushFrame(frame);

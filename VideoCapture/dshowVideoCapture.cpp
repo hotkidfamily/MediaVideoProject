@@ -164,8 +164,8 @@ HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 	desc.height = mWorkParams.height;
 	desc.pixelFormatInFourCC = mWorkMediaType.subtype.Data1;
 	desc.lineSize = mWorkParams.width * mWorkFrameInfo->bytePerPixel / 8;
-	desc.planeCnt = mWorkFrameInfo->planeCnt;
-	memcpy(&desc.planeStride, &mWorkFrameInfo->planeStride, sizeof(mWorkFrameInfo->planeStride));
+	desc.planarCnt = mWorkFrameInfo->planarCnt;
+	memcpy(&desc.planarStride, &mWorkFrameInfo->planarStride, sizeof(mWorkFrameInfo->planarStride));
 
 	mBufferManager.FillFrame(desc);
 

@@ -1,6 +1,6 @@
 #include "stdafx.h"
+#include "RenderUtils.h"
 #include "D3D9Render.h"
-#include <stdlib.h>
 
 #pragma comment(lib, "videoprocess.lib")
 
@@ -48,7 +48,6 @@ D3D9Render::D3D9Render()
 	, mpD3D9Device(nullptr)
 	, mPFont(nullptr)
 	, mPrimerySurface(nullptr)
-	, mPrimeryTexture(nullptr)
 
 	, mRenderEvent(nullptr)
 	, mSupportVSync(FALSE)
@@ -58,6 +57,9 @@ D3D9Render::D3D9Render()
 	, mVppFactory(nullptr)
 	, mVpp(nullptr)
 {
+	mPrimeryTexture[0] = nullptr;
+	mPrimeryTexture[1] = nullptr;
+	mPrimeryTexture[2] = nullptr;
 }
 
 D3D9Render::~D3D9Render()
@@ -118,33 +120,36 @@ HRESULT D3D9Render::GetDisplayMode()
 }
 
 // check windowed mode color convert ability
-HRESULT D3D9Render::IfSupportedFormat(D3DFORMAT pixelFormat)
+HRESULT D3D9Render::IfSupportedFormat(D3DDISPLAYMODE mode, D3DFORMAT pixelFormat, BOOL &bNeedConversion)
 {
 	HRESULT hr = S_OK;
-	D3DDISPLAYMODE mode;
-
-	mpD3D9OBj->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &mode);
+	bNeedConversion = FALSE;
 
 	mD3D9DeviceType = D3DDEVTYPE_HAL;
 	hr = mpD3D9OBj->CheckDeviceType(D3DADAPTER_DEFAULT, mD3D9DeviceType, mode.Format, pixelFormat, TRUE);
 	if (FAILED(hr)){
+		bNeedConversion = TRUE;
 		hr = mpD3D9OBj->CheckDeviceFormatConversion(D3DADAPTER_DEFAULT, mD3D9DeviceType, pixelFormat, mode.Format);
 	}
 
 	// software device
 	if (FAILED(hr)){
+		bNeedConversion = FALSE;
 		mD3D9DeviceType = D3DDEVTYPE_SW;
 		hr = mpD3D9OBj->CheckDeviceType(D3DADAPTER_DEFAULT, mD3D9DeviceType, mode.Format, pixelFormat, TRUE);
 		if (FAILED(hr)){
+			bNeedConversion = TRUE;
 			hr = mpD3D9OBj->CheckDeviceFormatConversion(D3DADAPTER_DEFAULT, mD3D9DeviceType, pixelFormat, mode.Format);
 		}
 	}
 	
 	// reference rasterizer device
 	if (FAILED(hr)){
+		bNeedConversion = FALSE;
 		mD3D9DeviceType = D3DDEVTYPE_REF;
 		hr = mpD3D9OBj->CheckDeviceType(D3DADAPTER_DEFAULT, mD3D9DeviceType, mode.Format, pixelFormat, TRUE);
 		if (FAILED(hr)){
+			bNeedConversion = TRUE;
 			hr = mpD3D9OBj->CheckDeviceFormatConversion(D3DADAPTER_DEFAULT, mD3D9DeviceType, pixelFormat, mode.Format);
 		}
 	}
@@ -152,38 +157,12 @@ HRESULT D3D9Render::IfSupportedFormat(D3DFORMAT pixelFormat)
 	return hr;
 }
 
-void D3D9Render::FourCCtoD3DFormat(D3DFORMAT* pd3dPixelFormat, DWORD dwFourCC)
-{
-	switch (dwFourCC)
-	{
-	case PIXEL_FORMAT_RGB24:
-	case PIXEL_FORMAT_RGB32:
-	case PIXEL_FORMAT_ARGB:
-		*pd3dPixelFormat = D3DFMT_A8R8G8B8;
-		break;
-	case PIXEL_FORMAT_RGB565:
-		*pd3dPixelFormat = D3DFMT_X1R5G5B5;
-		break;
-	case PIXEL_FORMAT_RGB555:
-		*pd3dPixelFormat = D3DFMT_R5G6B5;
-		break;
-	case PIXEL_FORMAT_UYVY:
-	case PIXEL_FORMAT_YUY2:
-	case PIXEL_FORMAT_YV12:
-	case PIXEL_FORMAT_I420:
-		*pd3dPixelFormat = (D3DFORMAT)dwFourCC;
-		break;
-	default:
-		*pd3dPixelFormat = D3DFMT_UNKNOWN;
-		break;
-	}
-}
-
 BOOL D3D9Render::InitRender(HWND hWnd, int width, int height, DWORD pixelFormatInFourCC)
 {
 	HRESULT hr = S_OK;
 	RECT rect = { 0 };
 	D3DPRESENT_PARAMETERS d3dpp; //the presentation parameters that will be used when we will create the device
+	D3DDISPLAYMODE mode;
 
 	mhWnd = hWnd;
 
@@ -193,16 +172,17 @@ BOOL D3D9Render::InitRender(HWND hWnd, int width, int height, DWORD pixelFormatI
 	d3dpp.BackBufferCount = 3; //set it to only use 1 back buffer
 	d3dpp.BackBufferWidth = width; //set the buffer to our window width
 	d3dpp.BackBufferHeight = height; //set the buffer to out window height
-	FourCCtoD3DFormat(&d3dpp.BackBufferFormat, pixelFormatInFourCC);
+	d3dpp.BackBufferFormat = GetD3D9PixelFmtByFourCC(pixelFormatInFourCC);
 	d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD; //SwapEffect
 	d3dpp.Flags |= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER | D3DPRESENTFLAG_VIDEO;
 	d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE; // wait for VSync
 	d3dpp.MultiSampleType = D3DMULTISAMPLE_NONE;
 	
 	mpD3D9OBj = Direct3DCreate9(D3D_SDK_VERSION); //Create the presentation parameters
+	mpD3D9OBj->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &mode);
 
-	if (FAILED(hr = IfSupportedFormat(d3dpp.BackBufferFormat))){
-		// Create VPP Support
+	if (FAILED(hr = IfSupportedFormat(mode, d3dpp.BackBufferFormat, mbNeedConversion))){
+		// Create software VPP Support
 		if (GetVPPFactoryObj(mVppFactory)) {
 			mVppFactory->CreateVPPObj(mVpp);
 		}
@@ -228,7 +208,18 @@ BOOL D3D9Render::InitRender(HWND hWnd, int width, int height, DWORD pixelFormatI
 	else
 		devBehaviorFlags |= D3DCREATE_SOFTWARE_VERTEXPROCESSING;
 
+	if (mbNeedConversion){
+		d3dpp.BackBufferFormat = mode.Format;
+	}
+
 	CHECK_HR(hr = mpD3D9OBj->CreateDevice(D3DADAPTER_DEFAULT, mD3D9DeviceType, mhWnd, devBehaviorFlags, &d3dpp, &mpD3D9Device));
+
+	if (mbNeedConversion){
+		CHECK_HR(hr = mpD3D9Device->CreateTexture(width, height, 1, 0, D3DFMT_L8, D3DPOOL_DEFAULT, &mPrimeryTexture[0], NULL));
+		CHECK_HR(hr = mpD3D9Device->CreateTexture(width / 2, height / 2, 1, 0, D3DFMT_L8, D3DPOOL_DEFAULT, &mPrimeryTexture[1], NULL));
+		CHECK_HR(hr = mpD3D9Device->CreateTexture(width / 2, height / 2, 1, 0, D3DFMT_L8, D3DPOOL_DEFAULT, &mPrimeryTexture[2], NULL));
+	}
+
 	CHECK_HR(hr = D3DXCreateFont(mpD3D9Device, 30, 0, FW_LIGHT, 1, TRUE, 
 		DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &mPFont));
 
@@ -282,10 +273,10 @@ BOOL D3D9Render::DeinitRender()
 	ReleaseVPPFactoryObj(mVppFactory);
 	mVppFactory = nullptr;
 
-	
-
 	SAFE_RELEASE(mPrimerySurface);
-	SAFE_RELEASE(mPrimeryTexture);
+	SAFE_RELEASE(mPrimeryTexture[0]);
+	SAFE_RELEASE(mPrimeryTexture[1]);
+	SAFE_RELEASE(mPrimeryTexture[2]);
 	SAFE_RELEASE(mPFont);
 	SAFE_RELEASE(mpD3D9Device);
 	SAFE_RELEASE(mpD3D9OBj);
@@ -340,6 +331,7 @@ BOOL D3D9Render::PushFrame(CSampleBuffer *frame)
 	int32_t frameWidth = 0;
 	int32_t frameHeight = 0;
 	int32_t srcLineSize = 0;
+	uint8_t **planptr = NULL;
 
 	if (!frame){
 		return FALSE;
@@ -349,12 +341,23 @@ BOOL D3D9Render::PushFrame(CSampleBuffer *frame)
 	frameHeight = frame->GetHeight();
 	srcDataptr = frame->GetDataPtr();
 	srcLineSize = frame->GetLineSize();
+	planptr = frame->GetPlanarPtr();
 
 #if USE_BACKBUFFER
 	CHECK_HR(hr = mpD3D9Device->GetBackBuffer(0, 2, D3DBACKBUFFER_TYPE_MONO, &pSurface));
 #else
 	pSurface = mPrimerySurface;
 #endif
+	D3DLOCKED_RECT textureY;
+	D3DLOCKED_RECT textureU;
+	D3DLOCKED_RECT textureV;
+	hr = mPrimeryTexture[0]->LockRect(0, &textureY, NULL, 0);
+	hr = mPrimeryTexture[0]->LockRect(0, &textureU, NULL, 0);
+	hr = mPrimeryTexture[0]->LockRect(0, &textureV, NULL, 0);
+	memcpy(textureY.pBits, planptr[0], frameWidth*frameHeight);
+	memcpy(textureU.pBits, planptr[1], frameWidth*frameHeight>>2);
+	memcpy(textureV.pBits, planptr[2], frameWidth*frameHeight>>2);
+
 	pSurface->GetDesc(&dstDec);
 	if (SUCCEEDED(hr = pSurface->LockRect(&dstRect, nullptr, 0))){
 		dstDataPtr = (uint8_t*)dstRect.pBits;

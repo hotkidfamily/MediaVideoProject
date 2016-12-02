@@ -3,5 +3,5 @@
 #include "PixelFormat.h"
 #include <d3d9.h>
 
-D3DFORMAT TranslateFourCCToD3D9PixelFormat(DWORD pfFourCC);
-DWORD TranslateD3D9PixelFormatToFourCC(D3DFORMAT format);
+D3DFORMAT GetD3D9PixelFmtByFourCC(DWORD pfFourCC);
+DWORD GetFourCCByD3D9PixelFmt(D3DFORMAT format);

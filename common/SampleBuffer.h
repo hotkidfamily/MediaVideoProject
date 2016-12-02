@@ -79,8 +79,8 @@ typedef struct tagFrameDesc{
 	int64_t ptsEnd;
 	int64_t frameStartIdx;
 	int64_t frameEndIdx;
-	int32_t planeCnt;
-	uint32_t planeStride[4];
+	int32_t planarCnt;
+	uint32_t planarStride[4];
 	tagFrameDesc(){
 		ZeroMemory(this, sizeof(struct tagFrameDesc));
 		cbSize = sizeof(struct tagFrameDesc);
@@ -121,8 +121,8 @@ public:
 		this->capacity = capacityInBytes;
 		this->pixelFormat = 0;
 		this->dataPtr = bufferPtr;
-		ZeroMemory(this->planePtr, sizeof(this->planePtr));
-		ZeroMemory(this->planeStride, sizeof(this->planeStride));
+		ZeroMemory(this->planarPtr, sizeof(this->planarPtr));
+		ZeroMemory(this->planarStride, sizeof(this->planarStride));
 
 		return TRUE;
 	}
@@ -139,13 +139,13 @@ public:
 		this->width = desc.width;
 		this->height = desc.height;
 		this->lineSize = desc.lineSize;
-		this->planeCnt = desc.planeCnt;
-		this->planePtr[0] = dataPtr;
-		this->planeStride[0] = desc.lineSize;
+		this->planarCnt = desc.planarCnt;
+		this->planarPtr[0] = dataPtr;
+		this->planarStride[0] = desc.lineSize;
 
-		for (int i = 1; i < desc.planeCnt; i++){
-			planePtr[i] = planePtr[i-1] + desc.lineSize*desc.height / (1<<desc.planeStride[i-1]);
-			planeStride[i] = desc.lineSize / desc.planeStride[i];
+		for (int i = 1; i < desc.planarCnt; i++){
+			planarPtr[i] = planarPtr[i-1] + desc.lineSize*desc.height / (1<<desc.planarStride[i-1]);
+			planarStride[i] = desc.lineSize / desc.planarStride[i];
 		}
 		
 		return TRUE;
@@ -154,8 +154,8 @@ public:
 	inline uint32_t GetDataSize() const { return sizeInUse; };
 	inline uint8_t *GetDataPtr() const { return dataPtr; };
 	inline int32_t GetLineSize() const { return lineSize; };
-	inline uint8_t* *GetPlanePtr() const { return (uint8_t**)planePtr; };
-	inline int32_t* GetStride() const { return (int32_t*)planeStride; };
+	inline uint8_t* *GetPlanarPtr() const { return (uint8_t**)planarPtr; };
+	inline int32_t* GetStride() const { return (int32_t*)planarStride; };
 	inline int64_t  GetPts() const { return pts; };
 	inline int32_t GetWidth() const { return width; };
 	inline int32_t GetHeight() const { return height; };
@@ -173,8 +173,8 @@ private:
 	int32_t colorRange;
 	int32_t transferMatrix;
 	int32_t primaries;
-	int32_t planeCnt;
-	uint8_t *planePtr[4];
-	int32_t planeStride[4];
+	int32_t planarCnt;
+	uint8_t *planarPtr[4];
+	int32_t planarStride[4];
 };
 
