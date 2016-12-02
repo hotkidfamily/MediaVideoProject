@@ -142,20 +142,6 @@ DDrawRender::DDrawRender()
 {
 }
 
-DDrawRender::DDrawRender(HWND hWnd)
-	: mDDrawObj(nullptr)
-	, mPrimarySurface(nullptr)
-	, mCanvasSurface(nullptr)
-	, mHwnd(hWnd)
-	, mRenderThreadHandle(INVALID_HANDLE_VALUE)
-	, mRenderThreadId(0)
-	, mRenderEvent(nullptr)
-	, mDDrawClippper(nullptr)
-	, mRenderThreadRuning(FALSE)
-	, mSupportVSync(FALSE)
-{
-}
-
 DDrawRender::~DDrawRender()
 {
 	DeinitRender();
@@ -267,12 +253,14 @@ DWORD WINAPI RenderThread(LPVOID args)
 	return pRender->RenderLoop();
 }
 
-BOOL DDrawRender::InitRender(int width, int height, DWORD pixelFormatInFourCC)
+BOOL DDrawRender::InitRender(HWND hWnd, int width, int height, DWORD pixelFormatInFourCC)
 {
 	HRESULT hr = DD_OK;
 	DDBLTFX ddbltfx = { 0 };
 	ZeroMemory(&mHwCaps, sizeof(DDCAPS));
 	ZeroMemory(&mHelCaps, sizeof(DDCAPS));
+
+	mHwnd = hWnd;
 
 	CHECK_HR(hr = CoInitialize(nullptr));
 
@@ -401,7 +389,13 @@ BOOL DDrawRender::PushFrame(CSampleBuffer *frame)
 {
 	HRESULT hr = DD_OK;
 	DDSURFACEDESC2 desc;
-	uint32_t ptsInterval = (uint32_t)(frame->GetPts() - mLastPts);
+	uint32_t ptsInterval = 0;
+
+	if (!frame){
+		return FALSE;
+	}
+
+	ptsInterval = (uint32_t)(frame->GetPts() - mLastPts);
 	if (mLastPts)
 		mInputStatis.AppendSample(ptsInterval);
 
