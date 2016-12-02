@@ -111,10 +111,11 @@ DWORD WINAPI CaptureThread(LPVOID args)
 	while (ctx->bRuning){
 		CSampleBuffer *frame = nullptr;
 		if (ctx->capture->GetFrame(frame)){
+			//ctx->render->PushFrame(frame);
 			EnterCriticalSection(&ctx->listLock);
 			captureList.push_back(frame);
 			LeaveCriticalSection(&ctx->listLock);
-			//ctx->capturer->ReleaseFrame(frame);
+			//ctx->capture->ReleaseFrame(frame);
 		}
 
 		Sleep(20);

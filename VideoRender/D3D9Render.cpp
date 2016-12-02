@@ -195,13 +195,13 @@ BOOL D3D9Render::InitRender(HWND hWnd, int width, int height, DWORD pixelFormatI
 	d3dpp.BackBufferHeight = height; //set the buffer to out window height
 	FourCCtoD3DFormat(&d3dpp.BackBufferFormat, pixelFormatInFourCC);
 	d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD; //SwapEffect
-	d3dpp.Flags |= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+	d3dpp.Flags |= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER | D3DPRESENTFLAG_VIDEO;
 	d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE; // wait for VSync
 	d3dpp.MultiSampleType = D3DMULTISAMPLE_NONE;
 	
 	mpD3D9OBj = Direct3DCreate9(D3D_SDK_VERSION); //Create the presentation parameters
-	
-	if (FAILED(hr = IfSupportedFormat(D3DFORMAT(pixelFormatInFourCC)))){
+
+	if (FAILED(hr = IfSupportedFormat(d3dpp.BackBufferFormat))){
 		// Create VPP Support
 		if (GetVPPFactoryObj(mVppFactory)) {
 			mVppFactory->CreateVPPObj(mVpp);
@@ -293,7 +293,7 @@ BOOL D3D9Render::DeinitRender()
 	return TRUE;
 }
 
-#define USE_BACKBUFFER 0
+#define USE_BACKBUFFER 1
 
 DWORD D3D9Render::RenderLoop()
 {
@@ -337,12 +337,18 @@ BOOL D3D9Render::PushFrame(CSampleBuffer *frame)
 	uint8_t *dstDataPtr = nullptr;
 	uint8_t *srcDataptr = nullptr;
 	IDirect3DSurface9 *pSurface = nullptr;
+	int32_t frameWidth = 0;
+	int32_t frameHeight = 0;
+	int32_t srcLineSize = 0;
 
 	if (!frame){
 		return FALSE;
 	}
 
+	frameWidth = frame->GetWidth();
+	frameHeight = frame->GetHeight();
 	srcDataptr = frame->GetDataPtr();
+	srcLineSize = frame->GetLineSize();
 
 #if USE_BACKBUFFER
 	CHECK_HR(hr = mpD3D9Device->GetBackBuffer(0, 2, D3DBACKBUFFER_TYPE_MONO, &pSurface));
@@ -353,16 +359,16 @@ BOOL D3D9Render::PushFrame(CSampleBuffer *frame)
 	if (SUCCEEDED(hr = pSurface->LockRect(&dstRect, nullptr, 0))){
 		dstDataPtr = (uint8_t*)dstRect.pBits;
 		if (frame->GetPixelFormat() == PIXEL_FORMAT_RGB24){
-			for (int i = 0; i < frame->GetHeight(); i++){
+			for (int i = 0; i < frameHeight; i++){
 				DWORD *rgb32Buffer = rgb32Buffer = (DWORD*)(dstDataPtr + i*dstRect.Pitch);
-				uint8_t* rgb24Buffer = frame->GetDataPtr() + frame->GetLineSize()*(frame->GetHeight() - i);
-				for (int j = 0; j < frame->GetWidth(); j++){
+				uint8_t* rgb24Buffer = srcDataptr  + srcLineSize*(frameHeight - i);
+				for (int j = 0; j < frameWidth; j++){
 					rgb32Buffer[j] = RGB(rgb24Buffer[0], rgb24Buffer[1], rgb24Buffer[2]);
 					rgb24Buffer += 3;
 				}
 			}
 		} else{
-			memcpy(dstDataPtr, frame->GetDataPtr(), frame->GetDataSize());
+			memcpy(dstDataPtr, srcDataptr, frame->GetDataSize());
 		}
 		hr = pSurface->UnlockRect();
 #if USE_BACKBUFFER
