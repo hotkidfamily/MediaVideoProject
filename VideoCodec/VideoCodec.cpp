@@ -33,7 +33,7 @@ BOOL ICodecFactoryImpl::CreateCodecObj(ICodec* &codec)
 	return bRet;
 }
 
-BOOL ICodecFactoryImpl::DestoryCodecObj(ICodec *&codec)
+BOOL ICodecFactoryImpl::DestoryCodecObj(ICodec *codec)
 {
 	BOOL bRet = TRUE;
 

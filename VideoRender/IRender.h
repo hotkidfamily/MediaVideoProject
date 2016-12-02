@@ -13,11 +13,11 @@ protected:
 	~IRender(){};
 
 public:
-	virtual HRESULT Repaint() = 0;
-	virtual HRESULT InitRender(HWND, int32_t, int32_t, DWORD) = 0;
-	virtual HRESULT DeinitRender() = 0;
+	virtual BOOL Repaint() = 0;
+	virtual BOOL InitRender(HWND, int32_t, int32_t, DWORD) = 0;
+	virtual BOOL DeinitRender() = 0;
 
-	virtual HRESULT PushFrame(CSampleBuffer *frame) = 0;
+	virtual BOOL PushFrame(CSampleBuffer *frame) = 0;
 	virtual const char *GetRenderDescriptor() = 0;
 };
 
@@ -27,7 +27,7 @@ protected:
 	~IRenderFactory(){};
 
 public:
-	virtual BOOL CreateRenderObj(IRender *) = 0;
+	virtual BOOL CreateRenderObj(IRender *&) = 0;
 	virtual BOOL DestoryRenderObj(IRender *) = 0;
 };
 

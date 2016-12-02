@@ -17,11 +17,11 @@ public:
 	DDrawRender(HWND);
 	~DDrawRender();
 
-	HRESULT InitRender(int, int, DWORD);
-	HRESULT DeinitRender();
-	HRESULT Repaint() { return S_OK; };
+	BOOL InitRender(int, int, DWORD);
+	BOOL DeinitRender();
+	BOOL Repaint() { return S_OK; };
 
-	HRESULT PushFrame(CSampleBuffer *);
+	BOOL PushFrame(CSampleBuffer *);
 
 	const char *GetRenderDescriptor() { return "Ddraw Render"; };
 

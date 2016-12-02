@@ -13,7 +13,7 @@ IRenderFactoryImpl::~IRenderFactoryImpl()
 
 }
 
-BOOL IRenderFactoryImpl::CreateRenderObj(IRender *render)
+BOOL IRenderFactoryImpl::CreateRenderObj(IRender *&render)
 {
 	render = new D3D9Render();
 

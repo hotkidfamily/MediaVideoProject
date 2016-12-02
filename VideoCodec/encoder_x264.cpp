@@ -60,7 +60,7 @@ void CLibx264::close()
 	if (mVppFactory || mVpp){
 		mVpp->DeinitContext();
 		mVppFactory->DestoryVPPObj(mVpp);
-		ReleaseVPPFctoryObj(mVppFactory);
+		ReleaseVPPFactoryObj(mVppFactory);
 	}
 
 	x264_picture_clean(&mInPic);

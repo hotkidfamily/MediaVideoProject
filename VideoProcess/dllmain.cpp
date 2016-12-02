@@ -36,7 +36,7 @@ BOOL GetVPPFactoryObj(IVPPFactory* &factoryPtr)
 	return factoryPtr != nullptr;
 }
 
-BOOL ReleaseVPPFctoryObj(IVPPFactory *ctx)
+BOOL ReleaseVPPFactoryObj(IVPPFactory *ctx)
 {
 	BOOL bRet = FALSE;
 

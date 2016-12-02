@@ -179,7 +179,7 @@ void D3D9Render::FourCCtoD3DFormat(D3DFORMAT* pd3dPixelFormat, DWORD dwFourCC)
 	}
 }
 
-HRESULT D3D9Render::InitRender(HWND hWnd, int width, int height, DWORD pixelFormatInFourCC)
+BOOL D3D9Render::InitRender(HWND hWnd, int width, int height, DWORD pixelFormatInFourCC)
 {
 	HRESULT hr = S_OK;
 	RECT rect = { 0 };
@@ -255,10 +255,10 @@ done:
 
 	GetErrorString(hr);
 
-	return hr;
+	return hr == S_OK;
 }
 
-HRESULT D3D9Render::DeinitRender()
+BOOL D3D9Render::DeinitRender()
 {
 	mRenderThreadRuning = FALSE;
 	if (mRenderThreadHandle != INVALID_HANDLE_VALUE){
@@ -279,7 +279,7 @@ HRESULT D3D9Render::DeinitRender()
 		mVpp = nullptr;
 	}
 
-	ReleaseVPPFctoryObj(mVppFactory);
+	ReleaseVPPFactoryObj(mVppFactory);
 	mVppFactory = nullptr;
 
 	
@@ -290,7 +290,7 @@ HRESULT D3D9Render::DeinitRender()
 	SAFE_RELEASE(mpD3D9Device);
 	SAFE_RELEASE(mpD3D9OBj);
 
-	return S_OK;
+	return TRUE;
 }
 
 #define USE_BACKBUFFER 1
@@ -337,7 +337,7 @@ DWORD D3D9Render::RenderLoop()
 	return 0;
 }
 
-HRESULT D3D9Render::PushFrame(CSampleBuffer *frame)
+BOOL D3D9Render::PushFrame(CSampleBuffer *frame)
 {
 	HRESULT hr = E_FAIL;
 	D3DLOCKED_RECT dstRect = { 0 };
@@ -376,7 +376,7 @@ HRESULT D3D9Render::PushFrame(CSampleBuffer *frame)
 done:
 	GetErrorString(hr);
 
-	return hr;
+	return hr != DD_OK;
 }
 
 BOOL D3D9Render::OSDText(HDC, TCHAR *format, ...)

@@ -267,7 +267,7 @@ DWORD WINAPI RenderThread(LPVOID args)
 	return pRender->RenderLoop();
 }
 
-HRESULT DDrawRender::InitRender(int width, int height, DWORD pixelFormatInFourCC)
+BOOL DDrawRender::InitRender(int width, int height, DWORD pixelFormatInFourCC)
 {
 	HRESULT hr = DD_OK;
 	DDBLTFX ddbltfx = { 0 };
@@ -318,13 +318,11 @@ HRESULT DDrawRender::InitRender(int width, int height, DWORD pixelFormatInFourCC
 
 done:
 	GetErrorString(hr);
-	return hr;
+	return hr != DD_OK;
 }
 
-HRESULT DDrawRender::DeinitRender()
+BOOL DDrawRender::DeinitRender()
 {
-	HRESULT hr = S_OK;
-
 	mRenderThreadRuning = FALSE;
 	if (mRenderThreadHandle != INVALID_HANDLE_VALUE){
 		SetEvent(mRenderEvent);
@@ -344,7 +342,8 @@ HRESULT DDrawRender::DeinitRender()
 	SAFE_RELEASE(mDDrawObj);
 
 	CoUninitialize();
-	return hr;
+
+	return TRUE;
 }
 
 
@@ -398,7 +397,7 @@ DWORD DDrawRender::RenderLoop()
 	return 0;
 }
 
-HRESULT DDrawRender::PushFrame(CSampleBuffer *frame)
+BOOL DDrawRender::PushFrame(CSampleBuffer *frame)
 {
 	HRESULT hr = DD_OK;
 	DDSURFACEDESC2 desc;
@@ -437,7 +436,7 @@ HRESULT DDrawRender::PushFrame(CSampleBuffer *frame)
 	
 done:
 	GetErrorString(hr);
-	return hr;
+	return hr != DD_OK;
 }
 
 BOOL DDrawRender::OSDText(HDC hdc, char* format, ...)

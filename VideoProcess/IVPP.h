@@ -36,7 +36,7 @@ protected:
 	~IVPPFactory(){};
 
 public:
-	virtual BOOL CreateVPPObj(IVPP*&) = 0;
+	virtual BOOL CreateVPPObj(IVPP *&) = 0;
 	virtual void DestoryVPPObj(IVPP *) = 0;
 };
 
@@ -44,8 +44,8 @@ public:
 extern "C" {
 #endif
 
-	VIDEOPROCESS_API BOOL GetVPPFactoryObj(IVPPFactory * &);
-	VIDEOPROCESS_API BOOL ReleaseVPPFctoryObj(IVPPFactory *);
+	VIDEOPROCESS_API BOOL GetVPPFactoryObj(IVPPFactory *&);
+	VIDEOPROCESS_API BOOL ReleaseVPPFactoryObj(IVPPFactory *);
 
 #ifdef __cplusplus
 }

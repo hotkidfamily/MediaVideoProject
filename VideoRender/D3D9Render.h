@@ -14,10 +14,10 @@ public:
 	D3D9Render();
 	~D3D9Render();
 
-	HRESULT InitRender(HWND , int , int , DWORD );
-	HRESULT DeinitRender();
-	HRESULT PushFrame(CSampleBuffer *);
-	HRESULT Repaint() { return S_OK; };
+	BOOL InitRender(HWND , int , int , DWORD );
+	BOOL DeinitRender();
+	BOOL PushFrame(CSampleBuffer *);
+	BOOL Repaint() { return S_OK; };
 
 	const char *GetRenderDescriptor() { return "D39 Render"; };
 

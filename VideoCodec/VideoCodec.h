@@ -7,8 +7,8 @@ public:
 	ICodecFactoryImpl();
 	~ICodecFactoryImpl();
 
-	BOOL CreateCodecObj(ICodec* &codec);
-	BOOL DestoryCodecObj(ICodec *&codec);
+	BOOL CreateCodecObj(ICodec* &);
+	BOOL DestoryCodecObj(ICodec *);
 
 protected:
 	BOOL UpdateCodecAbilityTable();

@@ -9,6 +9,6 @@ public:
 	IRenderFactoryImpl();
 	~IRenderFactoryImpl();
 
-	BOOL CreateRenderObj(IRender *);
+	BOOL CreateRenderObj(IRender *&);
 	BOOL DestoryRenderObj(IRender *);
 };

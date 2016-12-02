@@ -123,7 +123,7 @@ DWORD WINAPI EncoderThread(LPVOID args)
 	while (ctx->bRuning){
 		CSampleBuffer *frame = nullptr;
 		if (ctx->capturer->GetFrame(frame)){
-			//ctx->render->PushFrame(frame);
+			ctx->render->PushFrame(frame);
 			ctx->capturer->ReleaseFrame(frame);
 		}
 
@@ -148,7 +148,7 @@ BOOL StartRenderWork(THIS_CONTEXT *ctx)
 	}
 
 	if(bRet){
-		bRet = (ctx->render->InitRender(ctx->hMainWnd, ctx->captureArgs.width, ctx->captureArgs.height, ctx->captureArgs.pixelFormatInFourCC) < 0);
+		bRet = ctx->render->InitRender(ctx->hMainWnd, ctx->captureArgs.width, ctx->captureArgs.height, ctx->captureArgs.pixelFormatInFourCC);
 	}
 
 	if(!bRet){
@@ -160,10 +160,16 @@ BOOL StartRenderWork(THIS_CONTEXT *ctx)
 
 BOOL StopRenderWork(THIS_CONTEXT *ctx)
 {
-#if 0
-	if (ctx->render)
-		ctx->render->DeinitRenderContext();
-	SAFE_DELETE(ctx->render);
-#endif
+	if (ctx){
+		if (ctx->render){
+			ctx->render->DeinitRender();
+			ctx->renderFactory->DestoryRenderObj(ctx->render);
+			ctx->render = NULL;
+		}
+
+		ReleaseRenderFactoryObj(ctx->renderFactory);
+		ctx->renderFactory = NULL;
+	}
+	
 	return TRUE;
 }

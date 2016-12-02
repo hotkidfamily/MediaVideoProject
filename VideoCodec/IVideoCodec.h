@@ -82,8 +82,8 @@ protected:
 	~ICodecFactory(){};
 
 public:
-	virtual BOOL CreateCodecObj(ICodec* &codec) = 0;
-	virtual BOOL DestoryCodecObj(ICodec *&codec) = 0;
+	virtual BOOL CreateCodecObj(ICodec* &) = 0;
+	virtual BOOL DestoryCodecObj(ICodec *) = 0;
 };
 
 #ifdef __cplusplus
