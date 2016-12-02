@@ -5,6 +5,7 @@
 #include <fstream>
 
 #pragma comment(lib, "VideoCodec.lib")
+#pragma comment(lib, "VideoRender.lib")
 
 BOOL StartCaptureWork(THIS_CONTEXT *ctx)
 {
@@ -122,7 +123,7 @@ DWORD WINAPI EncoderThread(LPVOID args)
 	while (ctx->bRuning){
 		CSampleBuffer *frame = nullptr;
 		if (ctx->capturer->GetFrame(frame)){
-			ctx->render->PushFrame(frame);
+			//ctx->render->PushFrame(frame);
 			ctx->capturer->ReleaseFrame(frame);
 		}
 
@@ -140,10 +141,18 @@ BOOL CreateWorkThread(THIS_CONTEXT *ctx)
 
 BOOL StartRenderWork(THIS_CONTEXT *ctx)
 {
-	ctx->render = new D3D9Render(ctx->hMainWnd);
-	assert(ctx->render != nullptr);
-	if (ctx->render->InitializeRenderContext(ctx->captureArgs.width, ctx->captureArgs.height, ctx->captureArgs.pixelFormatInFourCC) < 0){
-		return FALSE;
+	BOOL bRet = TRUE;
+	bRet = GetRenderFactoryObj(ctx->renderFactory);
+	if (bRet){
+		bRet = ctx->renderFactory->CreateRenderObj(ctx->render);
+	}
+
+	if(bRet){
+		bRet = (ctx->render->InitRender(ctx->hMainWnd, ctx->captureArgs.width, ctx->captureArgs.height, ctx->captureArgs.pixelFormatInFourCC) < 0);
+	}
+
+	if(!bRet){
+		StopRenderWork(ctx);
 	}
 
 	return TRUE;
@@ -151,8 +160,10 @@ BOOL StartRenderWork(THIS_CONTEXT *ctx)
 
 BOOL StopRenderWork(THIS_CONTEXT *ctx)
 {
+#if 0
 	if (ctx->render)
 		ctx->render->DeinitRenderContext();
 	SAFE_DELETE(ctx->render);
+#endif
 	return TRUE;
 }

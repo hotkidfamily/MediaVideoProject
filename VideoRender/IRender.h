@@ -14,7 +14,7 @@ protected:
 
 public:
 	virtual HRESULT Repaint() = 0;
-	virtual HRESULT InitRender(int, int, DWORD) = 0;
+	virtual HRESULT InitRender(HWND, int32_t, int32_t, DWORD) = 0;
 	virtual HRESULT DeinitRender() = 0;
 
 	virtual HRESULT PushFrame(CSampleBuffer *frame) = 0;

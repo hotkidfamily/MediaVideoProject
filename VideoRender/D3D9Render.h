@@ -1,23 +1,26 @@
 #pragma once
 
+#include "IRender.h"
 #include <d3d9.h>
 #include <d3dx9.h>
 #include "AutoLock.h"
-#include "IVPP.h"
 
 #pragma comment(lib, "d3dx9.lib") //link the library
 #pragma comment(lib, "d3d9.lib") //link the library
 
-class D3D9Render
+class D3D9Render :public IRender
 {
 public:
 	D3D9Render();
-	D3D9Render(HWND hWnd);
 	~D3D9Render();
 
-	HRESULT InitializeRenderContext(int width, int height, DWORD pixelFormatInFourCC);
-	HRESULT DeinitRenderContext();
-	HRESULT PushFrame(CSampleBuffer *frame);
+	HRESULT InitRender(HWND , int , int , DWORD );
+	HRESULT DeinitRender();
+	HRESULT PushFrame(CSampleBuffer *);
+	HRESULT Repaint() { return S_OK; };
+
+	const char *GetRenderDescriptor() { return "D39 Render"; };
+
 	DWORD RenderLoop();
 
 protected:

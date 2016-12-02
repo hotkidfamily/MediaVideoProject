@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "D3D9Render.h"
+#include <stdlib.h>
 
 #pragma comment(lib, "videoprocess.lib")
 
@@ -59,32 +60,12 @@ D3D9Render::D3D9Render()
 {
 }
 
-D3D9Render::D3D9Render(HWND hWnd)
-	: mhWnd(hWnd)
-	, mpD3D9OBj(nullptr)
-	, mpD3D9Device(nullptr)
-	, mPFont(nullptr)
-	, mPrimerySurface(nullptr)
-	, mPrimeryTexture(nullptr)
-
-	, mRenderEvent(nullptr)
-	, mSupportVSync(FALSE)
-	, mRenderThreadHandle(INVALID_HANDLE_VALUE)
-	, mRenderThreadId(0)
-	, mRenderThreadRuning(FALSE)
-	, mVppFactory(nullptr)
-	, mVpp(nullptr)
-{
-
-}
-
-
 D3D9Render::~D3D9Render()
 {
 }
 
 
-DWORD WINAPI RenderThread(LPVOID args)
+DWORD WINAPI D3d9RenderThread(LPVOID args)
 {
 	D3D9Render *pRender = (D3D9Render*)args;
 	return pRender->RenderLoop();
@@ -198,11 +179,13 @@ void D3D9Render::FourCCtoD3DFormat(D3DFORMAT* pd3dPixelFormat, DWORD dwFourCC)
 	}
 }
 
-HRESULT D3D9Render::InitializeRenderContext(int width, int height, DWORD pixelFormatInFourCC)
+HRESULT D3D9Render::InitRender(HWND hWnd, int width, int height, DWORD pixelFormatInFourCC)
 {
 	HRESULT hr = S_OK;
 	RECT rect = { 0 };
 	D3DPRESENT_PARAMETERS d3dpp; //the presentation parameters that will be used when we will create the device
+
+	mhWnd = hWnd;
 
 	ZeroMemory(&d3dpp, sizeof(d3dpp)); //to be sure d3dpp is empty
 	d3dpp.Windowed = TRUE; //use our global windowed variable to tell if the program is windowed or not
@@ -263,11 +246,11 @@ HRESULT D3D9Render::InitializeRenderContext(int width, int height, DWORD pixelFo
 
 	mSupportVSync = FALSE;
 	mRenderThreadRuning = TRUE;
-	mRenderThreadHandle = CreateThread(nullptr, 0, RenderThread, this, NULL, &mRenderThreadId);
+	mRenderThreadHandle = CreateThread(nullptr, 0, D3d9RenderThread, this, NULL, &mRenderThreadId);
 
 done:
 	if (FAILED(hr)){
-		DeinitRenderContext();
+		DeinitRender();
 	}
 
 	GetErrorString(hr);
@@ -275,7 +258,7 @@ done:
 	return hr;
 }
 
-HRESULT D3D9Render::DeinitRenderContext()
+HRESULT D3D9Render::DeinitRender()
 {
 	mRenderThreadRuning = FALSE;
 	if (mRenderThreadHandle != INVALID_HANDLE_VALUE){

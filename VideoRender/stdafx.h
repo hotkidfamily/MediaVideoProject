@@ -11,5 +11,8 @@
 // Windows м╥нд╪Ч: 
 #include <windows.h>
 
-
+#include "utils.h"
+#include "PixelFormat.h"
+#include "SampleBuffer.h"
+#include "IVPP.h"
 
