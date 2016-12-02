@@ -33,7 +33,7 @@ void AddDevicesToMenu(THIS_CONTEXT *ctx)
 
 	VECT camlist;
 	VECT::iterator it;
-	ctx->capturer->GetDeviceList(camlist);
+	ctx->capture->GetDeviceList(camlist);
 	ctx->totalCaptureDevices = camlist.size();
 
 	if (iMenuItems > 0){
@@ -58,7 +58,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	gContext = new THIS_CONTEXT;
 	assert(gContext);
 	gContext->hInstance = hInstance;
-
+	InitializeCriticalSection(&gContext->listLock);
 
  	// TODO: Place code here.
 	MSG msg;
@@ -77,8 +77,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
 	hAccelTable = LoadAccelerators(gContext->hInstance, MAKEINTRESOURCE(IDC_WINVIDEOCAPTURE));
 
-	gContext->capturer = GetVideoCaptureObj();
-	assert(gContext->capturer);
+	gContext->capture = GetVideoCaptureObj();
+	assert(gContext->capture);
 	AddDevicesToMenu(gContext);
 
 	// Main message loop:
@@ -93,7 +93,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
 	StopCaptureWork(gContext);
 	StopRenderWork(gContext);	
-	ReleaseVideoCaptureObj(gContext->capturer);
+	ReleaseVideoCaptureObj(gContext->capture);
+	DeleteCriticalSection(&gContext->listLock);
 	delete gContext;
 	gContext = nullptr;
 
@@ -238,24 +239,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				status = GetMenuState(hMenu, idx, MF_BYPOSITION);
 				if (status & MF_CHECKED){
 					CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_UNCHECKED);
-					//ShowWindow(gContext->hDashboardWnd, SW_HIDE);
+					ShowWindow(gContext->hDashboardWnd, SW_HIDE);
 				}else{
 					CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_CHECKED);
 					if (!gContext->hDashboardWnd)
 						gContext->hDashboardWnd = CreateDialog(gContext->hInstance, MAKEINTRESOURCE(IDD_DIALOG_STATUS), hWnd, (DLGPROC)StatusDlgProc);
-					ShowWindow(gContext->hDashboardWnd, SW_SHOW);
+					//ShowWindow(gContext->hDashboardWnd, SW_SHOW);
 				}
 				break;
 			case ID_WINDOW_VIDEO:
 				status = GetMenuState(hMenu, idx, MF_BYPOSITION);
 				if (status & MF_CHECKED){
 					CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_UNCHECKED);
-					//ShowWindow(gContext->hMediaInfoWnd, SW_HIDE);
+					ShowWindow(gContext->hMediaInfoWnd, SW_HIDE);
 				}else{
 					CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_CHECKED);
 					if (!gContext->hMediaInfoWnd)
 						gContext->hMediaInfoWnd = CreateDialog(gContext->hInstance, MAKEINTRESOURCE(IDD_DIALOG_MEDIA), hWnd, (DLGPROC)MediaDlgProc);
-					ShowWindow(gContext->hMediaInfoWnd, SW_SHOW);
+					//ShowWindow(gContext->hMediaInfoWnd, SW_SHOW);
 				}
 				break;
 			case ID_TOOLS_RANDOMRENDER:
