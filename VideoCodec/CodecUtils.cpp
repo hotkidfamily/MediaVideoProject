@@ -13,7 +13,6 @@ typedef struct tagPixelFormatX264AndFourCC
 }PFAVCFCC;
 
 PFAVCFCC PFTable[] = {
-		{ X264_CSP_NONE, MAKEFOURCC('N', 'O', 'N', 'E') },
 		{ X264_CSP_I420, MAKEFOURCC('I', '4', '2', '0') },
 		{ X264_CSP_YV12, MAKEFOURCC('Y', 'V', '1', '2') },
 		{ X264_CSP_NV12, MAKEFOURCC('N', 'V', '1', '2') },
@@ -23,9 +22,9 @@ PFAVCFCC PFTable[] = {
 		{ X264_CSP_V210, MAKEFOURCC('V', '2', '1', '0') },
 		{ X264_CSP_I444, MAKEFOURCC('I', '4', '4', '4') },
 		{ X264_CSP_YV24, MAKEFOURCC('Y', 'V', '2', '4') },
-		{ X264_CSP_BGR, MAKEFOURCC('B', 'G', 'R', '0') },
-		{ X264_CSP_BGRA, MAKEFOURCC('B', 'G', 'R', 'A') },
-		{ X264_CSP_RGB, MAKEFOURCC('R', 'G', 'B', '0') },
+		{ X264_CSP_BGR, 0xe436eb7e }, // not support
+		{ X264_CSP_BGRA, 0x773c9ac0 },
+		{ X264_CSP_RGB, 0xe436eb7d },
 };
 
 

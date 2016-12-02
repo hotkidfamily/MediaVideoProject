@@ -216,7 +216,7 @@ HRESULT D3D9Render::InitializeRenderContext(int width, int height, DWORD pixelFo
 	d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE; // wait for VSync
 	
 	mpD3D9OBj = Direct3DCreate9(D3D_SDK_VERSION); //Create the presentation parameters
-	GetD3D9FormatByFourCC(pixelFormatInFourCC);
+	
 	if (FAILED(hr = IfSupportedFormat(D3DFORMAT(pixelFormatInFourCC)))){
 		// Create VPP Support
 		if (GetVPPFactoryObj(mVppFactory)) {

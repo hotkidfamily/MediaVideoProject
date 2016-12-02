@@ -39,13 +39,10 @@ enum CPPixelFormat{
 typedef struct tagFrameFormatInfo{
 	GUID subtype;
 	DWORD pixelFormatInFourCC;
-	AVPixelFormat pixelFmtInFFmpeg;
-	D3DFORMAT pixelFmtInD3D9;
 	int priority;
 	int32_t bytePerPixel;
 	int32_t planeCnt;
 	uint32_t planeStride[4];
-
 }FRAMEFORAMTINFO;
 
 

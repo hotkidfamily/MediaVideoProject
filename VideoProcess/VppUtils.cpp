@@ -4,8 +4,7 @@
 #include "PixelFormat.h"
 #include <ddraw.h>
 
-typedef struct tagPixelFormatFFmpegFourCC
-{
+typedef struct tagPixelFormatFFmpegFourCC{
 	DWORD pfFourCC;
 	AVPixelFormat fpFFmpeg;
 }PFFF;
