@@ -4,7 +4,7 @@
 
 CSampleBufferManager::CSampleBufferManager()
 	: mBufferSize(0)
-	, mBufferPtr(NULL)
+	, mBufferPtr(nullptr)
 {
 }
 
@@ -109,7 +109,7 @@ BOOL CSampleBufferManager::ReleaseMemory()
 
 	if (mBufferPtr){
 		_aligned_free(mBufferPtr);
-		mBufferPtr = NULL;
+		mBufferPtr = nullptr;
 	}
 
 	mBufferSize = 0;

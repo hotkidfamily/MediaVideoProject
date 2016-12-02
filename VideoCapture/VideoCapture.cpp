@@ -21,12 +21,12 @@ bool IVideoCaptureDelegate::UnInitContext()
 {
 	if (mDShowCapture){
 		delete mDShowCapture;
-		mDShowCapture = NULL;
+		mDShowCapture = nullptr;
 	}
 
 	if (mMFCapture){
 		delete mMFCapture;
-		mMFCapture = NULL;
+		mMFCapture = nullptr;
 	}
 
 	return (!mDShowCapture && !mMFCapture);

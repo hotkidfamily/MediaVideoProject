@@ -42,6 +42,9 @@
     <ClInclude Include="VideoProcess.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="VppUtils.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -61,6 +64,9 @@
     </ClCompile>
     <ClCompile Include="FFmpegWrapper.cpp">
       <Filter>源文件\Wrapper</Filter>
+    </ClCompile>
+    <ClCompile Include="VppUtils.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

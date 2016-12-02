@@ -30,30 +30,30 @@ class CPackageBuffer
 {
 public:
 	CPackageBuffer()
-		: mBufferPtr(NULL)
+		: mBufferPtr(nullptr)
 		, mCapbility(0)
-		, data(NULL)
-		, extraData(NULL)
+		, data(nullptr)
+		, extraData(nullptr)
 		, dataSize(0)
 		, extraDataSize(0)
 		, pts(0)
 		, dts(0)
 		, frameType(ERR_FRAME)
-		, extraParam(NULL)
+		, extraParam(nullptr)
 	{
 	}
 
 	CPackageBuffer(int32_t size, int32_t mainSize)
-		: mBufferPtr(NULL)
+		: mBufferPtr(nullptr)
 		, mCapbility(0)
-		, data(NULL)
-		, extraData(NULL)
+		, data(nullptr)
+		, extraData(nullptr)
 		, dataSize(0)
 		, extraDataSize(0)
 		, pts(0)
 		, dts(0)
 		, frameType(ERR_FRAME)
-		, extraParam(NULL)
+		, extraParam(nullptr)
 	{
 		Reset(size, mainSize);
 	}
@@ -97,7 +97,7 @@ public:
 		pts = 0;
 		dts = 0;
 		frameType = ERR_FRAME;
-		extraParam = NULL;
+		extraParam = nullptr;
 		bRet = TRUE;
 
 	done:
@@ -134,8 +134,8 @@ protected:
 			_aligned_free(mBufferPtr);
 
 		mCapbility = 0;
-		data = NULL;
-		extraData = NULL;
+		data = nullptr;
+		extraData = nullptr;
 		dataSize = 0;
 		extraDataSize = 0;
 

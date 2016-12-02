@@ -21,14 +21,14 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 
 IVideoCapture *GetVideoCaptureObj()
 {
-	CoInitialize(NULL);
+	CoInitialize(nullptr);
 
 	IVideoCaptureDelegate *pCapture = new IVideoCaptureDelegate;
 	if (pCapture){
 		pCapture->InitContext();
 		return static_cast<IVideoCapture*>(pCapture);
 	}else{
-		return NULL;
+		return nullptr;
 	}
 }
 

@@ -129,28 +129,28 @@ const COMERROR ddrawErrorList[] = {
 };
 
 DDrawRender::DDrawRender()
-	: mDDrawObj(NULL)
-	, mPrimarySurface(NULL)
-	, mCanvasSurface(NULL)
-	, mHwnd(NULL)
+	: mDDrawObj(nullptr)
+	, mPrimarySurface(nullptr)
+	, mCanvasSurface(nullptr)
+	, mHwnd(nullptr)
 	, mRenderThreadHandle(INVALID_HANDLE_VALUE)
 	, mRenderThreadId(0)
-	, mRenderEvent(NULL)
-	, mDDrawClippper(NULL)
+	, mRenderEvent(nullptr)
+	, mDDrawClippper(nullptr)
 	, mRenderThreadRuning(FALSE)
 	, mSupportVSync(FALSE)
 {
 }
 
 DDrawRender::DDrawRender(HWND hWnd)
-	: mDDrawObj(NULL)
-	, mPrimarySurface(NULL)
-	, mCanvasSurface(NULL)
+	: mDDrawObj(nullptr)
+	, mPrimarySurface(nullptr)
+	, mCanvasSurface(nullptr)
 	, mHwnd(hWnd)
 	, mRenderThreadHandle(INVALID_HANDLE_VALUE)
 	, mRenderThreadId(0)
-	, mRenderEvent(NULL)
-	, mDDrawClippper(NULL)
+	, mRenderEvent(nullptr)
+	, mDDrawClippper(nullptr)
 	, mRenderThreadRuning(FALSE)
 	, mSupportVSync(FALSE)
 {
@@ -244,7 +244,7 @@ HRESULT DDrawRender::CreateSurfaces(int width, int height, DWORD pixelFormatInFo
 	ddsd.dwFlags = DDSD_CAPS;
 	ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
 
-	CHECK_HR(hr = mDDrawObj->CreateSurface(&ddsd, &mPrimarySurface, NULL));
+	CHECK_HR(hr = mDDrawObj->CreateSurface(&ddsd, &mPrimarySurface, nullptr));
 
 	ddsd.dwFlags = DDSD_WIDTH | DDSD_HEIGHT | DDSD_CAPS | DDSD_PIXELFORMAT;
 	ddsd.dwWidth = width;
@@ -252,7 +252,7 @@ HRESULT DDrawRender::CreateSurfaces(int width, int height, DWORD pixelFormatInFo
  	ddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
 	FillddPixelFormatFromFourCC(&(ddsd.ddpfPixelFormat), pixelFormatInFourCC);
 
-	CHECK_HR(hr = mDDrawObj->CreateSurface(&ddsd, &mCanvasSurface, NULL));
+	CHECK_HR(hr = mDDrawObj->CreateSurface(&ddsd, &mCanvasSurface, nullptr));
 
 	mCanvasBpp = ddsd.ddpfPixelFormat.dwRGBBitCount;
 
@@ -274,10 +274,10 @@ HRESULT DDrawRender::InitRender(int width, int height, DWORD pixelFormatInFourCC
 	ZeroMemory(&mHwCaps, sizeof(DDCAPS));
 	ZeroMemory(&mHelCaps, sizeof(DDCAPS));
 
-	CHECK_HR(hr = CoInitialize(NULL));
+	CHECK_HR(hr = CoInitialize(nullptr));
 
-	CHECK_HR(hr = CoCreateInstance(CLSID_DirectDraw, NULL, CLSCTX_ALL, IID_IDirectDraw, (void**)&mDDrawObj));
-	CHECK_HR(hr = mDDrawObj->Initialize(NULL));
+	CHECK_HR(hr = CoCreateInstance(CLSID_DirectDraw, nullptr, CLSCTX_ALL, IID_IDirectDraw, (void**)&mDDrawObj));
+	CHECK_HR(hr = mDDrawObj->Initialize(nullptr));
 	CHECK_HR(hr = mDDrawObj->SetCooperativeLevel(mHwnd, DDSCL_NORMAL));
 
 	mHwCaps.dwSize = sizeof(DDCAPS);
@@ -286,14 +286,14 @@ HRESULT DDrawRender::InitRender(int width, int height, DWORD pixelFormatInFourCC
 
 	CHECK_HR(hr = CreateSurfaces(width, height, pixelFormatInFourCC));
 
-	CHECK_HR(hr = mDDrawObj->CreateClipper(0, &mDDrawClippper, NULL));
+	CHECK_HR(hr = mDDrawObj->CreateClipper(0, &mDDrawClippper, nullptr));
 	CHECK_HR(hr = mDDrawClippper->SetHWnd(0, mHwnd));
 	CHECK_HR(hr = mPrimarySurface->SetClipper(mDDrawClippper));
 
 	/* clear screen */
 	ddbltfx.dwSize = sizeof(ddbltfx);
 	ddbltfx.dwFillColor = RGB(0, 0, 0);
-	hr = mPrimarySurface->Blt(NULL, NULL, NULL, DDBLT_COLORFILL | DDBLT_WAIT, &ddbltfx);
+	hr = mPrimarySurface->Blt(nullptr, nullptr, nullptr, DDBLT_COLORFILL | DDBLT_WAIT, &ddbltfx);
 	if (hr == DDERR_SURFACELOST){
 		//Restore surface
 	}
@@ -302,7 +302,7 @@ HRESULT DDrawRender::InitRender(int width, int height, DWORD pixelFormatInFourCC
 	mLastTime = 0;
 	mScreenSizeInPixel.cx = width;
 	mScreenSizeInPixel.cy = height;
-	mRenderEvent = CreateEvent(NULL, FALSE, FALSE, TEXT("Render Event"));
+	mRenderEvent = CreateEvent(nullptr, FALSE, FALSE, TEXT("Render Event"));
 	if (mRenderEvent == INVALID_HANDLE_VALUE){
 		hr = E_FAIL;
 		goto done;
@@ -334,7 +334,7 @@ HRESULT DDrawRender::DeinitRender()
 
 	if (mRenderEvent){
 		CloseHandle(mRenderEvent);
-		mRenderEvent = NULL;
+		mRenderEvent = nullptr;
 		mSupportVSync = FALSE;
 	}
 
@@ -353,7 +353,7 @@ DWORD DDrawRender::RenderLoop()
 	HRESULT hr = S_FALSE;
 	RECT rect = { 0 };
 	DWORD renderBefore = 0;
-	HDC dc = NULL;
+	HDC dc = nullptr;
 	uint32_t renderInterval = 0;
 
 	mLastTime = 0;
@@ -377,7 +377,7 @@ DWORD DDrawRender::RenderLoop()
 		}
 
 		GetWindowRect(mHwnd, &rect);
-		CHECK_HR(hr = mPrimarySurface->Blt(&rect, mCanvasSurface, NULL, DDBLT_WAIT, NULL));
+		CHECK_HR(hr = mPrimarySurface->Blt(&rect, mCanvasSurface, nullptr, DDBLT_WAIT, nullptr));
 		if (mInputStatis.SampleSize() > 2){
 			mInputStatis.MinMaxSample(minInputSample, maxInputSample);
 			mRenderStatis.MinMaxSample(minRenderSample, maxRenderSample);
@@ -412,7 +412,7 @@ HRESULT DDrawRender::PushFrame(CSampleBuffer *frame)
 	if (!mCanvasSurface){
 		return S_FALSE;
 	}
-	CHECK_HR(hr = mCanvasSurface->Lock(NULL, &desc, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL));
+	CHECK_HR(hr = mCanvasSurface->Lock(nullptr, &desc, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, nullptr));
 
 	if (!((uint32_t)frame->GetWidth() > desc.dwWidth || (uint32_t)frame->GetHeight() > desc.dwHeight)){
 		uint8_t *surfaceBuffer = (uint8_t*)desc.lpSurface;
@@ -431,7 +431,7 @@ HRESULT DDrawRender::PushFrame(CSampleBuffer *frame)
 		}
 	}
 
-	mCanvasSurface->Unlock(NULL);
+	mCanvasSurface->Unlock(nullptr);
 
 	mLastPts = frame->GetPts();
 	

@@ -8,7 +8,7 @@
 
 // Global Variables:
 
-THIS_CONTEXT *gContext = NULL;
+THIS_CONTEXT *gContext = nullptr;
 
 // Forward declarations of functions included in this code module:
 ATOM				MyRegisterClass(PTHIS_CONTEXT hInstance);
@@ -82,7 +82,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	AddDevicesToMenu(gContext);
 
 	// Main message loop:
-	while (GetMessage(&msg, NULL, 0, 0))
+	while (GetMessage(&msg, nullptr, 0, 0))
 	{
 		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
 		{
@@ -95,7 +95,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	StopRenderWork(gContext);	
 	ReleaseVideoCaptureObj(gContext->capturer);
 	delete gContext;
-	gContext = NULL;
+	gContext = nullptr;
 
 	return (int) msg.wParam;
 }
@@ -127,7 +127,7 @@ ATOM MyRegisterClass(PTHIS_CONTEXT ctx)
 	wcex.cbWndExtra		= 0;
 	wcex.hInstance		= ctx->hInstance;
 	wcex.hIcon			= LoadIcon(ctx->hInstance, MAKEINTRESOURCE(IDI_WINVIDEOCAPTURE));
-	wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
+	wcex.hCursor		= LoadCursor(nullptr, IDC_ARROW);
 	wcex.hbrBackground	= (HBRUSH)(COLOR_WINDOW+1);
 	wcex.lpszMenuName	= MAKEINTRESOURCE(IDC_WINVIDEOCAPTURE);
 	wcex.lpszClassName	= ctx->szWindowClass;
@@ -150,7 +150,7 @@ BOOL InitInstance(THIS_CONTEXT *ctx, int nCmdShow)
 {
 
 	ctx->hMainWnd = CreateWindow(ctx->szWindowClass, ctx->szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, ctx->hInstance, NULL);
+      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, ctx->hInstance, nullptr);
 
 	if (!ctx->hMainWnd)
    {

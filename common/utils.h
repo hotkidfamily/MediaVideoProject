@@ -4,7 +4,7 @@
 #include <string>
 
 #ifndef SAFE_DELETE
-#define SAFE_DELETE(x)  {if(x) delete (x); (x)= NULL;}
+#define SAFE_DELETE(x)  {if(x) delete (x); (x)= nullptr;}
 #endif
 
 #ifdef UNICODE
@@ -18,7 +18,7 @@
 #endif
 
 #ifndef SAFE_RELEASE
-#define SAFE_RELEASE(x) { if(x) x->Release(); x=NULL; }
+#define SAFE_RELEASE(x) { if(x) x->Release(); x=nullptr; }
 #endif
 
 typedef struct tagCOMError{

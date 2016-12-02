@@ -42,34 +42,38 @@ const COMERROR d3d9ErrorList[] = {
 };
 
 D3D9Render::D3D9Render()
-	: mhWnd(NULL)
-	, mpD3D9OBj(NULL)
-	, mpD3D9Device(NULL)
-	, mPFont(NULL)
-	, mPrimerySurface(NULL)
-	, mPrimeryTexture(NULL)
+	: mhWnd(nullptr)
+	, mpD3D9OBj(nullptr)
+	, mpD3D9Device(nullptr)
+	, mPFont(nullptr)
+	, mPrimerySurface(nullptr)
+	, mPrimeryTexture(nullptr)
 
-	, mRenderEvent(NULL)
+	, mRenderEvent(nullptr)
 	, mSupportVSync(FALSE)
 	, mRenderThreadHandle(INVALID_HANDLE_VALUE)
 	, mRenderThreadId(0)
 	, mRenderThreadRuning(FALSE)
+	, mVppFactory(nullptr)
+	, mVpp(nullptr)
 {
 }
 
 D3D9Render::D3D9Render(HWND hWnd)
 	: mhWnd(hWnd)
-	, mpD3D9OBj(NULL)
-	, mpD3D9Device(NULL)
-	, mPFont(NULL)
-	, mPrimerySurface(NULL)
-	, mPrimeryTexture(NULL)
+	, mpD3D9OBj(nullptr)
+	, mpD3D9Device(nullptr)
+	, mPFont(nullptr)
+	, mPrimerySurface(nullptr)
+	, mPrimeryTexture(nullptr)
 
-	, mRenderEvent(NULL)
+	, mRenderEvent(nullptr)
 	, mSupportVSync(FALSE)
 	, mRenderThreadHandle(INVALID_HANDLE_VALUE)
 	, mRenderThreadId(0)
 	, mRenderThreadRuning(FALSE)
+	, mVppFactory(nullptr)
+	, mVpp(nullptr)
 {
 
 }
@@ -212,11 +216,11 @@ HRESULT D3D9Render::InitializeRenderContext(int width, int height, DWORD pixelFo
 	d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE; // wait for VSync
 	
 	mpD3D9OBj = Direct3DCreate9(D3D_SDK_VERSION); //Create the presentation parameters
-	
-	if (FAILED(hr = IfSupportedFormat(d3dpp.BackBufferFormat))){
+	GetD3D9FormatByFourCC(pixelFormatInFourCC);
+	if (FAILED(hr = IfSupportedFormat(D3DFORMAT(pixelFormatInFourCC)))){
 		// Create VPP Support
-		if (GetVPPFactoryObj(vppFactory)) {
-			vpp = vppFactory->CreateVPPObj();
+		if (GetVPPFactoryObj(mVppFactory)) {
+			mVppFactory->CreateVPPObj(mVpp);
 		}
 		vppParams.srcWidth = width;
 		vppParams.srcHeight = height;
@@ -225,7 +229,7 @@ HRESULT D3D9Render::InitializeRenderContext(int width, int height, DWORD pixelFo
 		vppParams.dstHeight = height;
 		vppParams.dstPixelInFormatFourCC = PIXEL_FORMAT_RGB32;
 		vppParams.flags = SWS_POINT;
-		if (!vpp->InitContext(vppParams)){
+		if (!mVpp->InitContext(vppParams)){
 			hr = E_FAIL;
 			goto done;
 		}
@@ -244,14 +248,14 @@ HRESULT D3D9Render::InitializeRenderContext(int width, int height, DWORD pixelFo
 	CHECK_HR(hr = D3DXCreateFont(mpD3D9Device, 30, 0, FW_LIGHT, 1, TRUE, 
 		DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &mPFont));
 
-	CHECK_HR(hr = mpD3D9Device->CreateOffscreenPlainSurface(width, height, d3dpp.BackBufferFormat, D3DPOOL_SYSTEMMEM, &mPrimerySurface, NULL));
-	CHECK_HR(hr = mpD3D9Device->CreateTexture(width, height, 0, 0, d3dpp.BackBufferFormat, D3DPOOL_SYSTEMMEM, &mPrimeryTexture, NULL));
+	CHECK_HR(hr = mpD3D9Device->CreateOffscreenPlainSurface(width, height, d3dpp.BackBufferFormat, D3DPOOL_SYSTEMMEM, &mPrimerySurface, nullptr));
+	CHECK_HR(hr = mpD3D9Device->CreateTexture(width, height, 0, 0, d3dpp.BackBufferFormat, D3DPOOL_SYSTEMMEM, &mPrimeryTexture, nullptr));
 	CHECK_HR(hr = mpD3D9Device->GetDeviceCaps(&mpD3D9DeviceCaps));
 
 	SetupMatrices();
 	CHECK_HR(hr = mpD3D9Device->SetRenderState(D3DRS_LIGHTING, FALSE));
 
-	mRenderEvent = CreateEvent(NULL, FALSE, FALSE, TEXT("Render Event"));
+	mRenderEvent = CreateEvent(nullptr, FALSE, FALSE, TEXT("Render Event"));
 	if (mRenderEvent == INVALID_HANDLE_VALUE){
 		hr = E_FAIL;
 		goto done;
@@ -259,7 +263,7 @@ HRESULT D3D9Render::InitializeRenderContext(int width, int height, DWORD pixelFo
 
 	mSupportVSync = FALSE;
 	mRenderThreadRuning = TRUE;
-	mRenderThreadHandle = CreateThread(NULL, 0, RenderThread, this, NULL, &mRenderThreadId);
+	mRenderThreadHandle = CreateThread(nullptr, 0, RenderThread, this, NULL, &mRenderThreadId);
 
 done:
 	if (FAILED(hr)){
@@ -282,18 +286,18 @@ HRESULT D3D9Render::DeinitRenderContext()
 
 	if (mRenderEvent){
 		CloseHandle(mRenderEvent);
-		mRenderEvent = NULL;
+		mRenderEvent = nullptr;
 		mSupportVSync = FALSE;
 	}
 
-	if (vpp){
-		vpp->DeinitContext();
-		vppFactory->DestoryVPPObj(vpp);
-		vpp = NULL;
+	if (mVpp){
+		mVpp->DeinitContext();
+		mVppFactory->DestoryVPPObj(mVpp);
+		mVpp = nullptr;
 	}
 
-	ReleaseVPPFctoryObj(vppFactory);
-	vppFactory = NULL;
+	ReleaseVPPFctoryObj(mVppFactory);
+	mVppFactory = nullptr;
 
 	
 
@@ -318,9 +322,9 @@ DWORD D3D9Render::RenderLoop()
 		if (dwRet == WAIT_OBJECT_0){
 #ifndef USE_BACKBUFFER
 			if (SUCCEEDED(hr = mpD3D9Device->BeginScene())){
-				IDirect3DSurface9 *pBackBuffer = NULL;
+				IDirect3DSurface9 *pBackBuffer = nullptr;
 				CHECK_HR(hr = mpD3D9Device->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer));
-				CHECK_HR(hr = mpD3D9Device->UpdateSurface(mPrimerySurface, NULL, pBackBuffer, NULL));
+				CHECK_HR(hr = mpD3D9Device->UpdateSurface(mPrimerySurface, nullptr, pBackBuffer, nullptr));
 				SAFE_RELEASE(pBackBuffer);
 			done:
 				mpD3D9Device->EndScene();
@@ -337,9 +341,9 @@ DWORD D3D9Render::RenderLoop()
 			}
 #endif
 
-			OSDText(NULL, TEXT("this is a test %d."), GetTickCount());
+			OSDText(nullptr, TEXT("this is a test %d."), GetTickCount());
 
-			hr = mpD3D9Device->Present(NULL, NULL, NULL, NULL);
+			hr = mpD3D9Device->Present(nullptr, nullptr, nullptr, nullptr);
 		} else if (dwRet == WAIT_TIMEOUT){
 			continue;
 		}else{
@@ -355,9 +359,9 @@ HRESULT D3D9Render::PushFrame(CSampleBuffer *frame)
 	HRESULT hr = E_FAIL;
 	D3DLOCKED_RECT dstRect = { 0 };
 	D3DSURFACE_DESC dstDec;
-	uint8_t *dstDataPtr = NULL;
+	uint8_t *dstDataPtr = nullptr;
 	uint8_t *srcDataptr = frame->GetDataPtr();
-	IDirect3DSurface9 *pSurface = NULL;
+	IDirect3DSurface9 *pSurface = nullptr;
 
 #ifdef USE_BACKBUFFER
 	CHECK_HR(hr = mpD3D9Device->GetBackBuffer(0, 2, D3DBACKBUFFER_TYPE_MONO, &pSurface));
@@ -365,7 +369,7 @@ HRESULT D3D9Render::PushFrame(CSampleBuffer *frame)
 	pSurface = mPrimerySurface;
 #endif
 	pSurface->GetDesc(&dstDec);
-	if (SUCCEEDED(hr = pSurface->LockRect(&dstRect, NULL, 0))){
+	if (SUCCEEDED(hr = pSurface->LockRect(&dstRect, nullptr, 0))){
 		dstDataPtr = (uint8_t*)dstRect.pBits;
 		if (frame->GetPixelFormat() == PIXEL_FORMAT_RGB24){
 			for (int i = 0; i < frame->GetHeight(); i++){
@@ -405,9 +409,9 @@ BOOL D3D9Render::OSDText(HDC, TCHAR *format, ...)
 	vswprintf_s(buf, format, va_alist);
 	va_end(va_alist);
 
-	//CHECK_HR(hr = mPD3DDevice->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0));
+	//CHECK_HR(hr = mPD3DDevice->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0));
 	if (SUCCEEDED(hr = mpD3D9Device->BeginScene())){
-		mPFont->DrawText(NULL, buf, -1, &FontPos, DT_CENTER, D3DCOLOR_ARGB(255, 0, 255, 0));
+		mPFont->DrawText(nullptr, buf, -1, &FontPos, DT_CENTER, D3DCOLOR_ARGB(255, 0, 255, 0));
 		mpD3D9Device->EndScene();
 	}
 

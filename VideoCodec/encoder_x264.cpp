@@ -5,7 +5,9 @@
 #pragma comment(lib, "libx264.lib")
 
 CLibx264::CLibx264()
-	: mCodecHandle(NULL)
+	: mCodecHandle(nullptr)
+	, mVppFactory(nullptr)
+	, mVpp(nullptr)
 {
 
 }
@@ -17,6 +19,24 @@ CLibx264::~CLibx264()
 
 bool CLibx264::open()
 {
+	BOOL bRet = FALSE;
+
+
+	if (mbNeedVpp){
+		if (!mVppFactory)
+			bRet = GetVPPFactoryObj(mVppFactory);
+
+		if (mVppFactory){
+			bRet = mVppFactory->CreateVPPObj(mVpp);
+		}
+
+		if (!mVppFactory || !mVpp){
+			return false;
+		}
+
+		x264_picture_alloc(&mInPic, mCodecParams.i_csp, mCodecParams.i_width, mCodecParams.i_height);
+	}
+
 	mCodecHandle = x264_encoder_open(&mCodecParams);
 	if (!mCodecHandle)
 	{
@@ -26,15 +46,21 @@ bool CLibx264::open()
 
 	mPackages.Reset(10);
 
-	return (mCodecHandle != NULL);
+	return (mCodecHandle != nullptr);
 }
 
 void CLibx264::close()
 {
-	if (mCodecHandle != NULL){
+	if (mCodecHandle != nullptr){
 		flushEncodeCache();
 		x264_encoder_close(mCodecHandle);
-		mCodecHandle = NULL;
+		mCodecHandle = nullptr;
+	}
+
+	if (mVppFactory || mVpp){
+		mVpp->DeinitContext();
+		mVppFactory->DestoryVPPObj(mVpp);
+		ReleaseVPPFctoryObj(mVppFactory);
 	}
 
 	x264_picture_clean(&mInPic);
@@ -46,7 +72,7 @@ bool CLibx264::setConfig(const ENCODECCFG &config)
 
 	ZeroMemory(&mCodecParams, sizeof(x264_param_t));
 
- 	x264_param_default(&mCodecParams);
+	x264_param_default(&mCodecParams);
 
 	mCodecParams.rc.i_vbv_max_bitrate = config.maxBitrateInKb;
 	mCodecParams.rc.i_vbv_buffer_size = config.maxBitrateInKb;
@@ -64,8 +90,19 @@ bool CLibx264::setConfig(const ENCODECCFG &config)
 		mCodecParams.i_csp = X264_CSP_BGRA;
 		break;
 	case PIXEL_FORMAT_YUY2:
+		mbNeedVpp = TRUE;
 		mCodecParams.i_csp = X264_CSP_NV16;
 		break;
+	}
+
+	if (mbNeedVpp){
+		vppParams.srcWidth = config.width;
+		vppParams.srcHeight = config.height;
+		vppParams.srcPixelInFormatFourCC = config.pixelFormatInFourCC;
+		vppParams.dstWidth = config.width;
+		vppParams.dstHeight = config.height;
+		vppParams.dstPixelInFormatFourCC = config.pixelFormatInFourCC;
+		vppParams.flags = SWS_POINT;
 	}
 
 	mCodecParams.b_annexb = 1;
@@ -83,8 +120,7 @@ bool CLibx264::setConfig(const ENCODECCFG &config)
 	mCodecParams.i_frame_reference = 6;
 	mCodecParams.i_threads = 0;
 
-	mCodecParams.b_repeat_headers = 1;
-	x264_picture_alloc(&mInPic, mCodecParams.i_csp, mCodecParams.i_width, mCodecParams.i_height);
+	mCodecParams.b_repeat_headers = 1;	
 
 	parseConfigString();
 	return true;
@@ -159,7 +195,7 @@ bool CLibx264::encodeFrame(x264_picture_t *inpic)
 {
 	bool ret = false;
 	int outputNALsDataSizeInBytes = 0;
-	x264_nal_t *outputNalus = NULL;
+	x264_nal_t *outputNalus = nullptr;
 	int outputNaluCnt = 0;
 	x264_picture_t outputPic;
 	x264_picture_init(&outputPic);
@@ -179,10 +215,10 @@ bool CLibx264::assemblePackage(int uNALsDataSizeInBytes,
 {
 	bool ret = true;
 	FRAME_TYPE frameType;
-	uint8_t *pOutData = NULL;
-	uint8_t *pExtraData = NULL;
+	uint8_t *pOutData = nullptr;
+	uint8_t *pExtraData = nullptr;
 	uint32_t extraDataSize = 0;
-	CPackageBuffer *outPackage = NULL;
+	CPackageBuffer *outPackage = nullptr;
 
 	if (uNALsDataSizeInBytes > 0)// encode one frame.
 	{
@@ -257,7 +293,7 @@ void CLibx264::flushEncodeCache()
 {
 	int ret = 0;
 	int eStatus = 0;
-	x264_nal_t * outputNalus = NULL;
+	x264_nal_t * outputNalus = nullptr;
 	int outputNaluCount = 0;
 	x264_picture_t outputPic;
 
@@ -266,7 +302,7 @@ void CLibx264::flushEncodeCache()
 	if (1){
 		// flush delay frames
 		while (x264_encoder_delayed_frames(mCodecHandle)){
-			eStatus = x264_encoder_encode(mCodecHandle, &outputNalus, &outputNaluCount, NULL, &outputPic);
+			eStatus = x264_encoder_encode(mCodecHandle, &outputNalus, &outputNaluCount, nullptr, &outputPic);
 
 			ret = assemblePackage(eStatus, outputNalus, outputNaluCount, &outputPic);
 			if (ret < 0){

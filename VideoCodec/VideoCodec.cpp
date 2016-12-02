@@ -40,7 +40,7 @@ BOOL ICodecFactoryImpl::DestoryCodecObj(ICodec *&codec)
 	if (codec)
 		delete static_cast<CLibx264*>(codec);
 
-	codec = NULL;
+	codec = nullptr;
 	return bRet;
 }
 

@@ -3,13 +3,15 @@
 #include "FFmpegWrapper.h"
 
 FFmpegProcess::FFmpegProcess()
-	: mScaleCtx(NULL)
+	: mScaleCtx(nullptr)
 {
+	FFmpegWrapper::InitModules();
 }
 
 
 FFmpegProcess::~FFmpegProcess()
 {
+	FFmpegWrapper::UnInitModules();
 }
 
 BOOL FFmpegProcess::InitContext(IVPPPARAMETER params)
@@ -23,7 +25,7 @@ BOOL FFmpegProcess::InitContext(IVPPPARAMETER params)
 	mScaleCtx = FFmpegWrapper::sws_getContext(mParams.sourceWidth(), mParams.sourceHeight(), mParams.sourceFormat(),
 		mParams.destWidth(), mParams.destHeight(), mParams.destFormat(), mParams.flag(), 0, 0, 0);
 
-	return mScaleCtx != NULL;
+	return mScaleCtx != nullptr;
 }
 
 BOOL FFmpegProcess::DeinitContext()
@@ -31,17 +33,17 @@ BOOL FFmpegProcess::DeinitContext()
 	if (mScaleCtx)
 		FFmpegWrapper::sws_freeContext((SwsContext*)mScaleCtx);
 
-	mScaleCtx = NULL;
+	mScaleCtx = nullptr;
 
 	return TRUE;
 }
 
 BOOL FFmpegProcess::ProcessFrame(const CSampleBuffer *srcPic, CSampleBuffer *outPic)
 {
-	uint8_t **sBuf = NULL;
-	int32_t *sStride = NULL;
-	uint8_t **dBuf = NULL;
-	int32_t *dStride = NULL;
+	uint8_t **sBuf = nullptr;
+	int32_t *sStride = nullptr;
+	uint8_t **dBuf = nullptr;
+	int32_t *dStride = nullptr;
 
 	sBuf = srcPic->GetPlanePtr();
 	sStride = srcPic->GetStride();

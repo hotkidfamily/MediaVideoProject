@@ -4,7 +4,7 @@
 #include "VideoRender.h"
 
 static long refCount = 1;
-static IRenderFactoryImpl *factory = NULL;
+static IRenderFactoryImpl *factory = nullptr;
 
 BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
@@ -31,7 +31,7 @@ BOOL GetRenderFactoryObj(IRenderFactory *&factoryPtr)
 
 	factoryPtr = factory;
 
-	return factoryPtr != NULL;
+	return factoryPtr != nullptr;
 }
 
 BOOL ReleaseRenderFactoryObj(IRenderFactory* factoryPtr)
@@ -41,8 +41,8 @@ BOOL ReleaseRenderFactoryObj(IRenderFactory* factoryPtr)
 	if (factoryPtr == factory){
 		if (!InterlockedDecrement(&refCount)){
 			delete factory;
-			factory = NULL;
-			factoryPtr = NULL;
+			factory = nullptr;
+			factoryPtr = nullptr;
 		}
 		bRet = TRUE;
 	}

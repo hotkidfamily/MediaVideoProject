@@ -12,7 +12,7 @@ extern "C" {
 #undef FMT
 #define FMT(X,Y) PIXEL_FORMAT_##X=Y
 enum CPPixelFormat{
-	FMT(I420, '024I'),
+	FMT(I420, '024I'), 
 	FMT(RGB565, 0xe436eb7c),
 	FMT(RGB555, 0xe436eb7b),
 	FMT(RGB24, 0xe436eb7d),
@@ -76,4 +76,5 @@ typedef struct tagFrameBility{
 extern "C" {
 	const FRAMEFORAMTINFO* GetFrameInfoByFourCC(DWORD fourcc);
 	BOOL IsFormatSupport(CMediaType &mediaType, FRAMEABILITY & bility);
+	D3DFORMAT GetD3D9FormatByFourCC(DWORD);
 }

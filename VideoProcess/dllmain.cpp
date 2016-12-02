@@ -4,7 +4,7 @@
 #include "VideoProcess.h"
 
 static long refCount = 1;
-static IVPPFactoryImpl *factory = NULL;
+static IVPPFactoryImpl *factory = nullptr;
 
 BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
@@ -33,7 +33,7 @@ BOOL GetVPPFactoryObj(IVPPFactory* &factoryPtr)
 
 	factoryPtr = factory;
 
-	return factoryPtr != NULL;
+	return factoryPtr != nullptr;
 }
 
 BOOL ReleaseVPPFctoryObj(IVPPFactory *ctx)
@@ -43,8 +43,8 @@ BOOL ReleaseVPPFctoryObj(IVPPFactory *ctx)
 	if (ctx == factory){
 		if (!InterlockedDecrement(&refCount)){
 			delete factory;
-			factory = NULL;
-			ctx = NULL;
+			factory = nullptr;
+			ctx = nullptr;
 		}
 		bRet = TRUE;
 	}

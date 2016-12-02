@@ -10,15 +10,15 @@
 #define JPEGDEC_FILTER_NAME_STR (TEXT("MJPEG Decompressor"))
 
 DShowVideoCapture::DShowVideoCapture()
-	: mGraph(NULL)
-	, mMediaControl(NULL)
-	, mMediaEventEx(NULL)
-	, mDropFrameStatus(NULL)
-	, mCaptureFilter(NULL)
-	, mGrabberFiler(NULL)
-	, mVideoGrabber(NULL)
-	, mcb(NULL)
-	, mWorkFrameInfo(NULL)
+	: mGraph(nullptr)
+	, mMediaControl(nullptr)
+	, mMediaEventEx(nullptr)
+	, mDropFrameStatus(nullptr)
+	, mCaptureFilter(nullptr)
+	, mGrabberFiler(nullptr)
+	, mVideoGrabber(nullptr)
+	, mcb(nullptr)
+	, mWorkFrameInfo(nullptr)
 	, mGraphRegisterHandler(0)
 {
 	
@@ -47,7 +47,7 @@ HRESULT DShowVideoCapture::RegisterCallback(VideoCaptureCallback *cb)
 
 HRESULT DShowVideoCapture::UnregisterCallback()
 {
-	mcb = NULL;
+	mcb = nullptr;
 	
 	return S_OK;
 }
@@ -134,7 +134,7 @@ HRESULT DShowVideoCapture::Stop()
 		RemoveGraphFromRot(mGraphRegisterHandler);
 	mGraphRegisterHandler = 0;
 	RemoveFiltersFromGraph();
-	mWorkFrameInfo = NULL;
+	mWorkFrameInfo = nullptr;
 
 	return S_OK;
 }
@@ -144,7 +144,7 @@ HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 	FRAME_DESC desc;
 	HRESULT  hr = S_OK;
 
-	ASSERT(mcb != NULL);
+	ASSERT(mcb != nullptr);
 
 	CHECK_HR(hr = pSample->GetPointer(&desc.dataPtr));
 	desc.dataSize = pSample->GetActualDataLength();
@@ -213,13 +213,13 @@ HRESULT DShowVideoCapture::ShowCapturePropertyWindow()
 HRESULT DShowVideoCapture::RemoveFiltersFromGraph()
 {
 	HRESULT hr = S_OK;
-	CComPtr<IEnumFilters> pFilterEnum = NULL;
-	CComPtr<IBaseFilter> pFilter = NULL;
+	CComPtr<IEnumFilters> pFilterEnum = nullptr;
+	CComPtr<IBaseFilter> pFilter = nullptr;
 
 	ASSERT(mGraph);
-	mVideoGrabber->SetCallback(NULL, 0);
+	mVideoGrabber->SetCallback(nullptr, 0);
 	CHECK_HR(mGraph->EnumFilters(&pFilterEnum));
-	while (pFilterEnum->Next(1, &pFilter, NULL) == S_OK){
+	while (pFilterEnum->Next(1, &pFilter, nullptr) == S_OK){
 		mGraph->RemoveFilter(pFilter);
 		pFilter.Release();
 		pFilterEnum->Reset();
@@ -255,7 +255,7 @@ HRESULT DShowVideoCapture::SaveGraphFile(IGraphBuilder *pGraph, TCHAR *wszPath)
 	const WCHAR wszStreamName[] = L"ActiveMovieGraph";
 	HRESULT hr;
 
-	IStorage *pStorage = NULL;
+	IStorage *pStorage = nullptr;
 	hr = StgCreateDocfile(
 		wszPath,
 		STGM_CREATE | STGM_TRANSACTED | STGM_READWRITE | STGM_SHARE_EXCLUSIVE,
@@ -274,7 +274,7 @@ HRESULT DShowVideoCapture::SaveGraphFile(IGraphBuilder *pGraph, TCHAR *wszPath)
 		return hr;
 	}
 
-	IPersistStream *pPersist = NULL;
+	IPersistStream *pPersist = nullptr;
 	pGraph->QueryInterface(IID_IPersistStream, (void**)&pPersist);
 	hr = pPersist->Save(pStream, TRUE);
 	pStream->Release();
@@ -292,15 +292,15 @@ HRESULT DShowVideoCapture::GetDShowInterfaces()
 	HRESULT hr = S_OK;
 	CComPtr<IMediaFilter> pMediaFilter;
 
-	CHECK_HR(hr = CoCreateInstance(CLSID_FilterGraph, NULL,
+	CHECK_HR(hr = CoCreateInstance(CLSID_FilterGraph, nullptr,
 		CLSCTX_INPROC_SERVER, IID_IGraphBuilder, (void**)&mGraph));
 
-	CHECK_HR(hr = CoCreateInstance(CLSID_CaptureGraphBuilder2, NULL,
+	CHECK_HR(hr = CoCreateInstance(CLSID_CaptureGraphBuilder2, nullptr,
 		CLSCTX_INPROC_SERVER, IID_ICaptureGraphBuilder2, (void**)&mGraphBuiler));
 
 	CHECK_HR(hr = mGraphBuiler->SetFiltergraph(mGraph));
 
-	CHECK_HR(hr = CoCreateInstance(CLSID_SampleGrabber, NULL,
+	CHECK_HR(hr = CoCreateInstance(CLSID_SampleGrabber, nullptr,
 		CLSCTX_INPROC_SERVER, IID_ISampleGrabber, (void**)&mVideoGrabber));
 	CHECK_HR(hr = mVideoGrabber->QueryInterface(IID_IBaseFilter, (void**)&mGrabberFiler));
 
@@ -308,7 +308,7 @@ HRESULT DShowVideoCapture::GetDShowInterfaces()
 	CHECK_HR(hr = mGraph->QueryInterface(IID_IMediaEventEx, (void**)&mMediaEventEx));
 	CHECK_HR(hr = mGraph->QueryInterface(IID_IMediaFilter, (void**)&pMediaFilter));
 	// not set sync clock
-	CHECK_HR(hr = pMediaFilter->SetSyncSource(NULL));
+	CHECK_HR(hr = pMediaFilter->SetSyncSource(nullptr));
 	
 done:
 	ShowDShowError(hr);
@@ -319,16 +319,16 @@ done:
 HRESULT DShowVideoCapture::BuildGraph()
 {
 	HRESULT hr = E_FAIL;
-	CComPtr<IBaseFilter> pNullRenderFilter = NULL;
-	CComPtr<IBaseFilter> pJpegDecFilter = NULL;
-	CComPtr<IPin> pCaptureOutPin = NULL;
-	CComPtr<IPin> pNullRenderInPin = NULL;
-	CComPtr<IPin> pGrabberInPin = NULL;
-	CComPtr<IPin> pGrabberOutPin = NULL;
+	CComPtr<IBaseFilter> pNullRenderFilter = nullptr;
+	CComPtr<IBaseFilter> pJpegDecFilter = nullptr;
+	CComPtr<IPin> pCaptureOutPin = nullptr;
+	CComPtr<IPin> pNullRenderInPin = nullptr;
+	CComPtr<IPin> pGrabberInPin = nullptr;
+	CComPtr<IPin> pGrabberOutPin = nullptr;
 	CMediaType mediaTypeFound;
-	CComPtr<IAMStreamConfig> pStreamConfig = NULL;
+	CComPtr<IAMStreamConfig> pStreamConfig = nullptr;
 
-	CHECK_HR(hr = CoCreateInstance(CLSID_NullRenderer, NULL, CLSCTX_INPROC_SERVER, IID_IBaseFilter, (void**)&pNullRenderFilter));
+	CHECK_HR(hr = CoCreateInstance(CLSID_NullRenderer, nullptr, CLSCTX_INPROC_SERVER, IID_IBaseFilter, (void**)&pNullRenderFilter));
 
 	CHECK_HR(hr = FindCaptureFilterByIndex(mWorkParams.index, mCaptureFilter));
 	ASSERT(mCaptureFilter);
@@ -338,16 +338,16 @@ HRESULT DShowVideoCapture::BuildGraph()
 	CHECK_HR(hr = mGraph->AddFilter(pNullRenderFilter, RENDER_FILTER_NAME_STR));
 #if 0
 	CHECK_HR(hr = FindPinByCategory(mCaptureFilter, PIN_CATEGORY_CAPTURE, PINDIR_OUTPUT, &pCaptureOutPin));
-	CHECK_HR(hr = FindMediaTypeInPinOrStreamConfig(pCaptureOutPin, mediaTypeFound, NULL));
+	CHECK_HR(hr = FindMediaTypeInPinOrStreamConfig(pCaptureOutPin, mediaTypeFound, nullptr));
 
 	CHECK_HR(hr = FindUnconnectedPin(mGrabberFiler, PINDIR_OUTPUT, &pGrabberOutPin));
 	CHECK_HR(hr = FindUnconnectedPin(mGrabberFiler, PINDIR_INPUT, &pGrabberInPin));
 	CHECK_HR(hr = FindUnconnectedPin(pNullRenderFilter, PINDIR_INPUT, &pNullRenderInPin));
 
 	if (mediaTypeFound.subTypeEqual(MEDIASUBTYPE_MJPG)){
-		CComPtr<IPin> pJpegDecInPin = NULL;
-		CComPtr<IPin> pJpegDecOutPin = NULL;
-		CHECK_HR(hr = CoCreateInstance(CLSID_MjpegDec, NULL, CLSCTX_INPROC_SERVER, IID_IBaseFilter, (void**)&pJpegDecFilter));
+		CComPtr<IPin> pJpegDecInPin = nullptr;
+		CComPtr<IPin> pJpegDecOutPin = nullptr;
+		CHECK_HR(hr = CoCreateInstance(CLSID_MjpegDec, nullptr, CLSCTX_INPROC_SERVER, IID_IBaseFilter, (void**)&pJpegDecFilter));
 		CHECK_HR(hr = mGraph->AddFilter(pJpegDecFilter, JPEGDEC_FILTER_NAME_STR));
 		CHECK_HR(hr = FindUnconnectedPin(pJpegDecFilter, PINDIR_INPUT, &pJpegDecInPin));
 		CHECK_HR(hr = FindUnconnectedPin(pJpegDecFilter, PINDIR_OUTPUT, &pJpegDecOutPin));
@@ -367,7 +367,7 @@ HRESULT DShowVideoCapture::BuildGraph()
 	CHECK_HR(hr = mGraphBuiler->FindInterface(&PIN_CATEGORY_CAPTURE, &MEDIATYPE_Video, mCaptureFilter, IID_IAMStreamConfig, (void**)&pStreamConfig));
 	CHECK_HR(hr = FindMediaTypeInPinOrStreamConfig(pCaptureOutPin, mediaTypeFound, pStreamConfig));
 	if (mediaTypeFound.subTypeEqual(MEDIASUBTYPE_MJPG)){
-		CHECK_HR(hr = CoCreateInstance(CLSID_MjpegDec, NULL, CLSCTX_INPROC_SERVER, IID_IBaseFilter, (void**)&pJpegDecFilter));
+		CHECK_HR(hr = CoCreateInstance(CLSID_MjpegDec, nullptr, CLSCTX_INPROC_SERVER, IID_IBaseFilter, (void**)&pJpegDecFilter));
 		CHECK_HR(hr = mGraph->AddFilter(pJpegDecFilter, JPEGDEC_FILTER_NAME_STR));
 		mediaTypeFound.majortype = MEDIATYPE_Video;
 		mediaTypeFound.subtype = MEDIASUBTYPE_RGB32;
@@ -411,7 +411,7 @@ HRESULT DShowVideoCapture::FindMediaTypeInPinOrStreamConfig(CComPtr<IPin> &pOutP
 {
 	HRESULT hr = S_OK;
 	HRESULT hrRet = E_FAIL;
-	CComPtr<IAMStreamConfig> pConfig = NULL;
+	CComPtr<IAMStreamConfig> pConfig = nullptr;
 	int cfgCnt = 0;
 	int cfgSize = 0;
 	std::list<FRAMEABILITY> supportFrameFormatList;
@@ -430,7 +430,7 @@ HRESULT DShowVideoCapture::FindMediaTypeInPinOrStreamConfig(CComPtr<IPin> &pOutP
 	 * Get all output format
 	 */
 	for (int i = 0; i < cfgCnt; i++){
-		CMediaType *mediaType = NULL;
+		CMediaType *mediaType = nullptr;
 		VIDEO_STREAM_CONFIG_CAPS caps;
 		if ((hr = pConfig->GetStreamCaps(i, (AM_MEDIA_TYPE**)&mediaType, (BYTE*)&caps)) == S_OK){
 			if (mediaType->isVideoInfoHeader()){ // sample only support format_videoinfo
@@ -513,17 +513,17 @@ HRESULT DShowVideoCapture::GetFilterFriendlyName(IBaseFilter * &filter, STRING n
 HRESULT DShowVideoCapture::FindCaptureFilterByIndex(int index, IBaseFilter * &filter)
 {
 	HRESULT hr = S_OK;
-	CComPtr<ICreateDevEnum> pDevEnum = NULL;
-	CComPtr<IEnumMoniker> pDevEnumMoniker = NULL;
-	CComPtr<IMoniker> pM = NULL;
-	CComPtr<IPropertyBag> pProperty = NULL;
+	CComPtr<ICreateDevEnum> pDevEnum = nullptr;
+	CComPtr<IEnumMoniker> pDevEnumMoniker = nullptr;
+	CComPtr<IMoniker> pM = nullptr;
+	CComPtr<IPropertyBag> pProperty = nullptr;
 
 	CHECK_HR(hr = CoCreateInstance(CLSID_SystemDeviceEnum, 
-		NULL, CLSCTX_INPROC_SERVER, IID_ICreateDevEnum, (void**)&pDevEnum));
+		nullptr, CLSCTX_INPROC_SERVER, IID_ICreateDevEnum, (void**)&pDevEnum));
 	CHECK_HR(hr = pDevEnum->CreateClassEnumerator(CLSID_VideoInputDeviceCategory, &pDevEnumMoniker, 0));
 
 	pDevEnumMoniker->Reset();
-	while (hr = pDevEnumMoniker->Next(1, &pM, NULL) == S_OK){
+	while (hr = pDevEnumMoniker->Next(1, &pM, nullptr) == S_OK){
 		VARIANT name;
 		VARIANT path;
 		VariantInit(&name);
@@ -536,7 +536,7 @@ HRESULT DShowVideoCapture::FindCaptureFilterByIndex(int index, IBaseFilter * &fi
 			CAMERADESC dev(name, path);
 
 			if (mCameraList[index] == dev){
-				hr = pM->BindToObject(NULL, NULL, IID_IBaseFilter, (void**)&filter);
+				hr = pM->BindToObject(nullptr, nullptr, IID_IBaseFilter, (void**)&filter);
 				filter->QueryInterface(IID_IAMDroppedFrames, (void**)&mDropFrameStatus);
 				break;
 			}
@@ -562,17 +562,17 @@ HRESULT DShowVideoCapture::EnumCaptureDevices()
 	HRESULT hr = S_OK;
 
 	int index = 0;
-	CComPtr<ICreateDevEnum> pDevEnum = NULL;
-	CComPtr<IEnumMoniker> pDevEnumMoniker = NULL;
-	CComPtr<IMoniker> pM = NULL;
-	CComPtr<IPropertyBag> pProperty = NULL;
+	CComPtr<ICreateDevEnum> pDevEnum = nullptr;
+	CComPtr<IEnumMoniker> pDevEnumMoniker = nullptr;
+	CComPtr<IMoniker> pM = nullptr;
+	CComPtr<IPropertyBag> pProperty = nullptr;
 
 	CHECK_HR(hr = CoCreateInstance(CLSID_SystemDeviceEnum,
-		NULL, CLSCTX_INPROC_SERVER, IID_ICreateDevEnum, (void**)&pDevEnum));
+		nullptr, CLSCTX_INPROC_SERVER, IID_ICreateDevEnum, (void**)&pDevEnum));
 	CHECK_HR(hr = pDevEnum->CreateClassEnumerator(CLSID_VideoInputDeviceCategory, &pDevEnumMoniker, 0));
 
 	pDevEnumMoniker->Reset();
-	while (hr = pDevEnumMoniker->Next(1, &pM, NULL) == S_OK){
+	while (hr = pDevEnumMoniker->Next(1, &pM, nullptr) == S_OK){
 		VARIANT name;
 		VARIANT path;
 		VariantInit(&name);

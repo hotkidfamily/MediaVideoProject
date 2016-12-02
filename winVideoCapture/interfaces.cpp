@@ -37,7 +37,7 @@ BOOL StopCaptureWork(THIS_CONTEXT *ctx)
 	if (ctx->bRuning){
 		ctx->bRuning = 0;
 		if (WAIT_OBJECT_0 != WaitForSingleObject(ctx->hWorkThread, INFINITE)){
-			assert(NULL);
+			assert(nullptr);
 		}
 
 		ctx->capturer->StopCapture();
@@ -90,9 +90,9 @@ BOOL StopEncodeWork(THIS_CONTEXT *ctx)
 	
 	if (ctx->encFactory){
 		ctx->encFactory->DestoryCodecObj(ctx->codec);
-		ctx->codec = NULL;
+		ctx->codec = nullptr;
 		ReleaseCodecFactoryOBj(ctx->encFactory);
-		ctx->encFactory = NULL;
+		ctx->encFactory = nullptr;
 	}
 
 	ctx->encoderArgs.cfgStr.clear();
@@ -101,7 +101,7 @@ BOOL StopEncodeWork(THIS_CONTEXT *ctx)
 }
 
 #if 0
-CPackageBuffer *packet = NULL;
+CPackageBuffer *packet = nullptr;
 ctx->encoder->addFrame(*frame);
 
 if (ctx->encoder->getPackage(packet)){
@@ -120,7 +120,7 @@ DWORD WINAPI EncoderThread(LPVOID args)
 	encodeFile.open(TEXT("C:\\Users\\Administrator\\desktop\\capture.h264"), std::ios::binary);
 
 	while (ctx->bRuning){
-		CSampleBuffer *frame = NULL;
+		CSampleBuffer *frame = nullptr;
 		if (ctx->capturer->GetFrame(frame)){
 			ctx->render->PushFrame(frame);
 			ctx->capturer->ReleaseFrame(frame);
@@ -134,14 +134,14 @@ DWORD WINAPI EncoderThread(LPVOID args)
 
 BOOL CreateWorkThread(THIS_CONTEXT *ctx)
 {
-	ctx->hWorkThread = CreateThread(NULL, 0, EncoderThread, ctx, 0, &(ctx->dwThreadId));
+	ctx->hWorkThread = CreateThread(nullptr, 0, EncoderThread, ctx, 0, &(ctx->dwThreadId));
 	return TRUE;
 }
 
 BOOL StartRenderWork(THIS_CONTEXT *ctx)
 {
 	ctx->render = new D3D9Render(ctx->hMainWnd);
-	assert(ctx->render != NULL);
+	assert(ctx->render != nullptr);
 	if (ctx->render->InitializeRenderContext(ctx->captureArgs.width, ctx->captureArgs.height, ctx->captureArgs.pixelFormatInFourCC) < 0){
 		return FALSE;
 	}

@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static PVIDEO_CAPTURE_LOG_CALLBACK_FUNC gLogCallback = NULL;
+static PVIDEO_CAPTURE_LOG_CALLBACK_FUNC gLogCallback = nullptr;
 
 void SetLogCallback( PVIDEO_CAPTURE_LOG_CALLBACK_FUNC pCallbackFunction )
 {

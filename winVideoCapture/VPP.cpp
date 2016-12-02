@@ -14,8 +14,8 @@ CVPP::~CVPP()
 BOOL CVPP::convertYUY2toI420(x264_picture_t &dstPic, const CSampleBuffer *srcPic)
 {
 	// yuyv ==> y + u + v
-	uint8_t *y = NULL, *u = NULL, *v = NULL;
-	uint8_t *yp = NULL;
+	uint8_t *y = nullptr, *u = nullptr, *v = nullptr;
+	uint8_t *yp = nullptr;
 	int step = 0;
 
 	int32_t width = srcPic->GetWidth();
@@ -46,8 +46,8 @@ BOOL CVPP::convertYUY2toI420(x264_picture_t &dstPic, const CSampleBuffer *srcPic
 
 BOOL CVPP::convertYUY2toNV16(x264_picture_t &dstPic, const CSampleBuffer *srcPic)
 {
-	uint8_t *y = NULL, *uv = NULL;
-	uint8_t *yp = NULL;
+	uint8_t *y = nullptr, *uv = nullptr;
+	uint8_t *yp = nullptr;
 	int step = 0;
 
 	int32_t width = srcPic->GetWidth();

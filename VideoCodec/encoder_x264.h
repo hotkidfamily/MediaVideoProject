@@ -64,5 +64,9 @@ private:
 
 	ENCODECCFG mWorkConfig;
 
+
+	BOOL mbNeedVpp;
+	IVPPPARAMETER vppParams;
+	IVPPFactory *mVppFactory;
 	IVPP * mVpp;
 };

@@ -36,7 +36,7 @@ protected:
 	~IVPPFactory(){};
 
 public:
-	virtual IVPP *CreateVPPObj() = 0;
+	virtual BOOL CreateVPPObj(IVPP*&) = 0;
 	virtual void DestoryVPPObj(IVPP *) = 0;
 };
 

@@ -45,8 +45,8 @@ private:
 	BOOL mRenderThreadRuning;
 
 	// VPP 
-	IVPPFactory *vppFactory;
-	IVPP *vpp;
+	IVPPFactory *mVppFactory;
+	IVPP *mVpp;
 	IVPPPARAMETER vppParams;
 };
 

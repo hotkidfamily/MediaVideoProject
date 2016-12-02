@@ -39,10 +39,10 @@ ISampleGrabber :public IUnknown
 template<class Interface>
 void SafeRelease(Interface **ppInterfaceToRelease)
 {
-	if (*ppInterfaceToRelease != NULL)
+	if (*ppInterfaceToRelease != nullptr)
 	{
 		(*ppInterfaceToRelease)->Release();
-		(*ppInterfaceToRelease) = NULL;
+		(*ppInterfaceToRelease) = nullptr;
 	}
 };
 

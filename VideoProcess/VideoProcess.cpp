@@ -15,11 +15,11 @@ IVPPFactoryImpl::~IVPPFactoryImpl()
 	
 }
 
-IVPP* IVPPFactoryImpl::CreateVPPObj()
+BOOL IVPPFactoryImpl::CreateVPPObj(IVPP *&vpp)
 {
-	BOOL bRet = TRUE;
-	IVPP *vpp = new FFmpegProcess();
-	return vpp;
+	vpp = new FFmpegProcess();
+
+	return vpp != NULL;
 }
 
 
@@ -28,6 +28,6 @@ void IVPPFactoryImpl::DestoryVPPObj(IVPP *ctx)
 	if (ctx){
 		FFmpegProcess *vpp = static_cast<FFmpegProcess*>(ctx);
 		delete vpp;
-		vpp = NULL;
+		vpp = nullptr;
 	}
 }

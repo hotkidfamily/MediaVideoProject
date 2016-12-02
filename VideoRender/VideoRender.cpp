@@ -16,7 +16,7 @@ BOOL IRenderFactoryImpl::CreateRenderObj(IRender *render)
 {
 	render = new DDrawRender();
 
-	return render != NULL;
+	return render != nullptr;
 }
 
 BOOL IRenderFactoryImpl::DestoryRenderObj(IRender *render)

@@ -95,7 +95,7 @@ public:
 		, pixelFormat(0)
 		, capacity(0)
 		, sizeInUse(0)
-		, dataPtr(NULL)
+		, dataPtr(nullptr)
 		, colorRange(0)
 		, transferMatrix(0)
 		, primaries(0)

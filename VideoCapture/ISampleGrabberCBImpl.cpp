@@ -14,10 +14,10 @@ ISampleGrabberCBImpl::~ISampleGrabberCBImpl()
 
 STDMETHODIMP ISampleGrabberCBImpl::QueryInterface(REFIID iid, void** ppv)
 {
-	if (NULL == ppv)
+	if (nullptr == ppv)
 		return E_POINTER;
 
-	*ppv = NULL;
+	*ppv = nullptr;
 	if (IID_IUnknown == iid)
 	{
 		*ppv = (IUnknown*)this;

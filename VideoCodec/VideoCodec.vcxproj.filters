@@ -33,6 +33,9 @@
     <ClInclude Include="encoder_x264.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="CodecUtils.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -48,6 +51,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="encoder_x264.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CodecUtils.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
