@@ -101,24 +101,9 @@ BOOL StopEncodeWork(THIS_CONTEXT *ctx)
 	return TRUE;
 }
 
-#if 0
-CPackageBuffer *packet = nullptr;
-ctx->encoder->addFrame(*frame);
-
-if (ctx->encoder->getPackage(packet)){
-	if (packet->isIDRFrame())
-		encodeFile.write((const char*)(packet->ExtraData()), packet->ExtraDataSize());
-	encodeFile.write((const char*)packet->Data(), packet->DataSize());
-	ctx->encoder->releasePackage(packet);
-}
-#endif
-
 DWORD WINAPI EncoderThread(LPVOID args)
 {
 	THIS_CONTEXT * ctx = (THIS_CONTEXT *)args;
-	std::ofstream encodeFile;
-	//encodeFile.open(TEXT("C:\\Users\\hotkid\\desktop\\capture.h264"), std::ios::binary);
-	encodeFile.open(TEXT("C:\\Users\\Administrator\\desktop\\capture.h264"), std::ios::binary);
 
 	while (ctx->bRuning){
 		CSampleBuffer *frame = nullptr;
