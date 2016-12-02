@@ -24,13 +24,7 @@
     <ClCompile Include="interfaces.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="VPP.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MainWindow.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="D3D9Render.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -50,13 +44,7 @@
     <ClInclude Include="VideoCallback.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="VPP.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="PackageManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="D3D9Render.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

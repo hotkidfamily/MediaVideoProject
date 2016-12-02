@@ -44,8 +44,8 @@
     <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
     <IntDir>$(Configuration)\</IntDir>
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(DXSDK_DIR)include;$(IncludePath);..\common;..\ffmpeg2.7.1\include;..\videoprocess;..\videocodec;</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(DXSDK_DIR)Lib\x86</LibraryPath>
+    <IncludePath>$(DXSDK_DIR)include;$(IncludePath);..\common;..\ffmpeg2.7.1\include;..\videoprocess;..\videocodec;..\videorender;</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
@@ -94,24 +94,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="D3D9Render.cpp" />
     <ClCompile Include="interfaces.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="VideoCallback.cpp" />
-    <ClCompile Include="VPP.cpp" />
     <ClCompile Include="MainWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="D3D9Render.h" />
     <ClInclude Include="PackageManager.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="VideoCallback.h" />
-    <ClInclude Include="VPP.h" />
     <ClInclude Include="winVideoCapture.h" />
   </ItemGroup>
   <ItemGroup>
