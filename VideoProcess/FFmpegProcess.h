@@ -3,21 +3,8 @@
 #include "IVPP.h"
 #include "FFmpegWrapper.h"
 #include "PixelFormat.h"
+#include "VppUtils.h"
 #include <d3d9.h>
-
-typedef struct PIXELFORMATtable{
-	DWORD pixelFmtFourCC;
-	AVPixelFormat pixelFmtInFFmpeg;
-	D3DFORMAT pixelFmtInD3D9;
-}PIXELFORMATCONVERT;
-
-const PIXELFORMATCONVERT pixelFormatTable[] = {
-		{ PIXEL_FORMAT_I420, AV_PIX_FMT_YUV420P, D3DFMT_UNKNOWN },
-		{ PIXEL_FORMAT_YUYV, AV_PIX_FMT_YUV422P, D3DFMT_UYVY },
-		{ PIXEL_FORMAT_RGB24, AV_PIX_FMT_RGB24, D3DFMT_R8G8B8 },
-		{ PIXEL_FORMAT_RGB32, AV_PIX_FMT_RGB32, D3DFMT_A8R8G8B8 },
-		{ PIXEL_FORMAT_NV12, AV_PIX_FMT_NV12, D3DFMT_UNKNOWN },
-};
 
 class FFmpegScaleParams : public IVPPPARAMETER
 {
@@ -72,17 +59,6 @@ public:
 		reset(params.srcWidth, params.srcHeight, params.srcPixelInFormatFourCC,
 			params.dstWidth, params.dstHeight, params.dstPixelInFormatFourCC, params.flags);
 		return *this;
-	}
-
-	AVPixelFormat GetPixFmtByFourCC(DWORD fourCC)
-	{
-		AVPixelFormat fmt = AV_PIX_FMT_NONE;
-		for (int i = 0; i < ARRAYSIZE(pixelFormatTable); i++){
-			if (fourCC == pixelFormatTable[i].pixelFmtFourCC){
-				fmt = pixelFormatTable[i].pixelFmtInFFmpeg;
-			}
-		}
-		return fmt;
 	}
 
 private:

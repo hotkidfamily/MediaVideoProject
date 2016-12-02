@@ -2,5 +2,5 @@
 
 #include "FFmpegWrapper.h"
 
-AVPixelFormat TranslateFourCCToFFmpegPixelFormat(DWORD pfFourCC);
-DWORD TranslateFFmpegPixelFormatToFourCC(AVPixelFormat format);
+AVPixelFormat GetPixFmtByFourCC(DWORD pfFourCC);
+DWORD GetFourCCByPixFmt(AVPixelFormat format);

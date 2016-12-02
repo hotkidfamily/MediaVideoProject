@@ -1,20 +1,24 @@
 #include "stdafx.h"
 #include "IVPP.h"
 #include "VppUtils.h"
+#include "PixelFormat.h"
 #include <ddraw.h>
-
 
 typedef struct tagPixelFormatFFmpegFourCC
 {
-	AVPixelFormat fpFFmpeg;
 	DWORD pfFourCC;
+	AVPixelFormat fpFFmpeg;
 }PFFF;
 
 PFFF PFTable[] = {
-		{ AV_PIX_FMT_YUV420P, MAKEFOURCC('Y', 'U', 'V', '0') },
+	{ PIXEL_FORMAT_I420, AV_PIX_FMT_YUV420P },
+	{ PIXEL_FORMAT_YUYV, AV_PIX_FMT_YUV422P },
+	{ PIXEL_FORMAT_RGB24, AV_PIX_FMT_RGB24 },
+	{ PIXEL_FORMAT_RGB32, AV_PIX_FMT_RGB32 },
+	{ PIXEL_FORMAT_NV12, AV_PIX_FMT_NV12 },
 };
 
-AVPixelFormat TranslateFourCCToFFmpegPixelFormat(DWORD pfFourCC)
+AVPixelFormat GetPixFmtByFourCC(DWORD pfFourCC)
 {
 	AVPixelFormat fp = AV_PIX_FMT_NONE;
 	for (int i = 0; i < ARRAYSIZE(PFTable); i++){
@@ -25,7 +29,7 @@ AVPixelFormat TranslateFourCCToFFmpegPixelFormat(DWORD pfFourCC)
 	return fp;
 }
 
-DWORD TranslateFFmpegPixelFormatToFourCC(AVPixelFormat format)
+DWORD GetFourCCByPixFmt(AVPixelFormat format)
 {
 	DWORD fourCC = 0;
 	for (int i = 0; i < ARRAYSIZE(PFTable); i++){
