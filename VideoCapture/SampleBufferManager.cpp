@@ -6,6 +6,9 @@ CSampleBufferManager::CSampleBufferManager()
 	: mBufferSize(0)
 	, mBufferPtr(nullptr)
 {
+	readyList.clear();
+	emptyList.clear();
+	occupyList.clear();
 }
 
 CSampleBufferManager::~CSampleBufferManager()
