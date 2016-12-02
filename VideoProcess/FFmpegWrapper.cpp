@@ -28,7 +28,7 @@ namespace FFmpegWrapper{
 		int ret = -1;
 		BOOL bRet = FALSE;
 		Psws_isSupportedInput func = NULL;
-		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)func, "sws_isSupportedInput");
+		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)&func, "sws_isSupportedInput");
 		if (bRet) {
 			ret = func(pix_fmt);
 		}
@@ -41,7 +41,7 @@ namespace FFmpegWrapper{
 		int ret = -1;
 		BOOL bRet = FALSE;
 		Psws_isSupportedOutput func = NULL;
-		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)func, "sws_isSupportedOutput");
+		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)&func, "sws_isSupportedOutput");
 		if (bRet) {
 			ret = func(pix_fmt);
 		}
@@ -53,7 +53,7 @@ namespace FFmpegWrapper{
 		int ret = -1;
 		BOOL bRet = FALSE;
 		Psws_isSupportedEndiannessConversion func = NULL;
-		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)func, "sws_isSupportedEndiannessConversion");
+		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)&func, "sws_isSupportedEndiannessConversion");
 		if (bRet) {
 			ret = func(pix_fmt);
 		}
@@ -65,7 +65,7 @@ namespace FFmpegWrapper{
 		struct SwsContext * ctx = NULL;
 		BOOL bRet = FALSE;  
 		Psws_alloc_context func = NULL;
-		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)func, "sws_alloc_context");
+		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)&func, "sws_alloc_context");
 		if (bRet) {
 			ctx = func();
 		}
@@ -77,7 +77,7 @@ namespace FFmpegWrapper{
 		int ret = -1;
 		BOOL bRet = FALSE;
 		Psws_init_context func = NULL;
-		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)func, "sws_init_context");
+		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)&func, "sws_init_context");
 		if (bRet) {
 			ret = func(sws_context, srcFilter, dstFilter);
 		}
@@ -88,7 +88,7 @@ namespace FFmpegWrapper{
 	{
 		BOOL bRet = FALSE;
 		Psws_freeContext func = NULL;
-		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC*)func, "sws_freeContext");
+		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)&func, "sws_freeContext");
 		if (bRet) {
 			func(swsContext);
 		}
@@ -102,7 +102,7 @@ namespace FFmpegWrapper{
 		struct SwsContext * ctx = NULL;
 		BOOL bRet = FALSE;
 		Psws_getContext func = NULL;
-		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)func, "sws_getContext");
+		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)&func, "sws_getContext");
 		if (bRet) {
 			ctx = func(srcW, srcH, srcFormat, dstW, dstH, dstFormat, flags, srcFilter, dstFilter, param);
 		}
@@ -116,7 +116,7 @@ namespace FFmpegWrapper{
 		int ret = -1;
 		BOOL bRet = FALSE;
 		Psws_scale func = NULL;
-		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)func, "sws_scale");
+		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)&func, "sws_scale");
 		if (bRet) {
 			ret = func(c, srcSlice, srcStride, srcSliceY, srcSliceH, dst, dstStride);
 		}
@@ -130,7 +130,7 @@ namespace FFmpegWrapper{
 		int ret = -1;
 		BOOL bRet = FALSE;
 		Psws_setColorspaceDetails func = NULL;
-		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)func, "sws_setColorspaceDetails");
+		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)&func, "sws_setColorspaceDetails");
 		if (bRet) {
 			ret = func(c, inv_table, srcRange, table, dstRange, brightness, contrast, saturation);
 		}
@@ -144,7 +144,7 @@ namespace FFmpegWrapper{
 		int ret = -1;
 		BOOL bRet = FALSE;
 		Psws_getColorspaceDetails func = NULL;
-		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)func, "sws_getColorspaceDetails");
+		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)&func, "sws_getColorspaceDetails");
 		if (bRet) {
 			ret = func(c, inv_table, srcRange, table, dstRange, brightness, contrast, saturation);
 		}
@@ -156,7 +156,7 @@ namespace FFmpegWrapper{
 		SwsVector * vect = NULL;
 		BOOL bRet = FALSE;
 		Psws_allocVec func = NULL;
-		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)func, "sws_allocVec");
+		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)&func, "sws_allocVec");
 		if (bRet) {
 			vect = func(length);
 		}
@@ -168,7 +168,7 @@ namespace FFmpegWrapper{
 		SwsVector * vect = NULL;
 		BOOL bRet = FALSE;
 		Psws_getGaussianVec func = NULL;
-		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)func, "sws_getGaussianVec");
+		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)&func, "sws_getGaussianVec");
 		if (bRet) {
 			vect = func(variance, quality);
 		}
@@ -180,7 +180,7 @@ namespace FFmpegWrapper{
 		SwsVector * vect = NULL;
 		BOOL bRet = FALSE;
 		Psws_getConstVec func = NULL;
-		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)func, "sws_getConstVec");
+		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)&func, "sws_getConstVec");
 		if (bRet) {
 			vect = func(c, length);
 		}
@@ -192,7 +192,7 @@ namespace FFmpegWrapper{
 		SwsVector * vect = NULL;
 		BOOL bRet = FALSE;
 		Psws_getIdentityVec func = NULL;
-		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)func, "sws_getIdentityVec");
+		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)&func, "sws_getIdentityVec");
 		if (bRet) {
 			vect = func();
 		}
@@ -203,7 +203,7 @@ namespace FFmpegWrapper{
 	{
 		BOOL bRet = FALSE;
 		Psws_scaleVec func = NULL;
-		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC*)func, "sws_scaleVec");
+		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)&func, "sws_scaleVec");
 		if (bRet){
 			func(a, scalar);
 		}
@@ -213,7 +213,7 @@ namespace FFmpegWrapper{
 	{
 		BOOL bRet = FALSE;
 		Psws_normalizeVec func = NULL;
-		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)func, "sws_normalizeVec");
+		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)&func, "sws_normalizeVec");
 		if (bRet){
 			func(a, height);
 		}
@@ -223,7 +223,7 @@ namespace FFmpegWrapper{
 	{
 		BOOL bRet = FALSE;
 		Psws_convVec func = NULL;
-		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)func, "sws_convVec");
+		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)&func, "sws_convVec");
 		if (bRet){
 			func(a, b);
 		}
@@ -233,7 +233,7 @@ namespace FFmpegWrapper{
 	{
 		BOOL bRet = FALSE;
 		Psws_addVec func = NULL;
-		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)func, "sws_addVec");
+		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)&func, "sws_addVec");
 		if (bRet){
 			func(a, b);
 		}
@@ -243,7 +243,7 @@ namespace FFmpegWrapper{
 	{
 		BOOL bRet = FALSE;
 		Psws_subVec func = NULL;
-		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)func, "sws_subVec");
+		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)&func, "sws_subVec");
 		if (bRet){
 			func(a, b);
 		}
@@ -253,7 +253,7 @@ namespace FFmpegWrapper{
 	{
 		BOOL bRet = FALSE;
 		Psws_shiftVec func = NULL;
-		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)func, "sws_shiftVec");
+		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)&func, "sws_shiftVec");
 		if (bRet){
 			func(a, shift);
 		}
@@ -264,7 +264,7 @@ namespace FFmpegWrapper{
 		SwsVector * vect = NULL;
 		BOOL bRet = FALSE;
 		Psws_cloneVec func = NULL;
-		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)func, "sws_cloneVec");
+		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)&func, "sws_cloneVec");
 		if (bRet) {
 			func(a);
 		}
@@ -275,7 +275,7 @@ namespace FFmpegWrapper{
 	{
 		BOOL bRet = FALSE;
 		Psws_printVec2 func = NULL;
-		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)func, "sws_printVec2");
+		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)&func, "sws_printVec2");
 		if (bRet){
 			func(a, log_ctx, log_level);
 		}
@@ -285,7 +285,7 @@ namespace FFmpegWrapper{
 	{
 		BOOL bRet = FALSE;
 		Psws_freeVec func = NULL;
-		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)func, "sws_freeVec");
+		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)&func, "sws_freeVec");
 		if (bRet){
 			func(a);
 		}
@@ -300,7 +300,7 @@ namespace FFmpegWrapper{
 		BOOL bRet = FALSE;
 		Psws_getDefaultFilter func = NULL;
 
-		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)func, "sws_getDefaultFilter");
+		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)&func, "sws_getDefaultFilter");
 		if (bRet) {
 			filter = func(lumaGBlur, chromaGBlur, lumaSharpen, chromaSharpen, chromaHShift, chromaVShift, verbose);
 		}
@@ -311,7 +311,7 @@ namespace FFmpegWrapper{
 	{
 		BOOL bRet = FALSE;
 		Psws_freeFilter func = NULL;
-		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)func, "sws_freeFilter");
+		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)&func, "sws_freeFilter");
 		if (bRet){
 			func(filter);
 		}
@@ -327,7 +327,7 @@ namespace FFmpegWrapper{
 
 		BOOL bRet = FALSE;
 		Psws_getCachedContext func = NULL;
-		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)func, "sws_getDefaultFilter");
+		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)&func, "sws_getDefaultFilter");
 		if (bRet) {
 			ctx = func(context, srcW, srcH, srcFormat, dstW, dstH, dstFormat, flags, srcFilter, dstFilter, param);
 		}
@@ -338,7 +338,7 @@ namespace FFmpegWrapper{
 	{
 		BOOL bRet = FALSE;
 		Psws_convertPalette8ToPacked32 func = NULL;
-		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)func, "sws_convertPalette8ToPacked32");
+		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)&func, "sws_convertPalette8ToPacked32");
 		if (bRet){
 			func(src, dst, num_pixels, palette);
 		}
@@ -348,7 +348,7 @@ namespace FFmpegWrapper{
 	{
 		BOOL bRet = FALSE;
 		Psws_convertPalette8ToPacked24 func = NULL;
-		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)func, "sws_convertPalette8ToPacked24");
+		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)&func, "sws_convertPalette8ToPacked24");
 		if (bRet){
 			func(src, dst, num_pixels, palette);
 		}
