@@ -56,6 +56,7 @@ D3D9Render::D3D9Render()
 	, mRenderThreadRuning(FALSE)
 	, mVppFactory(nullptr)
 	, mVpp(nullptr)
+	, mpRenderTarget(nullptr)
 {
 	mPrimeryTexture[0] = nullptr;
 	mPrimeryTexture[1] = nullptr;
@@ -215,16 +216,17 @@ BOOL D3D9Render::InitRender(HWND hWnd, int width, int height, DWORD pixelFormatI
 	CHECK_HR(hr = mpD3D9OBj->CreateDevice(D3DADAPTER_DEFAULT, mD3D9DeviceType, mhWnd, devBehaviorFlags, &d3dpp, &mpD3D9Device));
 
 	if (mbNeedConversion){
-		CHECK_HR(hr = mpD3D9Device->CreateTexture(width, height, 1, 0, D3DFMT_L8, D3DPOOL_DEFAULT, &mPrimeryTexture[0], NULL));
-		CHECK_HR(hr = mpD3D9Device->CreateTexture(width / 2, height / 2, 1, 0, D3DFMT_L8, D3DPOOL_DEFAULT, &mPrimeryTexture[1], NULL));
-		CHECK_HR(hr = mpD3D9Device->CreateTexture(width / 2, height / 2, 1, 0, D3DFMT_L8, D3DPOOL_DEFAULT, &mPrimeryTexture[2], NULL));
+		CHECK_HR(hr = mpD3D9Device->CreateTexture(width, height, 1, 0, D3DFMT_L8, D3DPOOL_MANAGED, &mPrimeryTexture[0], NULL));
+		CHECK_HR(hr = mpD3D9Device->CreateTexture(width / 2, height / 2, 1, 0, D3DFMT_L8, D3DPOOL_MANAGED, &mPrimeryTexture[1], NULL));
+		CHECK_HR(hr = mpD3D9Device->CreateTexture(width / 2, height / 2, 1, 0, D3DFMT_L8, D3DPOOL_MANAGED, &mPrimeryTexture[2], NULL));
 	}
 
 	CHECK_HR(hr = D3DXCreateFont(mpD3D9Device, 30, 0, FW_LIGHT, 1, TRUE, 
 		DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &mPFont));
 
 	CHECK_HR(hr = mpD3D9Device->CreateOffscreenPlainSurface(width, height, d3dpp.BackBufferFormat, D3DPOOL_SYSTEMMEM, &mPrimerySurface, nullptr));
-	// CHECK_HR(hr = mpD3D9Device->CreateTexture(width, height, 0, 0, d3dpp.BackBufferFormat, D3DPOOL_SYSTEMMEM, &mPrimeryTexture, nullptr));
+	CHECK_HR(hr = mpD3D9Device->CreateRenderTarget(width, height, mode.Format, d3dpp.MultiSampleType, d3dpp.MultiSampleQuality,
+		TRUE, &mpRenderTarget, NULL));
 
 	// SetupMatrices();
 	// CHECK_HR(hr = mpD3D9Device->SetRenderState(D3DRS_LIGHTING, FALSE));
@@ -306,6 +308,20 @@ DWORD D3D9Render::RenderLoop()
 				mpD3D9Device->EndScene();
 			}
 #endif
+#if 1
+			if (SUCCEEDED(hr = mpD3D9Device->BeginScene())){
+				mpD3D9Device->SetTexture(0, mPrimeryTexture[0]);
+				mpD3D9Device->SetTexture(1, mPrimeryTexture[1]);
+				mpD3D9Device->SetTexture(2, mPrimeryTexture[2]);
+// 				IDirect3DSurface9 *pBackBuffer = nullptr;
+// 				CHECK_HR(hr = mpD3D9Device->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer));
+// 				CHECK_HR(hr = mpD3D9Device->UpdateSurface(mPrimerySurface, nullptr, pBackBuffer, nullptr));
+// 				SAFE_RELEASE(pBackBuffer);
+			done:
+				mpD3D9Device->EndScene();
+			}
+#endif
+			
 
 			OSDText(nullptr, TEXT("this is a test %d."), GetTickCount());
 
@@ -348,15 +364,23 @@ BOOL D3D9Render::PushFrame(CSampleBuffer *frame)
 #else
 	pSurface = mPrimerySurface;
 #endif
-	D3DLOCKED_RECT textureY;
-	D3DLOCKED_RECT textureU;
-	D3DLOCKED_RECT textureV;
-	hr = mPrimeryTexture[0]->LockRect(0, &textureY, NULL, 0);
-	hr = mPrimeryTexture[0]->LockRect(0, &textureU, NULL, 0);
-	hr = mPrimeryTexture[0]->LockRect(0, &textureV, NULL, 0);
-	memcpy(textureY.pBits, planptr[0], frameWidth*frameHeight);
-	memcpy(textureU.pBits, planptr[1], frameWidth*frameHeight>>2);
-	memcpy(textureV.pBits, planptr[2], frameWidth*frameHeight>>2);
+
+	D3DLOCKED_RECT texture[3];
+	if (SUCCEEDED(hr = mPrimeryTexture[0]->LockRect(0, &texture[0], NULL, 0))){
+		memcpy(texture[0].pBits, planptr[0], frameWidth*frameHeight);
+		mPrimeryTexture[0]->UnlockRect(0);
+	}
+	if (SUCCEEDED(hr = mPrimeryTexture[1]->LockRect(0, &texture[1], NULL, 0))){
+		memcpy(texture[1].pBits, planptr[1], frameWidth*frameHeight >> 2);
+		mPrimeryTexture[1]->UnlockRect(0);
+	}
+	if (SUCCEEDED(hr = mPrimeryTexture[2]->LockRect(0, &texture[2], NULL, 0))){
+		memcpy(texture[2].pBits, planptr[2], frameWidth*frameHeight >> 2);
+		mPrimeryTexture[2]->UnlockRect(0);
+	}
+	
+	mPrimeryTexture[1]->UnlockRect(0);
+	mPrimeryTexture[2]->UnlockRect(0);
 
 	pSurface->GetDesc(&dstDec);
 	if (SUCCEEDED(hr = pSurface->LockRect(&dstRect, nullptr, 0))){

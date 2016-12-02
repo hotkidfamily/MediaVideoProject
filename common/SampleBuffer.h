@@ -160,6 +160,7 @@ public:
 	inline int32_t GetWidth() const { return width; };
 	inline int32_t GetHeight() const { return height; };
 	inline DWORD  GetPixelFormat() const{ return pixelFormat; };
+	inline int32_t GetPlanarCount() const { return planarCnt; };
 
 private:
 	int32_t width;

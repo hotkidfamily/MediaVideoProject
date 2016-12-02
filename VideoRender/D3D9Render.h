@@ -37,6 +37,7 @@ private:
 	D3DDEVTYPE mD3D9DeviceType;
 	D3DCAPS9 mpD3D9DeviceCaps;
 	IDirect3DSurface9* mPrimerySurface;
+	IDirect3DSurface9* mpRenderTarget;
 	LPD3DXFONT mPFont;
 	IDirect3DTexture9* mPrimeryTexture[3]; /* for YUV */
 
