@@ -194,9 +194,10 @@ BOOL D3D9Render::InitRender(HWND hWnd, int width, int height, DWORD pixelFormatI
 	d3dpp.BackBufferWidth = width; //set the buffer to our window width
 	d3dpp.BackBufferHeight = height; //set the buffer to out window height
 	FourCCtoD3DFormat(&d3dpp.BackBufferFormat, pixelFormatInFourCC);
-	d3dpp.SwapEffect = D3DSWAPEFFECT_FLIP; //SwapEffect
+	d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD; //SwapEffect
 	d3dpp.Flags |= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 	d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE; // wait for VSync
+	d3dpp.MultiSampleType = D3DMULTISAMPLE_NONE;
 	
 	mpD3D9OBj = Direct3DCreate9(D3D_SDK_VERSION); //Create the presentation parameters
 	
@@ -232,11 +233,10 @@ BOOL D3D9Render::InitRender(HWND hWnd, int width, int height, DWORD pixelFormatI
 		DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &mPFont));
 
 	CHECK_HR(hr = mpD3D9Device->CreateOffscreenPlainSurface(width, height, d3dpp.BackBufferFormat, D3DPOOL_SYSTEMMEM, &mPrimerySurface, nullptr));
-	CHECK_HR(hr = mpD3D9Device->CreateTexture(width, height, 0, 0, d3dpp.BackBufferFormat, D3DPOOL_SYSTEMMEM, &mPrimeryTexture, nullptr));
-	CHECK_HR(hr = mpD3D9Device->GetDeviceCaps(&mpD3D9DeviceCaps));
+	// CHECK_HR(hr = mpD3D9Device->CreateTexture(width, height, 0, 0, d3dpp.BackBufferFormat, D3DPOOL_SYSTEMMEM, &mPrimeryTexture, nullptr));
 
-	SetupMatrices();
-	CHECK_HR(hr = mpD3D9Device->SetRenderState(D3DRS_LIGHTING, FALSE));
+	// SetupMatrices();
+	// CHECK_HR(hr = mpD3D9Device->SetRenderState(D3DRS_LIGHTING, FALSE));
 
 	mRenderEvent = CreateEvent(nullptr, FALSE, FALSE, TEXT("Render Event"));
 	if (mRenderEvent == INVALID_HANDLE_VALUE){
@@ -293,7 +293,7 @@ BOOL D3D9Render::DeinitRender()
 	return TRUE;
 }
 
-#define USE_BACKBUFFER 1
+#define USE_BACKBUFFER 0
 
 DWORD D3D9Render::RenderLoop()
 {
@@ -303,23 +303,15 @@ DWORD D3D9Render::RenderLoop()
 	while (mRenderThreadRuning){
 		dwRet = WaitForSingleObject(mRenderEvent, 20);
 		if (dwRet == WAIT_OBJECT_0){
-#ifndef USE_BACKBUFFER
+
+#if USE_BACKBUFFER
+#else
 			if (SUCCEEDED(hr = mpD3D9Device->BeginScene())){
 				IDirect3DSurface9 *pBackBuffer = nullptr;
 				CHECK_HR(hr = mpD3D9Device->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer));
 				CHECK_HR(hr = mpD3D9Device->UpdateSurface(mPrimerySurface, nullptr, pBackBuffer, nullptr));
 				SAFE_RELEASE(pBackBuffer);
 			done:
-				mpD3D9Device->EndScene();
-			}
-#endif
-#if 0
-			if (SUCCEEDED(hr = mpD3D9Device->BeginScene())){
-				mpD3D9Device->SetTexture(0, mPrimeryTexture);
-
-				//mpD3D9Device->SetStreamSource(0, g_vertex_buffer, 0, sizeof(sCustomVertex));
-				//mpD3D9Device->SetFVF(D3DFVF_CUSTOM_VERTEX);
-				mpD3D9Device->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
 				mpD3D9Device->EndScene();
 			}
 #endif
@@ -343,10 +335,16 @@ BOOL D3D9Render::PushFrame(CSampleBuffer *frame)
 	D3DLOCKED_RECT dstRect = { 0 };
 	D3DSURFACE_DESC dstDec;
 	uint8_t *dstDataPtr = nullptr;
-	uint8_t *srcDataptr = frame->GetDataPtr();
+	uint8_t *srcDataptr = nullptr;
 	IDirect3DSurface9 *pSurface = nullptr;
 
-#ifdef USE_BACKBUFFER
+	if (!frame){
+		return FALSE;
+	}
+
+	srcDataptr = frame->GetDataPtr();
+
+#if USE_BACKBUFFER
 	CHECK_HR(hr = mpD3D9Device->GetBackBuffer(0, 2, D3DBACKBUFFER_TYPE_MONO, &pSurface));
 #else
 	pSurface = mPrimerySurface;
