@@ -156,6 +156,9 @@ BOOL D3D9SpriteRender::InitRender(HWND hWnd, int width, int height, DWORD pixelF
 
 	SetupMatrices();
 
+	mpReadyTexture = mpD3D9Texture;
+	mpFreeTexture = mpD3D9Texture2;
+
 	mRenderEvent = CreateEvent(nullptr, FALSE, FALSE, TEXT("sprite Render Event"));
 	if (mRenderEvent == INVALID_HANDLE_VALUE){
 		hr = E_FAIL;
@@ -248,7 +251,7 @@ BOOL D3D9SpriteRender::PushFrame(CSampleBuffer *frame)
 	int32_t srcLineSize = 0;
 	uint8_t **planptr = NULL;
 	int32_t planarCnt = 0;
-	volatile LPDIRECT3DTEXTURE9 pCur;
+	volatile LPDIRECT3DTEXTURE9 pCur = NULL;
 	D3DLOCKED_RECT rect;
 
 	if (!frame){
@@ -262,18 +265,17 @@ BOOL D3D9SpriteRender::PushFrame(CSampleBuffer *frame)
 	planptr = frame->GetPlanarPtr();
 	planarCnt = frame->GetPlanarCount();
 
-	if (mpReadyTexture == mpD3D9Texture){
-		pCur = mpD3D9Texture2;
-	} else {
-		pCur = mpD3D9Texture;
-	}
-
-	if (SUCCEEDED(hr = pCur->LockRect(0, &rect, NULL, 0))){
+	if (SUCCEEDED(hr = mpFreeTexture->LockRect(0, &rect, NULL, 0))){
 		memcpy(rect.pBits, srcDataptr, frame->GetDataSize());
-		pCur->UnlockRect(0);
+		mpFreeTexture->UnlockRect(0);
 	}
+// 	InterlockedExchangePointer((PVOID*)&pCur, mpReadyTexture);
+// 	InterlockedExchangePointer((PVOID *)&mpReadyTexture, mpFreeTexture);
+// 	InterlockedExchangePointer((PVOID*)&mpFreeTexture, pCur);
 
-	InterlockedExchangePointer((PVOID *)&mpReadyTexture, pCur);
+	pCur = mpReadyTexture;
+	mpReadyTexture = mpFreeTexture;
+	mpFreeTexture = pCur;
 	SetEvent(mRenderEvent);
 
 	GetD3D9ErrorString(hr);
@@ -294,7 +296,6 @@ BOOL D3D9SpriteRender::OSDText(HDC, TCHAR *format, ...)
 	vswprintf_s(buf, format, va_alist);
 	va_end(va_alist);
 
-	//mpD3D9Device->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_ARGB(0xff, 0, 0, 0), 1.0f, 0);
 	if (SUCCEEDED(hr = mpD3D9Device->BeginScene())){
 		mPFont->DrawText(nullptr, buf, -1, &FontPos, DT_CENTER, D3DCOLOR_ARGB(255, 0, 255, 0));
 		mpD3D9Device->EndScene();
