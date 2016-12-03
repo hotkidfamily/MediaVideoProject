@@ -34,11 +34,12 @@ DWORD WINAPI D3d9SpriteRenderThread(LPVOID args)
 void D3D9SpriteRender::SetupMatrices()
 {
 	// setup world matrix
-	D3DXMATRIX  matrixScale, matrixRotation, matrixTranslation;
+	D3DXMATRIX  matrixScale, matrixRotation, matrixTranslation, matrixWorld;
 
-	D3DXMatrixScaling(&matrixScale, 1.0f, 1.0f, 1.0f);
-	D3DXMatrixRotationZ(&matrixRotation, 0.0);
-	D3DXMatrixTranslation(&matrixTranslation, 0, 0, 0);
+	D3DXMatrixScaling(&matrixScale, 1.0f, 1.0f, 1.0f); // no scale
+	D3DXMatrixRotationZ(&matrixRotation, 0.0); // no z rotation
+	//D3DXMatrixRotationX(&matrixRotation, 0.5);
+	D3DXMatrixTranslation(&matrixTranslation, 0, 0, 0); // no translate
 	D3DXMatrixMultiply(&matrixWorld, &matrixScale, &matrixRotation);
 	D3DXMatrixMultiply(&matrixWorld, &matrixWorld, &matrixTranslation);
 	mSprite->SetTransform(&matrixWorld);
@@ -204,7 +205,9 @@ BOOL D3D9SpriteRender::DeinitRender()
 	mVppFactory = nullptr;
 
 	SAFE_RELEASE(mpD3D9Texture);
+	SAFE_RELEASE(mpD3D9Texture2);
 	SAFE_RELEASE(mPFont);
+	SAFE_RELEASE(mSprite);
 	SAFE_RELEASE(mpD3D9Device);
 	SAFE_RELEASE(mpD3D9OBj);
 
@@ -217,7 +220,7 @@ DWORD D3D9SpriteRender::RenderLoop()
 	DWORD dwRet = 0;
 
 	while (mRenderThreadRuning){
-		dwRet = WaitForSingleObject(mRenderEvent, 5);
+		dwRet = WaitForSingleObject(mRenderEvent, 10);
 		if ( dwRet == WAIT_OBJECT_0 ){
 			if (SUCCEEDED(mpD3D9Device->BeginScene())){
 				if (SUCCEEDED(mSprite->Begin(D3DXSPRITE_ALPHABLEND))){
@@ -252,7 +255,6 @@ BOOL D3D9SpriteRender::PushFrame(CSampleBuffer *frame)
 	uint8_t **planptr = NULL;
 	int32_t planarCnt = 0;
 	volatile LPDIRECT3DTEXTURE9 pCur = NULL;
-	D3DLOCKED_RECT rect;
 
 	if (!frame){
 		return FALSE;
@@ -265,17 +267,28 @@ BOOL D3D9SpriteRender::PushFrame(CSampleBuffer *frame)
 	planptr = frame->GetPlanarPtr();
 	planarCnt = frame->GetPlanarCount();
 
-	if (SUCCEEDED(hr = mpFreeTexture->LockRect(0, &rect, NULL, 0))){
-		memcpy(rect.pBits, srcDataptr, frame->GetDataSize());
+	if (SUCCEEDED(hr = mpFreeTexture->LockRect(0, &dstRect, NULL, 0))){
+		if (dstRect.Pitch == srcLineSize){
+			memcpy(dstRect.pBits, srcDataptr, frame->GetDataSize());
+		}
+		else{
+			dstDataPtr = (uint8_t*)dstRect.pBits;
+			for (int i = 0; i < frameHeight; i++){
+				DWORD *rgb32Buffer = (DWORD*)(dstDataPtr + i*dstRect.Pitch);
+				uint8_t* rgb24Buffer = srcDataptr + srcLineSize*(frameHeight - i);
+				for (int j = 0; j < frameWidth; j++){
+					rgb32Buffer[j] = RGB(rgb24Buffer[0], rgb24Buffer[1], rgb24Buffer[2]);
+					rgb24Buffer += 3;
+				}
+			}
+
+		}
 		mpFreeTexture->UnlockRect(0);
 	}
-// 	InterlockedExchangePointer((PVOID*)&pCur, mpReadyTexture);
-// 	InterlockedExchangePointer((PVOID *)&mpReadyTexture, mpFreeTexture);
-// 	InterlockedExchangePointer((PVOID*)&mpFreeTexture, pCur);
+	InterlockedExchangePointer((PVOID*)&pCur, mpReadyTexture);
+	InterlockedExchangePointer((PVOID *)&mpReadyTexture, mpFreeTexture);
+	InterlockedExchangePointer((PVOID*)&mpFreeTexture, pCur);
 
-	pCur = mpReadyTexture;
-	mpReadyTexture = mpFreeTexture;
-	mpFreeTexture = pCur;
 	SetEvent(mRenderEvent);
 
 	GetD3D9ErrorString(hr);

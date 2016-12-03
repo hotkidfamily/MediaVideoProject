@@ -348,7 +348,7 @@ BOOL D3D9Render::PushFrame(CSampleBuffer *frame)
 		dstDataPtr = (uint8_t*)dstRect.pBits;
 		if (frame->GetPixelFormat() == PIXEL_FORMAT_RGB24){
 			for (int i = 0; i < frameHeight; i++){
-				DWORD *rgb32Buffer = rgb32Buffer = (DWORD*)(dstDataPtr + i*dstRect.Pitch);
+				DWORD *rgb32Buffer = (DWORD*)(dstDataPtr + i*dstRect.Pitch);
 				uint8_t* rgb24Buffer = srcDataptr  + srcLineSize*(frameHeight - i);
 				for (int j = 0; j < frameWidth; j++){
 					rgb32Buffer[j] = RGB(rgb24Buffer[0], rgb24Buffer[1], rgb24Buffer[2]);
@@ -390,7 +390,6 @@ BOOL D3D9Render::OSDText(HDC, TCHAR *format, ...)
 		mpD3D9Device->EndScene();
 	}
 
-done:
 	GetD3D9ErrorString(hr);
 	return hr == S_OK;
 }

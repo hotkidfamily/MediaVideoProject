@@ -41,7 +41,6 @@ private:
 
 	LPD3DXFONT mPFont;
 	ID3DXSprite *mSprite;
-	D3DXMATRIX matrixWorld;
 
 	HANDLE mRenderEvent;
 	BOOL mSupportVSync;
