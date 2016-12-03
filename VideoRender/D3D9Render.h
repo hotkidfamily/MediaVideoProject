@@ -19,7 +19,7 @@ public:
 	BOOL PushFrame(CSampleBuffer *);
 	BOOL Repaint() { return S_OK; };
 
-	const char *GetRenderDescriptor() { return "D39 Render"; };
+	const char *GetRenderDescriptor() const { return "D39 Render"; };
 
 	DWORD RenderLoop();
 

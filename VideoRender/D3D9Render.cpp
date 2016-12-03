@@ -308,7 +308,7 @@ DWORD D3D9Render::RenderLoop()
 				mpD3D9Device->EndScene();
 			}
 #endif
-#if 1
+#if 0
 			if (SUCCEEDED(hr = mpD3D9Device->BeginScene())){
 				mpD3D9Device->SetTexture(0, mPrimeryTexture[0]);
 				mpD3D9Device->SetTexture(1, mPrimeryTexture[1]);
@@ -348,6 +348,7 @@ BOOL D3D9Render::PushFrame(CSampleBuffer *frame)
 	int32_t frameHeight = 0;
 	int32_t srcLineSize = 0;
 	uint8_t **planptr = NULL;
+	int32_t planarCnt = 0;
 
 	if (!frame){
 		return FALSE;
@@ -358,13 +359,14 @@ BOOL D3D9Render::PushFrame(CSampleBuffer *frame)
 	srcDataptr = frame->GetDataPtr();
 	srcLineSize = frame->GetLineSize();
 	planptr = frame->GetPlanarPtr();
+	planarCnt = frame->GetPlanarCount();
 
 #if USE_BACKBUFFER
 	CHECK_HR(hr = mpD3D9Device->GetBackBuffer(0, 2, D3DBACKBUFFER_TYPE_MONO, &pSurface));
 #else
 	pSurface = mPrimerySurface;
 #endif
-
+#if 0
 	D3DLOCKED_RECT texture[3];
 	if (SUCCEEDED(hr = mPrimeryTexture[0]->LockRect(0, &texture[0], NULL, 0))){
 		memcpy(texture[0].pBits, planptr[0], frameWidth*frameHeight);
@@ -378,10 +380,7 @@ BOOL D3D9Render::PushFrame(CSampleBuffer *frame)
 		memcpy(texture[2].pBits, planptr[2], frameWidth*frameHeight >> 2);
 		mPrimeryTexture[2]->UnlockRect(0);
 	}
-	
-	mPrimeryTexture[1]->UnlockRect(0);
-	mPrimeryTexture[2]->UnlockRect(0);
-
+#endif
 	pSurface->GetDesc(&dstDec);
 	if (SUCCEEDED(hr = pSurface->LockRect(&dstRect, nullptr, 0))){
 		dstDataPtr = (uint8_t*)dstRect.pBits;

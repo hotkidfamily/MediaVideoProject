@@ -18,7 +18,7 @@ public:
 	virtual BOOL DeinitRender() = 0;
 
 	virtual BOOL PushFrame(CSampleBuffer *frame) = 0;
-	virtual const char *GetRenderDescriptor() = 0;
+	virtual const char *GetRenderDescriptor() const = 0;
 };
 
 class IRenderFactory

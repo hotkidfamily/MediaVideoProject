@@ -23,7 +23,7 @@ public:
 
 	BOOL PushFrame(CSampleBuffer *);
 
-	const char *GetRenderDescriptor() { return "Ddraw Render"; };
+	const char *GetRenderDescriptor() const { return "Ddraw Render"; };
 
 	DWORD RenderLoop();
 

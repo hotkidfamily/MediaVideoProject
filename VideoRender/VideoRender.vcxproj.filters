@@ -39,6 +39,9 @@
     <ClInclude Include="D3D9Render.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="D3D9SpriteRender.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -57,6 +60,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="D3D9Render.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D9SpriteRender.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
