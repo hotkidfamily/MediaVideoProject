@@ -25,7 +25,6 @@ public:
 
 protected:
 	BOOL OSDText(HDC, TCHAR *, ...);
-	const TCHAR* GetErrorString(HRESULT hr);
 	void SetupMatrices();
 	HRESULT IfSupportedFormat(D3DDISPLAYMODE, D3DFORMAT, BOOL &);
 	HRESULT GetDisplayMode();
