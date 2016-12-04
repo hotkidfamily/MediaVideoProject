@@ -157,6 +157,7 @@ BOOL D3D9SpriteRender::InitRender(HWND hWnd, int width, int height, DWORD pixelF
 
 	SetupMatrices();
 
+	InitializeCriticalSection(&cs);
 	mpReadyTexture = mpD3D9Texture;
 	mpFreeTexture = mpD3D9Texture2;
 
@@ -204,6 +205,8 @@ BOOL D3D9SpriteRender::DeinitRender()
 	ReleaseVPPFactoryObj(mVppFactory);
 	mVppFactory = nullptr;
 
+	DeleteCriticalSection(&cs);
+
 	SAFE_RELEASE(mpD3D9Texture);
 	SAFE_RELEASE(mpD3D9Texture2);
 	SAFE_RELEASE(mPFont);
@@ -221,17 +224,28 @@ DWORD D3D9SpriteRender::RenderLoop()
 
 	while (mRenderThreadRuning){
 		dwRet = WaitForSingleObject(mRenderEvent, 10);
+
+		if (!mRenderThreadRuning)
+			break;
+
 		if ( dwRet == WAIT_OBJECT_0 ){
+			EnterCriticalSection(&cs);
+
 			if (SUCCEEDED(mpD3D9Device->BeginScene())){
+
 				if (SUCCEEDED(mSprite->Begin(D3DXSPRITE_ALPHABLEND))){
 					hr = mSprite->Draw(mpReadyTexture, NULL, NULL, &D3DXVECTOR3(0, 0, 0), 0XFFFFFFFF);
 					mSprite->End();
 				}
 				mpD3D9Device->EndScene();
+
 			}
+
 			OSDText(nullptr, TEXT("this is a test %d."), GetTickCount());
 
 			hr = mpD3D9Device->Present(nullptr, nullptr, nullptr, nullptr);
+			LeaveCriticalSection(&cs);
+
 		} else if ( dwRet == WAIT_TIMEOUT ){
 			continue;
 		} else {
@@ -248,13 +262,10 @@ BOOL D3D9SpriteRender::PushFrame(CSampleBuffer *frame)
 	D3DLOCKED_RECT dstRect = { 0 };
 	uint8_t *dstDataPtr = nullptr;
 	uint8_t *srcDataptr = nullptr;
-	IDirect3DSurface9 *pSurface = nullptr;
 	int32_t frameWidth = 0;
 	int32_t frameHeight = 0;
-	int32_t srcLineSize = 0;
-	uint8_t **planptr = NULL;
-	int32_t planarCnt = 0;
 	volatile LPDIRECT3DTEXTURE9 pCur = NULL;
+	int32_t srcLineSize = 0;
 
 	if (!frame){
 		return FALSE;
@@ -264,14 +275,12 @@ BOOL D3D9SpriteRender::PushFrame(CSampleBuffer *frame)
 	frameHeight = frame->GetHeight();
 	srcDataptr = frame->GetDataPtr();
 	srcLineSize = frame->GetLineSize();
-	planptr = frame->GetPlanarPtr();
-	planarCnt = frame->GetPlanarCount();
+
 
 	if (SUCCEEDED(hr = mpFreeTexture->LockRect(0, &dstRect, NULL, 0))){
 		if (dstRect.Pitch == srcLineSize){
 			memcpy(dstRect.pBits, srcDataptr, frame->GetDataSize());
-		}
-		else{
+		} else{
 			dstDataPtr = (uint8_t*)dstRect.pBits;
 			for (int i = 0; i < frameHeight; i++){
 				DWORD *rgb32Buffer = (DWORD*)(dstDataPtr + i*dstRect.Pitch);
@@ -281,15 +290,18 @@ BOOL D3D9SpriteRender::PushFrame(CSampleBuffer *frame)
 					rgb24Buffer += 3;
 				}
 			}
-
 		}
 		mpFreeTexture->UnlockRect(0);
-	}
-	InterlockedExchangePointer((PVOID*)&pCur, mpReadyTexture);
-	InterlockedExchangePointer((PVOID *)&mpReadyTexture, mpFreeTexture);
-	InterlockedExchangePointer((PVOID*)&mpFreeTexture, pCur);
 
-	SetEvent(mRenderEvent);
+		EnterCriticalSection(&cs);
+		pCur = mpReadyTexture;
+		mpReadyTexture = mpFreeTexture;
+		mpFreeTexture = pCur;
+		LeaveCriticalSection(&cs);
+
+		SetEvent(mRenderEvent);
+	}
+
 
 	GetD3D9ErrorString(hr);
 
@@ -309,6 +321,7 @@ BOOL D3D9SpriteRender::OSDText(HDC, TCHAR *format, ...)
 	vswprintf_s(buf, format, va_alist);
 	va_end(va_alist);
 
+	//mpD3D9Device->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_ARGB(255, 0, 0, 0), 0.0, 0);
 	if (SUCCEEDED(hr = mpD3D9Device->BeginScene())){
 		mPFont->DrawText(nullptr, buf, -1, &FontPos, DT_CENTER, D3DCOLOR_ARGB(255, 0, 255, 0));
 		mpD3D9Device->EndScene();

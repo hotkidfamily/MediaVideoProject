@@ -39,6 +39,8 @@ private:
 	volatile LPDIRECT3DTEXTURE9 mpReadyTexture;
 	volatile LPDIRECT3DTEXTURE9 mpFreeTexture;
 
+	CRITICAL_SECTION cs;
+
 	LPD3DXFONT mPFont;
 	ID3DXSprite *mSprite;
 
