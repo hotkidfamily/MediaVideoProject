@@ -3,6 +3,8 @@
 
 #include <string>
 #include <stdint.h>
+#include "PixelFormat.h"
+#include "SampleBuffer.h"
 
 #ifndef SAFE_DELETE
 #define SAFE_DELETE(x)  {if(x) delete (x); (x)= nullptr;}
@@ -34,6 +36,9 @@ extern "C" {
 
 	void DeallocMemory(uint8_t * pointerOfMemory);
 	uint8_t * AllocMemory(uint32_t sizeInByte);
+
+	BOOL DeallocSampleBuffer(CSampleBuffer *);
+	CSampleBuffer *AllocSampleBuffer(int32_t, int32_t, CPPixelFormat);
 
 #ifdef __cplusplus
 }

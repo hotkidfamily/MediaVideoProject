@@ -22,37 +22,49 @@ void DeallocMemory(uint8_t * ptr)
 #endif
 }
 
-BOOL AllocSampleBuffer(int32_t width, int32_t height, DWORD pixelFormat)
+
+BOOL DeallocSampleBuffer(CSampleBuffer *sample)
 {
+	if (!sample){
+		goto done;
+	}
+
+	uint8_t* ptr = sample->GetDataPtr();
+
+	DeallocMemory(ptr);
+
+	delete sample;
+
+done:
+	return TRUE;
+}
+
+CSampleBuffer *AllocSampleBuffer(int32_t width, int32_t height, CPPixelFormat pixelFormat)
+{
+	CSampleBuffer *sample = new CSampleBuffer;
 	BOOL bRet = FALSE;
-	uint32_t planarSize[4] = { 0 };
-	uint32_t planarStride[4] = { 0 };
-	uint8_t *planarPtr[4] = { NULL };
 
 	const PIXELFORAMTDESC *bpp = GetPxielFormatDescByFourCC(pixelFormat);
-	int32_t realWidth = WIDTHALIGN(width);
-	int32_t realHeight = HEIGHTALIGN(height);
-	int32_t sizeInBytes = realWidth * realHeight * bpp->pixdesc.bpp;
 
-	for (int32_t i = 0; i < bpp->pixdesc.planarCnt; i++){
-		planarSize[i] = realWidth * realHeight * bpp->pixdesc.resShift[i].widthShift;
-		planarPtr[i] = AllocMemory(planarSize[i]);
-		if (!planarPtr[i]){
-			goto fail;
-		}
-		planarStride[i] = realWidth * realHeight * bpp->pixdesc.resShift[i].widthShift;
+	/* calc buffer size */
+	int32_t rWidth = WIDTHALIGN(width);
+	int32_t rHeight = WIDTHALIGN(height);
+	int32_t capability = rWidth * rHeight * bpp->pixdesc.bpp >> 3;
+	uint8_t *bufferPtr = AllocMemory(capability);
+
+	if (!sample || !bufferPtr){
+		goto fail;
 	}
+
+	sample->Reset(bufferPtr, capability, width, height, pixelFormat);
 
 	bRet = TRUE;
 
 fail:
 	if (!bRet){
-		for (int32_t i = 0; i < bpp->pixdesc.planarCnt; i++){
-			if (planarPtr[i] != NULL){
-				DeallocMemory(planarPtr[i]);
-			}
-		}
+		DeallocSampleBuffer(sample);
+		sample = NULL;
 	}
 	
-	return FALSE;
+	return sample;
 }

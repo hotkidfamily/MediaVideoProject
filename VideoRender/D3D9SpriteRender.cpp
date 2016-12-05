@@ -20,9 +20,11 @@ D3D9SpriteRender::D3D9SpriteRender()
 	, mRenderThreadHandle(INVALID_HANDLE_VALUE)
 	, mRenderThreadId(0)
 	, mRenderThreadRuning(FALSE)
+
 	, mVppFactory(nullptr)
 	, mVpp(nullptr)
-	
+	, transSampleBuffer(NULL)
+	, mbNeedVpp(FALSE)
 {
 }
 
@@ -118,6 +120,7 @@ BOOL D3D9SpriteRender::InitRender(HWND hWnd, int width, int height, DWORD pixelF
 
 	if (!IfSupportedFormat(mode, d3dpp.BackBufferFormat)){
 		if (!IfSupportedConversionFormat(mode, d3dpp.BackBufferFormat)){
+			d3dpp.BackBufferFormat = mode.Format;
 			if (GetVPPFactoryObj(mVppFactory)) {
 				mVppFactory->CreateVPPObj(mVpp);
 			}
@@ -132,16 +135,11 @@ BOOL D3D9SpriteRender::InitRender(HWND hWnd, int width, int height, DWORD pixelF
 				hr = E_FAIL;
 				goto done;
 			}
-			transSampleBuffer = new CSampleBuffer;
-			int32_t size = width*height * 4;
-			uint8_t *buff = new uint8_t[size];
-			transSampleBuffer->Reset(buff, size);
-			FRAME_DESC desc;
-			desc.dataPtr = 0;
-			desc.pixelFormatInFourCC = vppParams.dstPixelInFormatFourCC;
-			desc.width = width;
-			desc.height = height;
-			transSampleBuffer->FillData(desc);
+			transSampleBuffer = AllocSampleBuffer(width, height, (CPPixelFormat)vppParams.dstPixelInFormatFourCC);
+			if (transSampleBuffer){
+				mbNeedVpp = TRUE;
+			}
+			
 			CHECK_HR(hr = GetDeviceType(mode));
 		} else {
 			mbSupportConversion = TRUE;
@@ -234,6 +232,11 @@ BOOL D3D9SpriteRender::DeinitRender()
 	ReleaseVPPFactoryObj(mVppFactory);
 	mVppFactory = nullptr;
 
+	if (transSampleBuffer){
+		DeallocSampleBuffer(transSampleBuffer);
+		transSampleBuffer = NULL;
+	}
+
 	DeleteCriticalSection(&cs);
 
 	SAFE_RELEASE(mpD3D9Surface);
@@ -291,7 +294,7 @@ DWORD D3D9SpriteRender::RenderLoop()
 	return 0;
 }
 
-BOOL D3D9SpriteRender::PushFrame(CSampleBuffer *frame)
+BOOL D3D9SpriteRender::PushFrame(CSampleBuffer *inframe)
 {
 	HRESULT hr = E_FAIL;
 	D3DLOCKED_RECT dstRect = { 0 };
@@ -301,9 +304,15 @@ BOOL D3D9SpriteRender::PushFrame(CSampleBuffer *frame)
 	int32_t frameHeight = 0;
 	volatile LPVOID pCur = NULL;
 	int32_t srcLineSize = 0;
+	CSampleBuffer *frame = inframe;
 
 	if (!frame){
 		return FALSE;
+	}
+
+	if (mbNeedVpp){
+		mVpp->ProcessFrame(inframe, transSampleBuffer);
+		frame = transSampleBuffer;
 	}
 
 	frameWidth = frame->GetWidth();
