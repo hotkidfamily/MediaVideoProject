@@ -13,7 +13,6 @@
   <ItemGroup>
     <ClInclude Include="AutoLock.h" />
     <ClInclude Include="logger.h" />
-    <ClInclude Include="mtype.h" />
     <ClInclude Include="PackageBuffer.h" />
     <ClInclude Include="PixelFormat.h" />
     <ClInclude Include="SampleBuffer.h" />
@@ -25,7 +24,6 @@
   <ItemGroup>
     <ClCompile Include="logger.cpp" />
     <ClCompile Include="MemoryUtils.cpp" />
-    <ClCompile Include="mtype.cpp" />
     <ClCompile Include="PixelFormat.cpp" />
     <ClCompile Include="SlidingWindowCalc.cpp" />
     <ClCompile Include="stdafx.cpp">

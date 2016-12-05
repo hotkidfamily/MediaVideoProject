@@ -6,8 +6,6 @@ extern "C" {
 #include "libswscale\swscale.h"
 }
 
-#include "mtype.h"
-
 // capture output format
 #undef FMT
 #define FMT(X,Y) PIXEL_FORMAT_##X=Y
