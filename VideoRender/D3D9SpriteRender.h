@@ -27,7 +27,7 @@ protected:
 	HRESULT IfSupportedFormat(D3DDISPLAYMODE , D3DFORMAT );
 	BOOL IfSupportedConversionFormat(D3DDISPLAYMODE , D3DFORMAT);
 	HRESULT updateContent(CSampleBuffer *&);
-	BOOL OSDText(HDC, TCHAR *format, ...);
+	BOOL OSDText(HDC, RECT *, TCHAR *format, ...);
 	BOOL OutputInformation();
 
 private:
@@ -69,6 +69,8 @@ private:
 	// statistics 
 	int64_t mLastPts;
 	int64_t mLastRender;
+	int64_t mCurRenderInterval;
+	int64_t mCurPtsInterval;
 	CSlidingWindowCalc mInputStatis;
 	CSlidingWindowCalc mRenderStatis;
 };

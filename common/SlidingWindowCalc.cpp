@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "logger.h"
 #include "SlidingWindowCalc.h"
 
 #define SAMPLE_COUNT_FPS (30)
@@ -74,6 +75,8 @@ int32_t CSlidingWindowCalc::AppendSample(uint32_t size)
 	pos = (mRingWirtePos + 1) % mSampleRingCapability;
 	InterlockedExchange(&mRingWirtePos, pos);
 
+	internel_log(Info, "append %d, %d", mRingReadPos, mRingWirtePos);
+
 	return 0;
 }
 
@@ -105,6 +108,8 @@ BOOL CSlidingWindowCalc::MinMaxSample(int32_t &minV, int32_t &maxV) const
 	uint64_t size = Samples();
 	long readPos = 0;
 	InterlockedExchange(&readPos, mRingReadPos);
+
+	//internel_log(Info, "read %d, write %d, size %d", mRingReadPos, mRingWirtePos, size);
 
 	for (uint64_t i = readPos; i < readPos + size; i++){
 		uint32_t sampleSize = mSampleRingBuffer[i%mSampleRingCapability].sampleSize;

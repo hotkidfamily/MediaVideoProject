@@ -24,7 +24,7 @@ public:
 	DWORD RenderLoop();
 
 protected:
-	BOOL OSDText(HDC, TCHAR *, ...);
+	BOOL OSDText(HDC, RECT, TCHAR *, ...);
 	void SetupMatrices();
 	HRESULT IfSupportedFormat(D3DDISPLAYMODE, D3DFORMAT, BOOL &);
 	HRESULT GetDisplayMode();

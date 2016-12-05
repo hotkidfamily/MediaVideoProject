@@ -285,7 +285,7 @@ DWORD D3D9Render::RenderLoop()
 #endif
 			
 
-			OSDText(nullptr, TEXT("this is a test %d."), GetTickCount());
+			//OSDText(nullptr, TEXT("this is a test %d."), GetTickCount());
 
 			hr = mpD3D9Device->Present(nullptr, nullptr, nullptr, nullptr);
 		} else if (dwRet == WAIT_TIMEOUT){
@@ -371,22 +371,20 @@ done:
 	return hr != DD_OK;
 }
 
-BOOL D3D9Render::OSDText(HDC, TCHAR *format, ...)
+BOOL D3D9Render::OSDText(HDC, RECT rc, TCHAR *format, ...)
 {
 	HRESULT hr = S_OK;
-	RECT FontPos;
 	TCHAR buf[1024] = { '\0' };
+
 	va_list va_alist;
-
-	GetClientRect(mhWnd, &FontPos);
-
 	va_start(va_alist, format);
 	vswprintf_s(buf, format, va_alist);
 	va_end(va_alist);
 
-	//CHECK_HR(hr = mPD3DDevice->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0));
+	OffsetRect(&rc, 2, 2);
+
 	if (SUCCEEDED(hr = mpD3D9Device->BeginScene())){
-		mPFont->DrawText(nullptr, buf, -1, &FontPos, DT_CENTER, D3DCOLOR_ARGB(255, 0, 255, 0));
+		mPFont->DrawText(nullptr, buf, -1, &rc, DT_CENTER, D3DCOLOR_ARGB(255, 0, 255, 0));
 		mpD3D9Device->EndScene();
 	}
 

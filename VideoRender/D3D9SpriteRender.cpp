@@ -2,6 +2,8 @@
 #include "D3D9SpriteRender.h"
 #include "RenderUtils.h"
 
+#define FONT_HEIGHT 30
+
 
 D3D9SpriteRender::D3D9SpriteRender()
 	: mhWnd(nullptr)
@@ -25,6 +27,8 @@ D3D9SpriteRender::D3D9SpriteRender()
 	, transSampleBuffer(NULL)
 	, mbNeedVpp(FALSE)
 
+	, mCurRenderInterval(0)
+	, mCurPtsInterval(0)
 	, mLastRender(0)
 	, mLastPts(0)
 {
@@ -173,7 +177,7 @@ BOOL D3D9SpriteRender::InitRender(HWND hWnd, int width, int height, DWORD pixelF
 		hr = mpD3D9Device->CreateTexture(width, height, 0, 0, d3dpp.BackBufferFormat, D3DPOOL_MANAGED, &mpD3D9Texture2, NULL);
 	}
 
-	CHECK_HR(hr = D3DXCreateFont(mpD3D9Device, 30, 0, FW_LIGHT, 1, TRUE,
+	CHECK_HR(hr = D3DXCreateFont(mpD3D9Device, FONT_HEIGHT, 0, FW_LIGHT, 1, TRUE,
 		DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &mPFont));
 
 	CHECK_HR(hr = D3DXCreateSprite(mpD3D9Device, &mSprite));
@@ -252,6 +256,8 @@ BOOL D3D9SpriteRender::DeinitRender()
 
 BOOL D3D9SpriteRender::OutputInformation()
 {
+	RECT FontPos;
+	GetClientRect(mhWnd, &FontPos);
 	int32_t minInputSample = 0, maxInputSample = 0;
 	int32_t minRenderSample = 0, maxRenderSample = 0;
 
@@ -259,11 +265,17 @@ BOOL D3D9SpriteRender::OutputInformation()
 		mInputStatis.MinMaxSample(minInputSample, maxInputSample);
 		mRenderStatis.MinMaxSample(minRenderSample, maxRenderSample);
 
-		OSDText(NULL,
-			TEXT("in: %.2f, %llu(%2d~%2d)")
-			TEXT(" %2llu(%2d~%2d)")
-			, mInputStatis.Frequency(), mInputStatis.AvgSampleSize(), minInputSample, maxInputSample,
-			mRenderStatis.AvgSampleSize(), minRenderSample, maxRenderSample);
+		OSDText(NULL, &FontPos, 
+			TEXT("FPS: %.2f"),
+			mInputStatis.Frequency());
+
+		OSDText(NULL, &FontPos,
+			TEXT("Input: %2lld, Avg:%2llu(%2d~%2d)"),
+			mCurPtsInterval, mInputStatis.AvgSampleSize(), minInputSample, maxInputSample);
+
+		OSDText(NULL, &FontPos,
+			TEXT("Render: %2lld Avg:%2llu(%2d~%2d)"),
+			mCurRenderInterval, mRenderStatis.AvgSampleSize(), minRenderSample, maxRenderSample);
 	}
 
 	return TRUE;
@@ -274,6 +286,7 @@ DWORD D3D9SpriteRender::RenderLoop()
 	HRESULT hr = S_OK;
 	DWORD dwRet = 0;
 	DWORD renderBefore = 0;
+	mCurRenderInterval = 0;
 
 	while (mRenderThreadRuning){
 		dwRet = WaitForSingleObject(mRenderEvent, 10);
@@ -281,16 +294,17 @@ DWORD D3D9SpriteRender::RenderLoop()
 		if (!mRenderThreadRuning)
 			break;
 
-		renderBefore = timeGetTime();
-
-		if (mLastRender){
-			mRenderStatis.AppendSample(renderBefore - mLastRender);
-		}
-
 		if ( dwRet == WAIT_OBJECT_0 ){
-			mLastRender = renderBefore;
+			renderBefore = timeGetTime();
 
-			mRenderStatis.AppendSample(1);
+			if (mLastRender){
+				mCurRenderInterval = renderBefore - mLastRender;
+				mRenderStatis.AppendSample(mCurRenderInterval);
+				if (mCurRenderInterval == 11){
+					mCurRenderInterval = mCurPtsInterval;
+				}
+			}
+			mLastRender = renderBefore;
 			if (SUCCEEDED(mpD3D9Device->BeginScene())){
 				if (mSupportSurfaceType == SUPPORT_TEXTURE){
 					if (SUCCEEDED(mSprite->Begin(D3DXSPRITE_ALPHABLEND))){
@@ -308,10 +322,10 @@ DWORD D3D9SpriteRender::RenderLoop()
 			}
 
 			OutputInformation();
+
 			EnterCriticalSection(&cs);
 			hr = mpD3D9Device->Present(nullptr, nullptr, nullptr, nullptr);
 			LeaveCriticalSection(&cs);
-
 		} else if ( dwRet == WAIT_TIMEOUT ){
 			continue;
 		} else {
@@ -385,7 +399,8 @@ BOOL D3D9SpriteRender::PushFrame(CSampleBuffer *inframe)
 	frame->GetPts(ptss, ptse);
 
 	if (mLastPts){
-		mInputStatis.AppendSample(ptss - mLastPts);
+		mCurPtsInterval = ptss - mLastPts;
+		mInputStatis.AppendSample(mCurPtsInterval);
 	}
 	
 	mLastPts = ptss;
@@ -413,23 +428,24 @@ BOOL D3D9SpriteRender::PushFrame(CSampleBuffer *inframe)
 	return hr != DD_OK;
 }
 
-BOOL D3D9SpriteRender::OSDText(HDC, TCHAR *format, ...)
+BOOL D3D9SpriteRender::OSDText(HDC, RECT *rc, TCHAR *format, ...)
 {
 	HRESULT hr = S_OK;
-	RECT FontPos;
 	TCHAR buf[1024] = { TEXT('\0') };
 	va_list va_alist;
-
-	GetClientRect(mhWnd, &FontPos);
 
 	va_start(va_alist, format);
 	vswprintf_s(buf, format, va_alist);
 	va_end(va_alist);
 
-	hr = mPFont->DrawText(nullptr, buf, -1, &FontPos, DT_LEFT | DT_TOP, D3DCOLOR_ARGB(255, 0, 255, 0));
+	OffsetRect(rc, 2, 2);
+
+	hr = mPFont->DrawText(nullptr, buf, -1, rc, DT_LEFT | DT_TOP, D3DCOLOR_ARGB(255, 0, 255, 0));
 
 	if (FAILED(hr))
 		GetD3D9ErrorString(hr);
+
+	rc->top += FONT_HEIGHT;
 
 	return hr == S_OK;
 }
