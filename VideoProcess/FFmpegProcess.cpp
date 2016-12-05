@@ -50,6 +50,12 @@ BOOL FFmpegProcess::ProcessFrame(const CSampleBuffer *srcPic, CSampleBuffer *out
 	dBuf = outPic->GetPlanarPtr();
 	dStride = outPic->GetStride();
 
+	if (srcPic->GetPixelFormat() == PIXEL_FORMAT_RGB24 || srcPic->GetPixelFormat() == PIXEL_FORMAT_RGB32){
+		sBuf[0] = sBuf[0] + sStride[0] + srcPic->GetLineSize() * (srcPic->GetHeight() - 1);
+		sStride[0] = -sStride[0];
+		
+	}
+
 	int oheight = FFmpegWrapper::sws_scale(mScaleCtx, sBuf, sStride, 0, mParams.sourceHeight(), dBuf, dStride);
 
 	return true;
