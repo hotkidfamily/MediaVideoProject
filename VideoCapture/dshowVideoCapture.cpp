@@ -3,11 +3,76 @@
 #include "logger.h"
 #include "dshowVideoCapture.h"
 #include "dshowutil.h"
+#include "VideoCapture.h"
 
 #define CAPTURE_FILTER_NAME_STR (TEXT("Capture Filter"))
 #define RENDER_FILTER_NAME_STR (TEXT("Null Renderer"))
 #define GRABBER_FILTER_NAME_STR (TEXT("SampleGrabber"))
 #define JPEGDEC_FILTER_NAME_STR (TEXT("MJPEG Decompressor"))
+
+
+
+/*
+Reference :https://msdn.microsoft.com/zh-cn/library/windows/desktop/dd391027(v=vs.85).aspx
+MEDIASUBTYPE_YV12 YV12 4:2:0 Planar 8 // Y V U 420 planar
+MEDIASUBTYPE_I420 I420 4:2:0 Planar 8 // Y U V 420 planar
+MEDIASUBTYPE_NV12 NV12 4:2:0 Planar 8 // Y planar UV packed
+MEDIASUBTYPE_IYUV IYUV 4:2:0 Planar 8 // same to I420
+
+MEDIASUBTYPE_IMC1 IMC1 4:2:0 Planar 8
+MEDIASUBTYPE_IMC3 IMC2 4:2:0 Planar 8
+MEDIASUBTYPE_IMC2 IMC3 4:2:0 Planar 8
+MEDIASUBTYPE_IMC4 IMC4 4:2:0 Planar 8
+
+MEDIASUBTYPE_YUY2 YUY2 4:2:2 Packed 8 // Y0U0Y1V0 Y2U1 16bpp
+MEDIASUBTYPE_UYVY UYVY 4:2:2 Packed 8 // U0Y0V0Y1
+MEDIASUBTYPE_YVYU YVYU 4:2:2 Packed 8
+MEDIASUBTYPE_YUYV // 16bits per pixel top-down image, YUYV packet
+MEDIASUBTYPE_AYUV AYUV 4:4:4 Packed 8
+*/
+
+#ifndef MEDIASUBTYPE_I420
+const GUID MEDIASUBTYPE_I420 = { 0x30323449, 0x0000, 0x0010, { 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71 } };
+#endif
+
+typedef struct tagPrority{
+	GUID guid;
+	uint32_t priority;
+}PIXFMTPRORITY;
+
+const PIXFMTPRORITY PixFmtPriorityTable[] = {
+		{ MEDIASUBTYPE_I420, 1 << 15 },
+		{ MEDIASUBTYPE_YV12, 1 << 15 },
+		{ MEDIASUBTYPE_NV12, 1 << 15 },
+		{ MEDIASUBTYPE_IYUV, 1 << 14 },
+		{ MEDIASUBTYPE_MJPG, 1 << 14 },
+		{ MEDIASUBTYPE_RGB565, 1 << 13 },
+		{ MEDIASUBTYPE_RGB555, 1 << 13 },
+		{ MEDIASUBTYPE_RGB24, 1 << 12 },
+		{ MEDIASUBTYPE_RGB32, 1 << 14 },
+		{ MEDIASUBTYPE_ARGB32, 1 << 14 },
+		{ MEDIASUBTYPE_YUYV, 1 << 13 },
+		{ MEDIASUBTYPE_Y411, 1 << 13 },
+		{ MEDIASUBTYPE_Y41P, 1 << 13 },
+		{ MEDIASUBTYPE_YUY2, 1 << 13 },
+		{ MEDIASUBTYPE_YVYU, 1 << 13 },
+		{ MEDIASUBTYPE_UYVY, 1 << 13 },
+		{ MEDIASUBTYPE_AYUV, 1 << 10 },
+};
+
+// test support and get priority
+BOOL IsFormatSupport(const GUID *guid, FRAMEABILITY & bility)
+{
+	BOOL bRet = FALSE;
+	for (int i = 0; i < ARRAYSIZE(PixFmtPriorityTable); i++){
+		if (IsEqualGUID(*guid, PixFmtPriorityTable[i].guid)){
+			bility.Priority = PixFmtPriorityTable[i].priority;
+			bRet = TRUE;
+			break;
+		}
+	}
+	return bRet;
+}
 
 DShowVideoCapture::DShowVideoCapture()
 	: mGraph(nullptr)
@@ -18,7 +83,6 @@ DShowVideoCapture::DShowVideoCapture()
 	, mGrabberFiler(nullptr)
 	, mVideoGrabber(nullptr)
 	, mcb(nullptr)
-	, mWorkFrameInfo(nullptr)
 	, mGraphRegisterHandler(0)
 {
 	
@@ -91,7 +155,6 @@ HRESULT DShowVideoCapture::Start(OPEN_DEVICE_PARAM &params)
 	mWorkParams.height = mWorkMediaType.BitmapHeader()->biHeight;
 	mWorkParams.fps = RefTimeToFramesPerSec(mWorkMediaType.AvgReferenceTime());
 	mWorkParams.pixelFormatInFourCC = mWorkMediaType.subtype.Data1;
-	mWorkFrameInfo = GetFrameInfoByFourCC(mWorkMediaType.subtype.Data1);
 	params = mWorkParams;
 	
 	do{
@@ -134,7 +197,6 @@ HRESULT DShowVideoCapture::Stop()
 		RemoveGraphFromRot(mGraphRegisterHandler);
 	mGraphRegisterHandler = 0;
 	RemoveFiltersFromGraph();
-	mWorkFrameInfo = nullptr;
 
 	return S_OK;
 }
@@ -147,7 +209,7 @@ HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 	ASSERT(mcb != nullptr);
 
 	CHECK_HR(hr = pSample->GetPointer(&desc.dataPtr));
-	desc.dataSize = pSample->GetActualDataLength();
+	desc.validDataSize = pSample->GetActualDataLength();
 	hr = pSample->GetMediaTime(&desc.frameStartIdx, &desc.frameEndIdx);
 
 	hr = pSample->GetTime(&desc.ptsStart, &desc.ptsEnd);
@@ -163,9 +225,6 @@ HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 	desc.width = mWorkParams.width;
 	desc.height = mWorkParams.height;
 	desc.pixelFormatInFourCC = mWorkMediaType.subtype.Data1;
-	desc.lineSize = mWorkParams.width * mWorkFrameInfo->bytePerPixel / 8;
-	desc.planarCnt = mWorkFrameInfo->planarCnt;
-	memcpy(&desc.planarStride, &mWorkFrameInfo->planarStride, sizeof(mWorkFrameInfo->planarStride));
 
 	mBufferManager.FillFrame(desc);
 
@@ -436,7 +495,7 @@ HRESULT DShowVideoCapture::FindMediaTypeInPinOrStreamConfig(CComPtr<IPin> &pOutP
 			if (mediaType->isVideoInfoHeader()){ // sample only support format_videoinfo
 				BITMAPINFOHEADER *bmp = mediaType->BitmapHeader();
 				FRAMEABILITY bility;
-				if (IsFormatSupport(*mediaType, bility)){
+				if (IsFormatSupport(mediaType->Subtype(), bility)){
 					bility.MaxFrameInterval = caps.MaxFrameInterval;
 					bility.MinFrameInterval = caps.MinFrameInterval;
 					bility.ImageSize.cx = abs(bmp->biWidth);

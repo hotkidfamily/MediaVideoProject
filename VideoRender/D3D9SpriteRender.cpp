@@ -133,10 +133,9 @@ BOOL D3D9SpriteRender::InitRender(HWND hWnd, int width, int height, DWORD pixelF
 			transSampleBuffer->Reset(buff, size);
 			FRAME_DESC desc;
 			desc.dataPtr = 0;
-			desc.dataSize = 0;
 			desc.pixelFormatInFourCC = vppParams.dstPixelInFormatFourCC;
-			desc.planarCnt = 1;
-			desc.lineSize = width * 4;
+//			desc.planarCnt = 1;
+			//desc.lineSize = width * 4;
 			desc.width = width;
 			desc.height = height;
 			transSampleBuffer->FillData(desc);

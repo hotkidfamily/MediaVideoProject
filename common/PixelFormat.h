@@ -36,42 +36,21 @@ enum CPPixelFormat{
 };
 #undef FMT
 
+typedef struct tagPixelFmtInfo{
+	int32_t bpp; // bits per pixel
+	int32_t planarCnt; // 1 ~ 4 LIKE ARGB XRGB AYUV YUV
+	struct {
+		int32_t wOffset;
+		int32_t hOffset;
+	} resShift[4];
+}PIXFMTINFO;
+
+//{ 16, 3, { {},{},{},{} }}
 typedef struct tagFrameFormatInfo{
-	GUID subtype;
 	DWORD pixelFormatInFourCC;
-	int priority;
-	int32_t bytePerPixel;
-	int32_t planarCnt;
-	uint32_t planarStride[4];
+	PIXFMTINFO pixdesc;
 }FRAMEFORAMTINFO;
-
-
-typedef struct tagFrameBility{
-	enum ability{
-		SU_RES = 1 << 15,
-		SU_FPS = 1 << 14,
-		SU_RES_RATIO = 1 << 13,
-		SU_FPS_SMALL = 1 << 12,
-
-		SU_RES_LARGE = 1 << 11,
-		SU_FPS_LARGE = 1 << 10,
-
-		SU_RES_LARGE_INAREA = 1 << 9,
-		SU_RES_SMALL_INAREA = 1 << 8,
-	};
-	int32_t Priority;
-	int32_t Ability;
-	SIZE ImageSize;
-	LONGLONG MinFrameInterval;
-	LONGLONG MaxFrameInterval;
-	CMediaType MediaType;
-	tagFrameBility(){
-		ZeroMemory(this, sizeof(tagFrameBility));
-	}
-}FRAMEABILITY, *PFRAMEABILITY;
 
 extern "C" {
 	const FRAMEFORAMTINFO* GetFrameInfoByFourCC(DWORD fourcc);
-	BOOL IsFormatSupport(CMediaType &mediaType, FRAMEABILITY & bility);
-	D3DFORMAT GetD3D9FormatByFourCC(DWORD);
 }

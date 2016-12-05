@@ -13,6 +13,7 @@
 
 #include <stdint.h>
 #include <dvdmedia.h>
+#pragma comment(lib, "strmiids.lib")
 
 #ifndef ASSERT
 #define ASSERT assert

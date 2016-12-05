@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include <stdint.h>
-
+#include "PixelFormat.h"
 /*
 step 1: lock
 step 2: reset 
@@ -66,24 +66,38 @@ enum ColorMatrix
 	ColorMatrix_BT2020CL
 };
 
-
 typedef struct tagFrameDesc{
+	// common
 	int32_t cbSize;
+
 	int32_t width;
 	int32_t height;
-	int32_t dataSize;
-	uint8_t *dataPtr;
-	DWORD pixelFormatInFourCC;
-	int32_t lineSize;
+
 	int64_t ptsStart;
 	int64_t ptsEnd;
 	int64_t frameStartIdx;
 	int64_t frameEndIdx;
-	int32_t planarCnt;
-	uint32_t planarStride[4];
+
+	DWORD pixelFormatInFourCC;
+	ColorRange colorRange;
+	ColorTransfer colorTransfer;
+	ColorPrimaries colorPrimaries;
+	ColorMatrix colorMatrix;
+
+	uint8_t* dataPtr;
+	uint32_t validDataSize;
+
 	tagFrameDesc(){
+		reset();
+	}
+
+	void reset(){
 		ZeroMemory(this, sizeof(struct tagFrameDesc));
 		cbSize = sizeof(struct tagFrameDesc);
+		colorRange = ColorRange_Full;
+		colorTransfer = ColorTransfer_Unspecified;
+		colorMatrix = ColorMatrix_Unspecified;
+		colorPrimaries = ColorPrimaries_Unspecified;
 	}
 }FRAME_DESC;
 
@@ -91,91 +105,80 @@ class CSampleBuffer
 {
 public:
 	CSampleBuffer()
-		: pts(0)
-		, pixelFormat(0)
-		, capacity(0)
-		, sizeInUse(0)
+		: capacity(0)
 		, dataPtr(nullptr)
-		, colorRange(0)
-		, transferMatrix(0)
-		, primaries(0)
 	{};
 
 	CSampleBuffer(uint8_t *bufferPtr, int32_t capacityInBytes)
-		: pts(0)
-		, pixelFormat(0)
-		, capacity(capacityInBytes)
-		, sizeInUse(0)
+		: capacity(capacityInBytes)
 		, dataPtr(bufferPtr)
-		, colorRange(0)
-		, transferMatrix(0)
-		, primaries(0)
 	{};
 
 	~CSampleBuffer(){};
 
 	/* for constructor, should first call */
 	BOOL Reset(uint8_t *bufferPtr, int32_t capacityInBytes){
-		this->pts = 0;
-		this->sizeInUse = 0;
 		this->capacity = capacityInBytes;
-		this->pixelFormat = 0;
 		this->dataPtr = bufferPtr;
-		ZeroMemory(this->planarPtr, sizeof(this->planarPtr));
-		ZeroMemory(this->planarStride, sizeof(this->planarStride));
-
+		frameDesc.reset();
 		return TRUE;
+	}
+
+	BOOL Set(const FRAME_DESC &desc)
+	{
+		memcpy(&frameDesc, &desc, sizeof(desc));
+		return TRUE;
+	}
+
+	CSampleBuffer & operator= (const FRAME_DESC &desc){
+		Set(desc);
+
+		return *this;
 	}
 
 	BOOL FillData(FRAME_DESC desc){
-		if (desc.dataSize > this->capacity || !desc.dataPtr){
+		if (desc.validDataSize > this->capacity || !desc.dataPtr){
 			return FALSE;
 		}
 
-		this->sizeInUse = desc.dataSize;
-		memcpy_s(this->dataPtr, this->capacity, desc.dataPtr, desc.dataSize);
-		this->pixelFormat = desc.pixelFormatInFourCC;
-		this->pts = desc.ptsStart;
-		this->width = desc.width;
-		this->height = desc.height;
-		this->lineSize = desc.lineSize;
-		this->planarCnt = desc.planarCnt;
-		this->planarPtr[0] = dataPtr;
-		this->planarStride[0] = desc.lineSize;
+		frameDesc = desc;
+		const FRAMEFORAMTINFO * info = GetFrameInfoByFourCC(desc.pixelFormatInFourCC);
 
-		for (int i = 1; i < desc.planarCnt; i++){
-			planarPtr[i] = planarPtr[i-1] + desc.lineSize*desc.height / (1<<desc.planarStride[i-1]);
-			planarStride[i] = desc.lineSize / desc.planarStride[i];
+		planarPtr[0] = dataPtr;
+		planarStride[0] = ((desc.width * info->pixdesc.bpp + 31)&~32) >> 3;
+		planarSize[0] = planarStride[0] * desc.height ;
+
+		for (int32_t i = 1; i < info->pixdesc.planarCnt; i++){
+			planarStride[i] = planarStride[i-1] >> info->pixdesc.resShift[i].wOffset;
+			planarSize[i] = planarStride[i] * desc.height;
+			planarPtr[i] = planarPtr[i] + planarSize[i];
 		}
-		
+
 		return TRUE;
 	}
 
-	inline uint32_t GetDataSize() const { return sizeInUse; };
+	inline uint32_t GetDataSize() const { return frameDesc.validDataSize; };
 	inline uint8_t *GetDataPtr() const { return dataPtr; };
-	inline int32_t GetLineSize() const { return lineSize; };
 	inline uint8_t* *GetPlanarPtr() const { return (uint8_t**)planarPtr; };
 	inline int32_t* GetStride() const { return (int32_t*)planarStride; };
-	inline int64_t  GetPts() const { return pts; };
-	inline int32_t GetWidth() const { return width; };
-	inline int32_t GetHeight() const { return height; };
-	inline DWORD  GetPixelFormat() const{ return pixelFormat; };
+	inline int64_t  GetPts() const { return frameDesc.ptsStart; };
+	inline int32_t GetWidth() const { return frameDesc.width; };
+	inline int32_t GetHeight() const { return frameDesc.height; };
+	inline DWORD  GetPixelFormat() const{ return frameDesc.pixelFormatInFourCC; };
 	inline int32_t GetPlanarCount() const { return planarCnt; };
+	inline int32_t GetLineSize() const { return planarStride[0]; };
 
 private:
-	int32_t width;
-	int32_t lineSize;
-	int32_t height;
-	int64_t pts;
-	DWORD pixelFormat;
-	int32_t capacity; // size of buffer 
-	int32_t sizeInUse; // size of data
+
+	// descriptor this sample
+	uint32_t capacity; // size of buffer 
 	uint8_t *dataPtr;
-	int32_t colorRange;
-	int32_t transferMatrix;
-	int32_t primaries;
+
 	int32_t planarCnt;
 	uint8_t *planarPtr[4];
 	int32_t planarStride[4];
+	int32_t planarSize[4];
+
+	FRAME_DESC frameDesc;
 };
 

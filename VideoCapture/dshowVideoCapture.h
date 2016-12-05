@@ -95,7 +95,6 @@ private:
 	VideoCaptureCallback *mcb;
 
 	OPEN_DEVICE_PARAM mWorkParams;
-	const FRAMEFORAMTINFO *mWorkFrameInfo;
 	CAMERALIST mCameraList;
 	CSlidingWindowCalc mFpsStats;
 	CSampleBufferManager mBufferManager;

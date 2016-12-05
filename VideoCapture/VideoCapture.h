@@ -7,6 +7,33 @@
 #include "mediafoundationVideoCapture.h"
 #include "SampleBufferManager.h"
 
+typedef struct tagFrameBility{
+	enum ability{
+		SU_RES = 1 << 15,
+		SU_FPS = 1 << 14,
+		SU_RES_RATIO = 1 << 13,
+		SU_FPS_SMALL = 1 << 12,
+
+		SU_RES_LARGE = 1 << 11,
+		SU_FPS_LARGE = 1 << 10,
+
+		SU_RES_LARGE_INAREA = 1 << 9,
+		SU_RES_SMALL_INAREA = 1 << 8,
+	};
+
+	int32_t Priority;
+	int32_t Ability;
+	SIZE ImageSize;
+	LONGLONG MinFrameInterval;
+	LONGLONG MaxFrameInterval;
+	CMediaType MediaType;
+	tagFrameBility(){
+		ZeroMemory(this, sizeof(tagFrameBility));
+	}
+}FRAMEABILITY, *PFRAMEABILITY;
+
+BOOL IsFormatSupport(const GUID *id, FRAMEABILITY & bility);
+
 class IVideoCaptureDelegate : 
 	public IVideoCapture
 {

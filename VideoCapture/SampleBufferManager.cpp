@@ -99,7 +99,7 @@ BOOL CSampleBufferManager::ReleaseMemory()
 	ClearWorkStatus();
 
 	if (mBufferPtr){
-		_aligned_free(mBufferPtr);
+		DeallocMemory(mBufferPtr);
 		mBufferPtr = nullptr;
 	}
 
@@ -140,7 +140,7 @@ BOOL CSampleBufferManager::ClearWorkStatus()
 
 BOOL CSampleBufferManager::AllocMemoryBySizeInByte(int32_t sizeInBytes)
 {
-	mBufferPtr = (uint8_t*)_aligned_malloc(sizeInBytes, 32);
+	mBufferPtr = (uint8_t*)AllocMemory(sizeInBytes);
 	if (mBufferPtr){
 		mBufferSize = sizeInBytes;
 	}
@@ -165,20 +165,20 @@ int32_t CSampleBufferManager::GetFrameSizePrePlannerByRes(int32_t res)
 
 	switch (res){
 	case RES1080P:
-		width = ALIGN32(1920);
-		height = ALIGN32(1080);
+		width = WIDTHALIGN(1920);
+		height = HEIGHTALIGN(1080);
 		break;
 	case RES720P:
-		width = ALIGN32(1280);
-		height = ALIGN32(720);
+		width = WIDTHALIGN(1280);
+		height = HEIGHTALIGN(720);
 		break;
 	case RES4K:
-		width = ALIGN32(3840);
-		height = ALIGN32(2160);
+		width = WIDTHALIGN(3840);
+		height = HEIGHTALIGN(2160);
 		break;
 	case RES8K:
-		width = ALIGN32(7680);
-		height = ALIGN32(4320);
+		width = WIDTHALIGN(7680);
+		height = HEIGHTALIGN(4320);
 		break;
 	default:
 		break;

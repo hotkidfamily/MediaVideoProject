@@ -2,7 +2,7 @@
 
 #include <list>
 #include "SampleBuffer.h"
-#include "AutoLock.h"
+#include "utils.h"
 
 enum resList{
 	RES320P,
@@ -42,7 +42,5 @@ private:
 
 	uint8_t *mBufferPtr;
 	int64_t mBufferSize;
-
-	CLock mListLock;
 };
 
