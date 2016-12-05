@@ -25,6 +25,10 @@ D3D9SpriteRender::D3D9SpriteRender()
 	, mVpp(nullptr)
 	, transSampleBuffer(NULL)
 	, mbNeedVpp(FALSE)
+
+	, renderFrameCount(0)
+	, reanderStartTime(0)
+	, pushFrameCount(0)
 {
 }
 
@@ -294,39 +298,29 @@ DWORD D3D9SpriteRender::RenderLoop()
 	return 0;
 }
 
-BOOL D3D9SpriteRender::PushFrame(CSampleBuffer *inframe)
+HRESULT D3D9SpriteRender::updateContent(CSampleBuffer *&frame)
 {
 	HRESULT hr = E_FAIL;
-	D3DLOCKED_RECT dstRect = { 0 };
 	uint8_t *dstDataPtr = nullptr;
 	uint8_t *srcDataptr = nullptr;
 	int32_t frameWidth = 0;
-	int32_t frameHeight = 0;
-	volatile LPVOID pCur = NULL;
 	int32_t srcLineSize = 0;
-	CSampleBuffer *frame = inframe;
-
-	if (!frame){
-		return FALSE;
-	}
-
-	if (mbNeedVpp){
-		mVpp->ProcessFrame(inframe, transSampleBuffer);
-		frame = transSampleBuffer;
-	}
+	int32_t frameHeight = 0;
+	D3DLOCKED_RECT dstRect = { 0 };
 
 	srcDataptr = frame->GetDataPtr();
 	srcLineSize = frame->GetLineSize();
+	frameWidth = frame->GetWidth();
+	frameHeight = frame->GetHeight();
 
 	if (mSupportSurfaceType == SUPPORT_TEXTURE)
 	{
 		if (SUCCEEDED(hr = ((LPDIRECT3DTEXTURE9)mpFreeObj)->LockRect(0, &dstRect, NULL, 0))){
+			renderFrameCount++;
 			dstDataPtr = (uint8_t*)dstRect.pBits;
 			if (dstRect.Pitch == srcLineSize){
 				memcpy(dstDataPtr, srcDataptr, frame->GetDataSize());
 			} else{
-				frameWidth = frame->GetWidth();
-				frameHeight = frame->GetHeight();
 				for (int i = 0; i < frameHeight; i++){
 					uint8_t *dstlineBuffer = (uint8_t*)(dstDataPtr + i*dstRect.Pitch);
 					uint8_t* srcLineBuffer = srcDataptr + srcLineSize*i;
@@ -337,6 +331,7 @@ BOOL D3D9SpriteRender::PushFrame(CSampleBuffer *inframe)
 		}
 	} else{
 		if (SUCCEEDED(hr = ((IDirect3DSurface9*)mpFreeObj)->LockRect(&dstRect, NULL, 0))){
+			renderFrameCount++;
 			dstDataPtr = (uint8_t*)dstRect.pBits;
 			if (dstRect.Pitch == srcLineSize){
 				memcpy(dstDataPtr, srcDataptr, frame->GetDataSize());
@@ -350,6 +345,29 @@ BOOL D3D9SpriteRender::PushFrame(CSampleBuffer *inframe)
 			((IDirect3DSurface9*)mpFreeObj)->UnlockRect();
 		}
 	}
+
+	return hr;
+};
+
+BOOL D3D9SpriteRender::PushFrame(CSampleBuffer *inframe)
+{
+	HRESULT hr = E_FAIL;
+
+	volatile LPVOID pCur = NULL;
+	CSampleBuffer *frame = inframe;
+
+	if (!frame){
+		return FALSE;
+	}
+
+	pushFrameCount++;
+
+	if (mbNeedVpp){
+		mVpp->ProcessFrame(inframe, transSampleBuffer);
+		frame = transSampleBuffer;
+	}
+
+	hr = updateContent(frame);
 	
 	if (SUCCEEDED(hr)){
 		EnterCriticalSection(&cs);

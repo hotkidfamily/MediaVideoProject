@@ -15,7 +15,7 @@ public:
 	virtual BOOL InitRender(HWND, int32_t, int32_t, DWORD);
 	virtual BOOL DeinitRender();
 
-	virtual BOOL PushFrame(CSampleBuffer *frame);
+	virtual BOOL PushFrame(CSampleBuffer *);
 	virtual const char *GetRenderDescriptor() const { return "D3D9 sprite render"; };
 	DWORD RenderLoop();
 	BOOL OSDText(HDC, TCHAR *format, ...);
@@ -24,8 +24,9 @@ public:
 protected:
 	void SetupMatrices();
 	HRESULT GetDeviceType(D3DDISPLAYMODE);
-	HRESULT IfSupportedFormat(D3DDISPLAYMODE mode, D3DFORMAT pixelFormat);
-	BOOL IfSupportedConversionFormat(D3DDISPLAYMODE mode, D3DFORMAT pixelFormat);
+	HRESULT IfSupportedFormat(D3DDISPLAYMODE , D3DFORMAT );
+	BOOL IfSupportedConversionFormat(D3DDISPLAYMODE , D3DFORMAT);
+	HRESULT updateContent(CSampleBuffer *&);
 
 
 private:
@@ -64,5 +65,10 @@ private:
 	IVPP *mVpp;
 	IVPPPARAMETER vppParams;
 	CSampleBuffer *transSampleBuffer;
+
+	// statistics 
+	uint32_t renderFrameCount;
+	DWORD reanderStartTime;
+	DWORD pushFrameCount;
 };
 
