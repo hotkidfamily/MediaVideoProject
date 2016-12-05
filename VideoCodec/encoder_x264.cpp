@@ -168,12 +168,16 @@ bool CLibx264::addFrame(const CSampleBuffer &inputFrame)
 	}
 
 	if (inputFrame.GetPixelFormat() == PIXEL_FORMAT_YUY2){
-		mInPic.i_pts = inputFrame.GetPts();
+		int64_t ptss = 0, ptse = 0;
+		inputFrame.GetPts(ptss, ptse);
+		mInPic.i_pts = ptss;
+		
 		mInPic.i_type = X264_TYPE_AUTO;
 		encodeFrame(&mInPic);
-	}
-	else{
-		inpic.i_pts = inputFrame.GetPts();
+	} else {
+		int64_t ptss = 0, ptse = 0;
+		inputFrame.GetPts(ptss, ptse);
+		inpic.i_pts = ptss;
 		inpic.i_type = X264_TYPE_AUTO;
 		encodeFrame(&inpic);
 	}

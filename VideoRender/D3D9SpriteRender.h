@@ -3,6 +3,7 @@
 #include "IRender.h"
 #include <d3d9.h>
 #include <d3dx9.h>
+#include "SlidingWindowCalc.h"
 
 class D3D9SpriteRender : public IRender
 {
@@ -18,7 +19,6 @@ public:
 	virtual BOOL PushFrame(CSampleBuffer *);
 	virtual const char *GetRenderDescriptor() const { return "D3D9 sprite render"; };
 	DWORD RenderLoop();
-	BOOL OSDText(HDC, TCHAR *format, ...);
 
 
 protected:
@@ -27,7 +27,8 @@ protected:
 	HRESULT IfSupportedFormat(D3DDISPLAYMODE , D3DFORMAT );
 	BOOL IfSupportedConversionFormat(D3DDISPLAYMODE , D3DFORMAT);
 	HRESULT updateContent(CSampleBuffer *&);
-
+	BOOL OSDText(HDC, TCHAR *format, ...);
+	BOOL OutputInformation();
 
 private:
 	HWND mhWnd;
@@ -54,7 +55,6 @@ private:
 	ID3DXSprite *mSprite;
 
 	HANDLE mRenderEvent;
-	BOOL mSupportVSync;
 	HANDLE mRenderThreadHandle;
 	DWORD mRenderThreadId;
 	BOOL mRenderThreadRuning;
@@ -67,8 +67,9 @@ private:
 	CSampleBuffer *transSampleBuffer;
 
 	// statistics 
-	uint32_t renderFrameCount;
-	DWORD reanderStartTime;
-	DWORD pushFrameCount;
+	int64_t mLastPts;
+	int64_t mLastRender;
+	CSlidingWindowCalc mInputStatis;
+	CSlidingWindowCalc mRenderStatis;
 };
 

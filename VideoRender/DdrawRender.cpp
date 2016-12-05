@@ -390,12 +390,14 @@ BOOL DDrawRender::PushFrame(CSampleBuffer *frame)
 	HRESULT hr = DD_OK;
 	DDSURFACEDESC2 desc;
 	uint32_t ptsInterval = 0;
+	int64_t ptss = 0, ptse = 0;
 
 	if (!frame){
 		return FALSE;
 	}
 
-	ptsInterval = (uint32_t)(frame->GetPts() - mLastPts);
+	frame->GetPts(ptss, ptse);
+	ptsInterval = (uint32_t)(ptss - mLastPts);
 	if (mLastPts)
 		mInputStatis.AppendSample(ptsInterval);
 
@@ -426,7 +428,7 @@ BOOL DDrawRender::PushFrame(CSampleBuffer *frame)
 
 	mCanvasSurface->Unlock(nullptr);
 
-	mLastPts = frame->GetPts();
+	mLastPts = ptss;
 	
 done:
 	GetErrorString(hr);

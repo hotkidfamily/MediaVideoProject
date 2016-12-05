@@ -44,6 +44,8 @@ BOOL FFmpegProcess::ProcessFrame(const CSampleBuffer *srcPic, CSampleBuffer *out
 	int32_t *sStride = nullptr;
 	uint8_t **dBuf = nullptr;
 	int32_t *dStride = nullptr;
+	int64_t ptss = 0 ;
+	int64_t ptse = 0 ;
 
 	sBuf = srcPic->GetPlanarPtr();
 	sStride = srcPic->GetStride();
@@ -57,6 +59,9 @@ BOOL FFmpegProcess::ProcessFrame(const CSampleBuffer *srcPic, CSampleBuffer *out
 	}
 
 	int oheight = FFmpegWrapper::sws_scale(mScaleCtx, sBuf, sStride, 0, mParams.sourceHeight(), dBuf, dStride);
+
+	srcPic->GetPts(ptss, ptse);
+	outPic->SetPts(ptss, ptse);
 
 	return true;
 }
