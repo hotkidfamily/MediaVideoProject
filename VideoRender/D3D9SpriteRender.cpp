@@ -315,8 +315,6 @@ BOOL D3D9SpriteRender::PushFrame(CSampleBuffer *inframe)
 		frame = transSampleBuffer;
 	}
 
-	frameWidth = frame->GetWidth();
-	frameHeight = frame->GetHeight();
 	srcDataptr = frame->GetDataPtr();
 	srcLineSize = frame->GetLineSize();
 
@@ -327,18 +325,12 @@ BOOL D3D9SpriteRender::PushFrame(CSampleBuffer *inframe)
 			if (dstRect.Pitch == srcLineSize){
 				memcpy(dstDataPtr, srcDataptr, frame->GetDataSize());
 			} else{
-				if (frame->GetPixelFormat() == PIXEL_FORMAT_RGB24){
-					for (int i = 0; i < frameHeight; i++){
-						uint8_t *rgb32Buffer = (uint8_t*)(dstDataPtr + i*dstRect.Pitch);
-						uint8_t* rgb24Buffer = srcDataptr + srcLineSize*(frameHeight - i);
-						for (int j = 0; j < frameWidth; j++){
-							rgb32Buffer[0] = rgb24Buffer[0];
-							rgb32Buffer[1] = rgb24Buffer[1];
-							rgb32Buffer[2] = rgb24Buffer[2];
-							rgb32Buffer += 4;
-							rgb24Buffer += 3;
-						}
-					}
+				frameWidth = frame->GetWidth();
+				frameHeight = frame->GetHeight();
+				for (int i = 0; i < frameHeight; i++){
+					uint8_t *dstlineBuffer = (uint8_t*)(dstDataPtr + i*dstRect.Pitch);
+					uint8_t* srcLineBuffer = srcDataptr + srcLineSize*i;
+					memcpy_s(dstlineBuffer, dstRect.Pitch, srcLineBuffer, srcLineSize);
 				}
 			}
 			((LPDIRECT3DTEXTURE9)mpFreeObj)->UnlockRect(0);
@@ -349,18 +341,10 @@ BOOL D3D9SpriteRender::PushFrame(CSampleBuffer *inframe)
 			if (dstRect.Pitch == srcLineSize){
 				memcpy(dstDataPtr, srcDataptr, frame->GetDataSize());
 			} else{
-				if (frame->GetPixelFormat() == PIXEL_FORMAT_RGB24){
-					for (int i = 0; i < frameHeight; i++){
-						uint8_t *rgb32Buffer = (uint8_t*)(dstDataPtr + i*dstRect.Pitch);
-						uint8_t* rgb24Buffer = srcDataptr + srcLineSize*(frameHeight - i);
-						for (int j = 0; j < frameWidth; j++){
-							rgb32Buffer[0] = rgb24Buffer[0];
-							rgb32Buffer[1] = rgb24Buffer[1];
-							rgb32Buffer[2] = rgb24Buffer[2];
-							rgb32Buffer += 4;
-							rgb24Buffer += 3;
-						}
-					}
+				for (int i = 0; i < frameHeight; i++){
+					uint8_t *dstlineBuffer = (uint8_t*)(dstDataPtr + i*dstRect.Pitch);
+					uint8_t* srcLineBuffer = srcDataptr + srcLineSize*i;
+					memcpy_s(dstlineBuffer, dstRect.Pitch, srcLineBuffer, srcLineSize);
 				}
 			}
 			((IDirect3DSurface9*)mpFreeObj)->UnlockRect();
