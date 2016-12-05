@@ -34,10 +34,18 @@ private:
 	IDirect3DDevice9* mpD3D9Device;
 	D3DDEVTYPE mD3D9DeviceType;
 	D3DCAPS9 mpD3D9DeviceCaps;
+	BOOL mbSupportConversion;
+	enum surfaceType {
+		SUPPORT_TEXTURE,
+		SUPPORT_SURFACE
+	};
+	int32_t mSupportSurfaceType;
 	IDirect3DTexture9 *mpD3D9Texture;
 	IDirect3DTexture9 *mpD3D9Texture2;
-	volatile LPDIRECT3DTEXTURE9 mpReadyTexture;
-	volatile LPDIRECT3DTEXTURE9 mpFreeTexture;
+	IDirect3DSurface9 *mpD3D9Surface;
+	IDirect3DSurface9 *mpD3D9Surface2;
+	volatile LPVOID mpReadyObj;
+	volatile LPVOID mpFreeObj;
 
 	CRITICAL_SECTION cs;
 

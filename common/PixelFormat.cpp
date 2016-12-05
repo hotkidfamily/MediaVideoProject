@@ -8,7 +8,7 @@ const PIXELFORAMTDESC pixelFormatDescTable[] = {
 	{
 		PIXEL_FORMAT_I420, 16, 16,
 		{
-			16, 3, 1, 1, 
+			8, 3, 1, 1, 
 			{ { 0, 0 }, { 1, 1 }, { 1, 1 }, { 0, 0 } }
 		}
 	},
