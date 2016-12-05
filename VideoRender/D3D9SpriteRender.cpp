@@ -127,6 +127,19 @@ BOOL D3D9SpriteRender::InitRender(HWND hWnd, int width, int height, DWORD pixelF
 				hr = E_FAIL;
 				goto done;
 			}
+			transSampleBuffer = new CSampleBuffer;
+			int32_t size = width*height * 4;
+			uint8_t *buff = new uint8_t[size];
+			transSampleBuffer->Reset(buff, size);
+			FRAME_DESC desc;
+			desc.dataPtr = 0;
+			desc.dataSize = 0;
+			desc.pixelFormatInFourCC = vppParams.dstPixelInFormatFourCC;
+			desc.planarCnt = 1;
+			desc.lineSize = width * 4;
+			desc.width = width;
+			desc.height = height;
+			transSampleBuffer->FillData(desc);
 			CHECK_HR(hr = GetDeviceType(mode));
 		} else {
 			bNeedConversion = TRUE;
@@ -229,20 +242,17 @@ DWORD D3D9SpriteRender::RenderLoop()
 			break;
 
 		if ( dwRet == WAIT_OBJECT_0 ){
-			EnterCriticalSection(&cs);
 
 			if (SUCCEEDED(mpD3D9Device->BeginScene())){
-
 				if (SUCCEEDED(mSprite->Begin(D3DXSPRITE_ALPHABLEND))){
 					hr = mSprite->Draw(mpReadyTexture, NULL, NULL, &D3DXVECTOR3(0, 0, 0), 0XFFFFFFFF);
 					mSprite->End();
 				}
 				mpD3D9Device->EndScene();
-
 			}
 
 			OSDText(nullptr, TEXT("this is a test %d."), GetTickCount());
-
+			EnterCriticalSection(&cs);
 			hr = mpD3D9Device->Present(nullptr, nullptr, nullptr, nullptr);
 			LeaveCriticalSection(&cs);
 
@@ -281,6 +291,8 @@ BOOL D3D9SpriteRender::PushFrame(CSampleBuffer *frame)
 		if (dstRect.Pitch == srcLineSize){
 			memcpy(dstRect.pBits, srcDataptr, frame->GetDataSize());
 		} else{
+			if (frame->GetPixelFormat() == PIXEL_FORMAT_RGB24){
+			}
 			dstDataPtr = (uint8_t*)dstRect.pBits;
 			for (int i = 0; i < frameHeight; i++){
 				DWORD *rgb32Buffer = (DWORD*)(dstDataPtr + i*dstRect.Pitch);
@@ -322,10 +334,10 @@ BOOL D3D9SpriteRender::OSDText(HDC, TCHAR *format, ...)
 	va_end(va_alist);
 
 	//mpD3D9Device->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_ARGB(255, 0, 0, 0), 0.0, 0);
-	if (SUCCEEDED(hr = mpD3D9Device->BeginScene())){
+	//if (SUCCEEDED(hr = mpD3D9Device->BeginScene())){
 		mPFont->DrawText(nullptr, buf, -1, &FontPos, DT_CENTER, D3DCOLOR_ARGB(255, 0, 255, 0));
-		mpD3D9Device->EndScene();
-	}
+// 		mpD3D9Device->EndScene();
+// 	}
 
 	GetD3D9ErrorString(hr);
 	return hr == S_OK;

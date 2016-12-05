@@ -54,5 +54,6 @@ private:
 	IVPPFactory *mVppFactory;
 	IVPP *mVpp;
 	IVPPPARAMETER vppParams;
+	CSampleBuffer *transSampleBuffer;
 };
 

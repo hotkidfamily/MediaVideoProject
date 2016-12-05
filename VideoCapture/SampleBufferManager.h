@@ -15,8 +15,6 @@ enum resList{
 	RES8K
 };
 
-#define ALIGN32(x) ((x + 0x1F) & (~0x1F))
-
 typedef std::list<CSampleBuffer*> BUFFLIST;
 
 class CSampleBufferManager

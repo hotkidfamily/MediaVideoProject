@@ -24,6 +24,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="logger.cpp" />
+    <ClCompile Include="MemoryUtils.cpp" />
     <ClCompile Include="mtype.cpp" />
     <ClCompile Include="PixelFormat.cpp" />
     <ClCompile Include="SlidingWindowCalc.cpp" />
