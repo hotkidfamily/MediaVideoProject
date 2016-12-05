@@ -29,18 +29,18 @@ BOOL AllocSampleBuffer(int32_t width, int32_t height, DWORD pixelFormat)
 	uint32_t planarStride[4] = { 0 };
 	uint8_t *planarPtr[4] = { NULL };
 
-	const FRAMEFORAMTINFO *bpp = GetFrameInfoByFourCC(pixelFormat);
+	const PIXELFORAMTDESC *bpp = GetPxielFormatDescByFourCC(pixelFormat);
 	int32_t realWidth = WIDTHALIGN(width);
 	int32_t realHeight = HEIGHTALIGN(height);
 	int32_t sizeInBytes = realWidth * realHeight * bpp->pixdesc.bpp;
 
 	for (int32_t i = 0; i < bpp->pixdesc.planarCnt; i++){
-		planarSize[i] = realWidth * realHeight * bpp->pixdesc.resShift[i].wOffset;
+		planarSize[i] = realWidth * realHeight * bpp->pixdesc.resShift[i].widthShift;
 		planarPtr[i] = AllocMemory(planarSize[i]);
 		if (!planarPtr[i]){
 			goto fail;
 		}
-		planarStride[i] = realWidth * realHeight * bpp->pixdesc.resShift[i].wOffset;
+		planarStride[i] = realWidth * realHeight * bpp->pixdesc.resShift[i].widthShift;
 	}
 
 	bRet = TRUE;

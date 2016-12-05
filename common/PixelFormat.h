@@ -37,18 +37,22 @@ enum CPPixelFormat{
 typedef struct tagPixelFmtInfo{
 	int32_t bpp; // bits per pixel
 	int32_t planarCnt; // 1 ~ 4 LIKE ARGB XRGB AYUV YUV
+	int32_t chromaWShift;
+	int32_t chromaHShift;
 	struct {
-		int32_t wOffset;
-		int32_t hOffset;
+		int32_t widthShift;
+		int32_t heightShift;
 	} resShift[4];
 }PIXFMTINFO;
 
 //{ 16, 3, { {},{},{},{} }}
 typedef struct tagFrameFormatInfo{
 	DWORD pixelFormatInFourCC;
+	int32_t strideW;
+	int32_t strideH;
 	PIXFMTINFO pixdesc;
-}FRAMEFORAMTINFO;
+}PIXELFORAMTDESC;
 
 extern "C" {
-	const FRAMEFORAMTINFO* GetFrameInfoByFourCC(DWORD fourcc);
+	const PIXELFORAMTDESC* GetPxielFormatDescByFourCC(DWORD fourcc);
 }
