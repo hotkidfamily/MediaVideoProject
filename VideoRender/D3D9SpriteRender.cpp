@@ -134,8 +134,6 @@ BOOL D3D9SpriteRender::InitRender(HWND hWnd, int width, int height, DWORD pixelF
 			FRAME_DESC desc;
 			desc.dataPtr = 0;
 			desc.pixelFormatInFourCC = vppParams.dstPixelInFormatFourCC;
-//			desc.planarCnt = 1;
-			//desc.lineSize = width * 4;
 			desc.width = width;
 			desc.height = height;
 			transSampleBuffer->FillData(desc);
@@ -186,9 +184,8 @@ BOOL D3D9SpriteRender::InitRender(HWND hWnd, int width, int height, DWORD pixelF
 done:
 	if (FAILED(hr)){
 		DeinitRender();
+		GetD3D9ErrorString(hr);
 	}
-
-	GetD3D9ErrorString(hr);
 
 	return hr == S_OK;
 }
@@ -241,7 +238,6 @@ DWORD D3D9SpriteRender::RenderLoop()
 			break;
 
 		if ( dwRet == WAIT_OBJECT_0 ){
-
 			if (SUCCEEDED(mpD3D9Device->BeginScene())){
 				if (SUCCEEDED(mSprite->Begin(D3DXSPRITE_ALPHABLEND))){
 					hr = mSprite->Draw(mpReadyTexture, NULL, NULL, &D3DXVECTOR3(0, 0, 0), 0XFFFFFFFF);
@@ -285,20 +281,22 @@ BOOL D3D9SpriteRender::PushFrame(CSampleBuffer *frame)
 	srcDataptr = frame->GetDataPtr();
 	srcLineSize = frame->GetLineSize();
 
-
 	if (SUCCEEDED(hr = mpFreeTexture->LockRect(0, &dstRect, NULL, 0))){
+		dstDataPtr = (uint8_t*)dstRect.pBits;
 		if (dstRect.Pitch == srcLineSize){
-			memcpy(dstRect.pBits, srcDataptr, frame->GetDataSize());
+			memcpy(dstDataPtr, srcDataptr, frame->GetDataSize());
 		} else{
 			if (frame->GetPixelFormat() == PIXEL_FORMAT_RGB24){
-			}
-			dstDataPtr = (uint8_t*)dstRect.pBits;
-			for (int i = 0; i < frameHeight; i++){
-				DWORD *rgb32Buffer = (DWORD*)(dstDataPtr + i*dstRect.Pitch);
-				uint8_t* rgb24Buffer = srcDataptr + srcLineSize*(frameHeight - i);
-				for (int j = 0; j < frameWidth; j++){
-					rgb32Buffer[j] = RGB(rgb24Buffer[0], rgb24Buffer[1], rgb24Buffer[2]);
-					rgb24Buffer += 3;
+				for (int i = 0; i < frameHeight; i++){
+					uint8_t *rgb32Buffer = (uint8_t*)(dstDataPtr + i*dstRect.Pitch);
+					uint8_t* rgb24Buffer = srcDataptr + srcLineSize*(frameHeight - i);
+					for (int j = 0; j < frameWidth; j++){
+						rgb32Buffer[0] = rgb24Buffer[0];
+						rgb32Buffer[1] = rgb24Buffer[1];
+						rgb32Buffer[2] = rgb24Buffer[2];
+						rgb32Buffer += 4;
+						rgb24Buffer += 3;
+					}
 				}
 			}
 		}
@@ -313,8 +311,8 @@ BOOL D3D9SpriteRender::PushFrame(CSampleBuffer *frame)
 		SetEvent(mRenderEvent);
 	}
 
-
-	GetD3D9ErrorString(hr);
+	if (FAILED(hr))
+		GetD3D9ErrorString(hr);
 
 	return hr != DD_OK;
 }
@@ -323,7 +321,7 @@ BOOL D3D9SpriteRender::OSDText(HDC, TCHAR *format, ...)
 {
 	HRESULT hr = S_OK;
 	RECT FontPos;
-	TCHAR buf[1024] = { '\0' };
+	TCHAR buf[1024] = { TEXT('\0') };
 	va_list va_alist;
 
 	GetClientRect(mhWnd, &FontPos);
@@ -332,13 +330,11 @@ BOOL D3D9SpriteRender::OSDText(HDC, TCHAR *format, ...)
 	vswprintf_s(buf, format, va_alist);
 	va_end(va_alist);
 
-	//mpD3D9Device->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_ARGB(255, 0, 0, 0), 0.0, 0);
-	//if (SUCCEEDED(hr = mpD3D9Device->BeginScene())){
-		mPFont->DrawText(nullptr, buf, -1, &FontPos, DT_CENTER, D3DCOLOR_ARGB(255, 0, 255, 0));
-// 		mpD3D9Device->EndScene();
-// 	}
+	hr = mPFont->DrawText(nullptr, buf, -1, &FontPos, DT_CENTER, D3DCOLOR_ARGB(255, 0, 255, 0));
 
-	GetD3D9ErrorString(hr);
+	if (FAILED(hr))
+		GetD3D9ErrorString(hr);
+
 	return hr == S_OK;
 }
 
