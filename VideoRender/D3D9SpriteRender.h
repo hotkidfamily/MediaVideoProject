@@ -68,8 +68,8 @@ private:
 
 	// statistics 
 	int64_t mLastPts;
-	int64_t mLastRender;
-	int64_t mCurRenderInterval;
+	DWORD mLastRender;
+	int32_t mCurRenderInterval;
 	int64_t mCurPtsInterval;
 	CSlidingWindowCalc mInputStatis;
 	CSlidingWindowCalc mRenderStatis;

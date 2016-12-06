@@ -75,7 +75,7 @@ int32_t CSlidingWindowCalc::AppendSample(uint32_t size)
 	pos = (mRingWirtePos + 1) % mSampleRingCapability;
 	InterlockedExchange(&mRingWirtePos, pos);
 
-	internel_log(Info, "append %d, %d", mRingReadPos, mRingWirtePos);
+	//internel_log(Info, "append %d, %d", mRingReadPos, mRingWirtePos);
 
 	return 0;
 }

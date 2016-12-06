@@ -46,7 +46,7 @@ errRet:
 	return bRet;
 }
 
-BOOL CSampleBufferManager::FillFrame(FRAME_DESC desc)
+BOOL CSampleBufferManager::FillFrame(FRAME_DESC &desc)
 {
 	BOOL bRet = FALSE;
 

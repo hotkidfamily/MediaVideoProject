@@ -274,7 +274,7 @@ BOOL D3D9SpriteRender::OutputInformation()
 			mCurPtsInterval, mInputStatis.AvgSampleSize(), minInputSample, maxInputSample);
 
 		OSDText(NULL, &FontPos,
-			TEXT("Render: %2lld Avg:%2llu(%2d~%2d)"),
+			TEXT("Render: %2d Avg:%2llu(%2d~%2d)"),
 			mCurRenderInterval, mRenderStatis.AvgSampleSize(), minRenderSample, maxRenderSample);
 	}
 
@@ -300,9 +300,6 @@ DWORD D3D9SpriteRender::RenderLoop()
 			if (mLastRender){
 				mCurRenderInterval = renderBefore - mLastRender;
 				mRenderStatis.AppendSample(mCurRenderInterval);
-				if (mCurRenderInterval == 11){
-					mCurRenderInterval = mCurPtsInterval;
-				}
 			}
 			mLastRender = renderBefore;
 			if (SUCCEEDED(mpD3D9Device->BeginScene())){

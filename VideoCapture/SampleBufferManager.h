@@ -26,7 +26,7 @@ public:
 	BOOL Reset(int32_t resOfFrames, int32_t nbFrames);
 	BOOL LockFrame(CSampleBuffer *&);
 	BOOL UnlockFrame(CSampleBuffer *&);
-	BOOL FillFrame(FRAME_DESC);
+	BOOL FillFrame(FRAME_DESC &);
 
 protected:
 	BOOL AllocMemoryBySizeInByte(int32_t);

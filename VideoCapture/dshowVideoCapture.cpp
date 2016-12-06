@@ -229,7 +229,7 @@ HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 	mBufferManager.FillFrame(desc);
 
 done:
-	//mFpsStats.AppendSample(1);
+	mFpsStats.AppendSample(1);
 
 	return hr;
 }
