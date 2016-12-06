@@ -1,7 +1,7 @@
 #pragma once
+
 #include <stdint.h>
-#include <Windows.h>
-#include <list>
+#include "AutoLock.h"
 
 class CSlidingWindowCalc
 {
@@ -14,20 +14,20 @@ public:
 
 	int32_t AppendSample(uint32_t size);
 
-	uint32_t Bitrate() const;
-	double Frequency() const;
-	uint64_t AvgSampleSize() const;
+	uint32_t Bitrate();
+	double Frequency();
+	uint64_t AvgSampleSize();
 
-	BOOL MinMaxSample(int32_t &minV, int32_t &maxV) const;
+	BOOL MinMaxSample(int32_t &minV, int32_t &maxV) ;
 
 	uint64_t TotalSampleSize() const;
-	uint64_t SampleSize() const;
+	uint64_t SampleSize() ;
 
 	uint64_t TotalSamples() const;
-	uint64_t Samples() const;
+	uint64_t Samples() ;
 
 	uint64_t TotalDuration() const;
-	uint64_t Duration() const;
+	uint64_t Duration() ;
 
 protected:
 	void Destory();
@@ -53,5 +53,7 @@ protected:
 	long mSampleRingCapability;
 	volatile long mRingWirtePos;
 	volatile long mRingReadPos;
+
+	CRITICAL_SECTION cs;
 };
 
