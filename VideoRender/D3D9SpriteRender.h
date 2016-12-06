@@ -20,15 +20,16 @@ public:
 	virtual const char *GetRenderDescriptor() const { return "D3D9 sprite render"; };
 	DWORD RenderLoop();
 
-
 protected:
 	void SetupMatrices();
 	HRESULT GetDeviceType(D3DDISPLAYMODE);
 	HRESULT IfSupportedFormat(D3DDISPLAYMODE , D3DFORMAT );
 	BOOL IfSupportedConversionFormat(D3DDISPLAYMODE , D3DFORMAT);
-	HRESULT updateContent(CSampleBuffer *&);
+	HRESULT UpdateContent(CSampleBuffer *&);
 	BOOL OSDText(HDC, RECT *, TCHAR *format, ...);
 	BOOL OutputInformation();
+	BOOL UpdatePushStatis(CSampleBuffer *&);
+	BOOL UpdateRenderStatis();
 
 private:
 	HWND mhWnd;

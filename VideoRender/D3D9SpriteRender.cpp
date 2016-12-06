@@ -284,11 +284,24 @@ BOOL D3D9SpriteRender::OutputInformation()
 	return TRUE;
 }
 
+BOOL D3D9SpriteRender::UpdateRenderStatis()
+{
+	DWORD renderBefore = timeGetTime();
+
+	if (mLastRender){
+		mCurRenderInterval = renderBefore - mLastRender;
+		mRenderStatis.AppendSample(mCurRenderInterval);
+	}
+
+	mLastRender = renderBefore;
+
+	return FALSE;
+}
+
 DWORD D3D9SpriteRender::RenderLoop()
 {
 	HRESULT hr = S_OK;
 	DWORD dwRet = 0;
-	DWORD renderBefore = 0;
 	mCurRenderInterval = 0;
 
 	while (mRenderThreadRuning){
@@ -298,34 +311,10 @@ DWORD D3D9SpriteRender::RenderLoop()
 			break;
 
 		if ( dwRet == WAIT_OBJECT_0 ){
-			renderBefore = timeGetTime();
-
-			if (mLastRender){
-				mCurRenderInterval = renderBefore - mLastRender;
-				mRenderStatis.AppendSample(mCurRenderInterval);
-			}
-			mLastRender = renderBefore;
-			if (SUCCEEDED(mpD3D9Device->BeginScene())){
-				if (mSupportSurfaceType == SUPPORT_TEXTURE){
-					if (SUCCEEDED(mSprite->Begin(D3DXSPRITE_ALPHABLEND))){
-						hr = mSprite->Draw((LPDIRECT3DTEXTURE9)mpReadyObj, NULL, NULL, &D3DXVECTOR3(0, 0, 0), 0XFFFFFFFF);
-						mSprite->End();
-					}
-				} else{
-					IDirect3DSurface9 *pBackBuffer = nullptr;
-					if (SUCCEEDED(hr = mpD3D9Device->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer))){
-						mpD3D9Device->StretchRect((IDirect3DSurface9*)mpReadyObj, NULL, pBackBuffer, NULL, D3DTEXF_NONE);
-						pBackBuffer->Release();
-					}
-				}
-				mpD3D9Device->EndScene();
-			}
-
+			UpdateRenderStatis();
 			OutputInformation();
 
-//			EnterCriticalSection(&cs);
 			hr = mpD3D9Device->Present(nullptr, nullptr, nullptr, nullptr);
-//			LeaveCriticalSection(&cs);
 		} else if ( dwRet == WAIT_TIMEOUT ){
 			continue;
 		} else {
@@ -336,7 +325,7 @@ DWORD D3D9SpriteRender::RenderLoop()
 	return 0;
 }
 
-HRESULT D3D9SpriteRender::updateContent(CSampleBuffer *&frame)
+HRESULT D3D9SpriteRender::UpdateContent(CSampleBuffer *&frame)
 {
 	HRESULT hr = E_FAIL;
 	uint8_t *dstDataPtr = nullptr;
@@ -345,6 +334,7 @@ HRESULT D3D9SpriteRender::updateContent(CSampleBuffer *&frame)
 	int32_t srcLineSize = 0;
 	int32_t frameHeight = 0;
 	D3DLOCKED_RECT dstRect = { 0 };
+	volatile LPVOID pCur = NULL;
 
 	srcDataptr = frame->GetDataPtr();
 	srcLineSize = frame->GetLineSize();
@@ -382,45 +372,63 @@ HRESULT D3D9SpriteRender::updateContent(CSampleBuffer *&frame)
 		}
 	}
 
+	// Flip
+	pCur = mpReadyObj;
+	mpReadyObj = mpFreeObj;
+	mpFreeObj = pCur;
+
+	if (SUCCEEDED(mpD3D9Device->BeginScene())){
+		if (mSupportSurfaceType == SUPPORT_TEXTURE){
+			if (SUCCEEDED(mSprite->Begin(D3DXSPRITE_ALPHABLEND))){
+				hr = mSprite->Draw((LPDIRECT3DTEXTURE9)mpReadyObj, NULL, NULL, &D3DXVECTOR3(0, 0, 0), 0XFFFFFFFF);
+				mSprite->End();
+			}
+		} else{
+			IDirect3DSurface9 *pBackBuffer = nullptr;
+			if (SUCCEEDED(hr = mpD3D9Device->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer))){
+				mpD3D9Device->StretchRect((IDirect3DSurface9*)mpReadyObj, NULL, pBackBuffer, NULL, D3DTEXF_NONE);
+				pBackBuffer->Release();
+			}
+		}
+		mpD3D9Device->EndScene();
+	}
+
 	return hr;
 };
 
-BOOL D3D9SpriteRender::PushFrame(CSampleBuffer *inframe)
+BOOL D3D9SpriteRender::UpdatePushStatis(CSampleBuffer *&frame)
 {
-	HRESULT hr = E_FAIL;
-	volatile LPVOID pCur = NULL;
-	CSampleBuffer *frame = inframe;
 	int64_t ptss = 0, ptse = 0;
-	
-	if (!frame){
-		return FALSE;
-	}
 
 	frame->GetPts(ptss, ptse);
-
 	if (mLastPts){
 		mCurPtsInterval = ptss - mLastPts;
 		mInputStatis.AppendSample(mCurPtsInterval);
 	}
-	
 	mLastPts = ptss;
+
+	return TRUE;
+}
+
+BOOL D3D9SpriteRender::PushFrame(CSampleBuffer *inframe)
+{
+	HRESULT hr = E_FAIL;
+	CSampleBuffer *frame = inframe;
+	
+	if (!frame){
+		return FALSE;
+	}
 
 	if (mbNeedVpp){
 		mVpp->ProcessFrame(inframe, mVppTransSampleBuffer);
 		frame = mVppTransSampleBuffer;
 	}
 
-	hr = updateContent(frame);
-	
-	if (SUCCEEDED(hr)){
-		EnterCriticalSection(&cs);
-		pCur = mpReadyObj;
-		mpReadyObj = mpFreeObj;
-		mpFreeObj = pCur;
-		LeaveCriticalSection(&cs);
+	hr = UpdateContent(frame);
 
-		SetEvent(mRenderEvent);
-	}
+	UpdatePushStatis(frame);
+
+	SetEvent(mRenderEvent);
 
 	if (FAILED(hr))
 		GetD3D9ErrorString(hr);
