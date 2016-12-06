@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "D3D9SpriteRender.h"
 #include "RenderUtils.h"
+#include "logger.h"
 
 #define FONT_HEIGHT 30
 
@@ -10,10 +11,8 @@ D3D9SpriteRender::D3D9SpriteRender()
 	, mpD3D9OBj(nullptr)
 	, mpD3D9Device(nullptr)
 	, mPFont(nullptr)
-	, mpD3D9Texture(nullptr)
-	, mpD3D9Texture2(nullptr)
-	, mpD3D9Surface(nullptr)
-	, mpD3D9Surface2(nullptr)
+	, mCurPushObjIndex(0)
+	, mCurRenderObjIndex(MAX_RENDER_OBJ-1)
 	, mbSupportConversion(FALSE)
 	, mSupportSurfaceType(SUPPORT_TEXTURE)
 
@@ -32,6 +31,8 @@ D3D9SpriteRender::D3D9SpriteRender()
 	, mLastRender(0)
 	, mLastPts(0)
 {
+	ZeroMemory(mpD3D9Texture, sizeof(mpD3D9Texture));
+	ZeroMemory(mpD3D9Surface, sizeof(mpD3D9Surface));
 }
 
 D3D9SpriteRender::~D3D9SpriteRender()
@@ -120,8 +121,8 @@ BOOL D3D9SpriteRender::InitRender(HWND hWnd, int width, int height, DWORD pixelF
 	d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE; // wait for VSync
 	d3dpp.MultiSampleType = D3DMULTISAMPLE_NONE;
 
-	mpD3D9OBj = Direct3DCreate9(D3D_SDK_VERSION); //Create the presentation parameters
-	mpD3D9OBj->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &mode);
+	CHECK_HR((hr = Direct3DCreate9Ex(D3D_SDK_VERSION, &mpD3D9OBj))); //Create the presentation parameters
+	CHECK_HR((hr = mpD3D9OBj->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &mode)));
 
 	if (!IfSupportedFormat(mode, d3dpp.BackBufferFormat)){
 		if (!IfSupportedConversionFormat(mode, d3dpp.BackBufferFormat)){
@@ -160,22 +161,29 @@ BOOL D3D9SpriteRender::InitRender(HWND hWnd, int width, int height, DWORD pixelF
 	else
 		devBehaviorFlags |= D3DCREATE_SOFTWARE_VERTEXPROCESSING;
 
-	CHECK_HR(hr = mpD3D9OBj->CreateDevice(D3DADAPTER_DEFAULT, mD3D9DeviceType, mhWnd, devBehaviorFlags, &d3dpp, &mpD3D9Device));
+	CHECK_HR(hr = mpD3D9OBj->CreateDeviceEx(D3DADAPTER_DEFAULT, mD3D9DeviceType, mhWnd, devBehaviorFlags, &d3dpp, FALSE, &mpD3D9Device));
 
 	if (mbSupportConversion)
 		d3dpp.BackBufferFormat = GetD3D9PixelFmtByFourCC(pixelFormatInFourCC);
 
 	mSupportSurfaceType = SUPPORT_TEXTURE; /* texture */
-	if (FAILED(hr = mpD3D9Device->CreateTexture(width, height, 0, 0, d3dpp.BackBufferFormat, D3DPOOL_MANAGED, &mpD3D9Texture, NULL))){
-		if (FAILED(hr = mpD3D9Device->CreateOffscreenPlainSurface(width, height, d3dpp.BackBufferFormat, D3DPOOL_DEFAULT, &mpD3D9Surface, NULL))){
+	if (FAILED(hr = mpD3D9Device->CreateTexture(width, height, 0, 0, d3dpp.BackBufferFormat, D3DPOOL_MANAGED, &mpD3D9Texture[0], NULL))){
+		if (FAILED(hr = mpD3D9Device->CreateOffscreenPlainSurface(width, height, d3dpp.BackBufferFormat, D3DPOOL_DEFAULT, &mpD3D9Surface[0], NULL))){
 			goto done;
 		} else{
-			hr = mpD3D9Device->CreateOffscreenPlainSurface(width, height, d3dpp.BackBufferFormat, D3DPOOL_DEFAULT, &mpD3D9Surface2, NULL);
+			for (int i = 1; i < MAX_RENDER_OBJ; i++){
+				hr = mpD3D9Device->CreateOffscreenPlainSurface(width, height, d3dpp.BackBufferFormat, D3DPOOL_DEFAULT, &mpD3D9Surface[i], NULL);
+			}
 			mSupportSurfaceType = SUPPORT_SURFACE; /* surface */
 		}
 	} else{
-		hr = mpD3D9Device->CreateTexture(width, height, 0, 0, d3dpp.BackBufferFormat, D3DPOOL_MANAGED, &mpD3D9Texture2, NULL);
+		for (int i = 1; i < MAX_RENDER_OBJ; i++){
+			hr = mpD3D9Device->CreateTexture(width, height, 0, 0, d3dpp.BackBufferFormat, D3DPOOL_MANAGED, &mpD3D9Texture[i], NULL);
+		}
 	}
+
+	// indicate to 0
+	mCurPushObjIndex = 0;
 
 	CHECK_HR(hr = D3DXCreateFont(mpD3D9Device, FONT_HEIGHT, 0, FW_LIGHT, 1, TRUE,
 		DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &mPFont));
@@ -183,16 +191,6 @@ BOOL D3D9SpriteRender::InitRender(HWND hWnd, int width, int height, DWORD pixelF
 	CHECK_HR(hr = D3DXCreateSprite(mpD3D9Device, &mSprite));
 
 	SetupMatrices();
-
-	InitializeCriticalSection(&cs);
-
-	if (mSupportSurfaceType == SUPPORT_TEXTURE ){
-		mpReadyObj = mpD3D9Texture;
-		mpFreeObj = mpD3D9Texture2;
-	}else{
- 		mpReadyObj = mpD3D9Surface;
- 		mpFreeObj = mpD3D9Surface2;
-	}
 	
 	mRenderEvent = CreateEvent(nullptr, FALSE, FALSE, TEXT("sprite Render Event"));
 	if (mRenderEvent == INVALID_HANDLE_VALUE){
@@ -240,12 +238,11 @@ BOOL D3D9SpriteRender::DeinitRender()
 		mVppTransSampleBuffer = NULL;
 	}
 
-	DeleteCriticalSection(&cs);
+	for (int i = 0; i < MAX_RENDER_OBJ; i++){
+		SAFE_RELEASE(mpD3D9Texture[i]);
+		SAFE_RELEASE(mpD3D9Surface[i]);
+	}
 
-	SAFE_RELEASE(mpD3D9Surface);
-	SAFE_RELEASE(mpD3D9Surface2);
-	SAFE_RELEASE(mpD3D9Texture);
-	SAFE_RELEASE(mpD3D9Texture2);
 	SAFE_RELEASE(mPFont);
 	SAFE_RELEASE(mSprite);
 	SAFE_RELEASE(mpD3D9Device);
@@ -254,9 +251,10 @@ BOOL D3D9SpriteRender::DeinitRender()
 	return TRUE;
 }
 
-BOOL D3D9SpriteRender::OutputInformation()
+BOOL D3D9SpriteRender::RenderStatus()
 {
 	RECT FontPos;
+	HRESULT hr = S_OK;
 	GetClientRect(mhWnd, &FontPos);
 	int32_t minInputSample = 0, maxInputSample = 0;
 	int32_t minRenderSample = 0, maxRenderSample = 0;
@@ -264,10 +262,10 @@ BOOL D3D9SpriteRender::OutputInformation()
 	if (mInputStatis.Samples() > 2 && mRenderStatis.Samples() > 2){
 		mInputStatis.MinMaxSample(minInputSample, maxInputSample);
 		mRenderStatis.MinMaxSample(minRenderSample, maxRenderSample);
-		if (SUCCEEDED(mpD3D9Device->BeginScene())){
+		if ((hr = mpD3D9Device->BeginScene()) == D3D_OK ){
 			OSDText(NULL, &FontPos,
-				TEXT("FPS: %.2f"),
-				mInputStatis.Frequency());
+				TEXT("In fps: %.2f, Out fps: %.2f Current: %d"),
+				mInputStatis.Frequency(), mRenderStatis.Frequency(), mCurPushObjIndex);
 
 			OSDText(NULL, &FontPos,
 				TEXT("Input: %2lld, Avg:%2llu(%2d~%2d)"),
@@ -301,20 +299,59 @@ BOOL D3D9SpriteRender::UpdateRenderStatis()
 DWORD D3D9SpriteRender::RenderLoop()
 {
 	HRESULT hr = S_OK;
-	DWORD dwRet = 0;
-	mCurRenderInterval = 0;
+	DWORD dwRet = WAIT_OBJECT_0;
+	int32_t iLastPost = 0;
+	IDirect3DSurface9 *pCurSurface = NULL;
 
 	while (mRenderThreadRuning){
-		dwRet = WaitForSingleObject(mRenderEvent, 10);
+		hr = mpD3D9Device->WaitForVBlank(0);
+		if (FAILED(hr)){
+			dwRet = WaitForSingleObject(mRenderEvent, 10);
+		}
 
 		if (!mRenderThreadRuning)
 			break;
 
-		if ( dwRet == WAIT_OBJECT_0 ){
-			UpdateRenderStatis();
-			OutputInformation();
+		if (dwRet == WAIT_OBJECT_0){
+			UpdateRenderStatis(); 
 
-			hr = mpD3D9Device->Present(nullptr, nullptr, nullptr, nullptr);
+			mCurRenderInterval = mCurPushObjIndex - 1;
+			if (mCurRenderInterval < 0){
+				mCurRenderInterval = MAX_RENDER_OBJ - 1;
+			}
+
+			if (mSupportSurfaceType == SUPPORT_TEXTURE){
+				IDirect3DTexture9 *pCur = mpD3D9Texture[mCurRenderInterval];
+				hr = pCur->GetSurfaceLevel(0, &pCurSurface);
+				if (FAILED(hr)){
+					continue;
+				}
+			} else{
+				pCurSurface = mpD3D9Surface[mCurRenderInterval];
+			}
+
+			internel_log(Info, "begin %d\n", mCurRenderInterval);
+
+			if ( (hr = mpD3D9Device->BeginScene()) == D3D_OK ){
+				IDirect3DSurface9 *pBackBuffer = nullptr;
+				if ( (hr = mpD3D9Device->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer)) == D3D_OK ){
+					hr = mpD3D9Device->StretchRect(pCurSurface, NULL, pBackBuffer, NULL, D3DTEXF_NONE);
+					pBackBuffer->Release();
+				}
+				hr = mpD3D9Device->EndScene();
+			}
+
+			internel_log(Info, "end %d\n", mCurRenderInterval);
+
+			//if (mCurRenderInterval != mCurPushObjIndex){
+				RenderStatus();
+				if ((hr = mpD3D9Device->Present(nullptr, nullptr, nullptr, nullptr)) != D3D_OK){
+					hr = hr;
+				}
+			//}
+
+			//hr = mpD3D9Device->Present(nullptr, nullptr, nullptr, nullptr);
+
 		} else if ( dwRet == WAIT_TIMEOUT ){
 			continue;
 		} else {
@@ -325,73 +362,47 @@ DWORD D3D9SpriteRender::RenderLoop()
 	return 0;
 }
 
-HRESULT D3D9SpriteRender::UpdateContent(CSampleBuffer *&frame)
+HRESULT D3D9SpriteRender::UpdateRenderSurface(CSampleBuffer *&frame)
 {
 	HRESULT hr = E_FAIL;
 	uint8_t *dstDataPtr = nullptr;
 	uint8_t *srcDataptr = nullptr;
-	int32_t frameWidth = 0;
 	int32_t srcLineSize = 0;
 	int32_t frameHeight = 0;
 	D3DLOCKED_RECT dstRect = { 0 };
-	volatile LPVOID pCur = NULL;
+	IDirect3DSurface9 *pCurSurface = NULL;
 
 	srcDataptr = frame->GetDataPtr();
 	srcLineSize = frame->GetLineSize();
-	frameWidth = frame->GetWidth();
 	frameHeight = frame->GetHeight();
 
-	if (mSupportSurfaceType == SUPPORT_TEXTURE)
-	{
-		if (SUCCEEDED(hr = ((LPDIRECT3DTEXTURE9)mpFreeObj)->LockRect(0, &dstRect, NULL, 0))){
-			dstDataPtr = (uint8_t*)dstRect.pBits;
-			if (dstRect.Pitch == srcLineSize){
-				memcpy(dstDataPtr, srcDataptr, frame->GetDataSize());
-			} else{
-				for (int i = 0; i < frameHeight; i++){
-					uint8_t *dstlineBuffer = (uint8_t*)(dstDataPtr + i*dstRect.Pitch);
-					uint8_t* srcLineBuffer = srcDataptr + srcLineSize*i;
-					memcpy_s(dstlineBuffer, dstRect.Pitch, srcLineBuffer, srcLineSize);
-				}
-			}
-			((LPDIRECT3DTEXTURE9)mpFreeObj)->UnlockRect(0);
+	if (mSupportSurfaceType == SUPPORT_TEXTURE){
+		IDirect3DTexture9 *pCur = mpD3D9Texture[mCurPushObjIndex];
+		hr = pCur->GetSurfaceLevel(0, &pCurSurface);
+		if (FAILED(hr)){
+			return hr;
 		}
 	} else{
-		if (SUCCEEDED(hr = ((IDirect3DSurface9*)mpFreeObj)->LockRect(&dstRect, NULL, 0))){
-			dstDataPtr = (uint8_t*)dstRect.pBits;
-			if (dstRect.Pitch == srcLineSize){
-				memcpy(dstDataPtr, srcDataptr, frame->GetDataSize());
-			} else{
-				for (int i = 0; i < frameHeight; i++){
-					uint8_t *dstlineBuffer = (uint8_t*)(dstDataPtr + i*dstRect.Pitch);
-					uint8_t* srcLineBuffer = srcDataptr + srcLineSize*i;
-					memcpy_s(dstlineBuffer, dstRect.Pitch, srcLineBuffer, srcLineSize);
-				}
-			}
-			((IDirect3DSurface9*)mpFreeObj)->UnlockRect();
-		}
+		pCurSurface = mpD3D9Surface[mCurPushObjIndex];
 	}
 
-	// Flip
-	pCur = mpReadyObj;
-	mpReadyObj = mpFreeObj;
-	mpFreeObj = pCur;
-
-	if (SUCCEEDED(mpD3D9Device->BeginScene())){
-		if (mSupportSurfaceType == SUPPORT_TEXTURE){
-			if (SUCCEEDED(mSprite->Begin(D3DXSPRITE_ALPHABLEND))){
-				hr = mSprite->Draw((LPDIRECT3DTEXTURE9)mpReadyObj, NULL, NULL, &D3DXVECTOR3(0, 0, 0), 0XFFFFFFFF);
-				mSprite->End();
-			}
+	if (SUCCEEDED(hr = pCurSurface->LockRect(&dstRect, NULL, 0))){
+		dstDataPtr = (uint8_t*)dstRect.pBits;
+		if (dstRect.Pitch == srcLineSize){
+			memcpy(dstDataPtr, srcDataptr, frame->GetDataSize());
 		} else{
-			IDirect3DSurface9 *pBackBuffer = nullptr;
-			if (SUCCEEDED(hr = mpD3D9Device->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer))){
-				mpD3D9Device->StretchRect((IDirect3DSurface9*)mpReadyObj, NULL, pBackBuffer, NULL, D3DTEXF_NONE);
-				pBackBuffer->Release();
+			for (int i = 0; i < frameHeight; i++){
+				uint8_t *dstlineBuffer = (uint8_t*)(dstDataPtr + i*dstRect.Pitch);
+				uint8_t* srcLineBuffer = srcDataptr + srcLineSize*i;
+				memcpy_s(dstlineBuffer, dstRect.Pitch, srcLineBuffer, srcLineSize);
 			}
 		}
-		mpD3D9Device->EndScene();
+		pCurSurface->UnlockRect();
 	}
+
+	internel_log(Info, "push %d\n", mCurPushObjIndex);
+
+	mCurPushObjIndex = (mCurPushObjIndex + 1) % MAX_RENDER_OBJ;
 
 	return hr;
 };
@@ -424,7 +435,7 @@ BOOL D3D9SpriteRender::PushFrame(CSampleBuffer *inframe)
 		frame = mVppTransSampleBuffer;
 	}
 
-	hr = UpdateContent(frame);
+	hr = UpdateRenderSurface(frame);
 
 	UpdatePushStatis(frame);
 

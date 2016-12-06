@@ -5,6 +5,8 @@
 #include <d3dx9.h>
 #include "SlidingWindowCalc.h"
 
+#define MAX_RENDER_OBJ (10)
+
 class D3D9SpriteRender : public IRender
 {
 public:
@@ -25,32 +27,31 @@ protected:
 	HRESULT GetDeviceType(D3DDISPLAYMODE);
 	HRESULT IfSupportedFormat(D3DDISPLAYMODE , D3DFORMAT );
 	BOOL IfSupportedConversionFormat(D3DDISPLAYMODE , D3DFORMAT);
-	HRESULT UpdateContent(CSampleBuffer *&);
+	HRESULT UpdateRenderSurface(CSampleBuffer *&);
 	BOOL OSDText(HDC, RECT *, TCHAR *format, ...);
-	BOOL OutputInformation();
+	BOOL RenderStatus();
 	BOOL UpdatePushStatis(CSampleBuffer *&);
 	BOOL UpdateRenderStatis();
 
 private:
 	HWND mhWnd;
-	IDirect3D9* mpD3D9OBj;
-	IDirect3DDevice9* mpD3D9Device;
+
+	IDirect3D9Ex* mpD3D9OBj;
+	IDirect3DDevice9Ex* mpD3D9Device;
 	D3DDEVTYPE mD3D9DeviceType;
 	D3DCAPS9 mpD3D9DeviceCaps;
 	BOOL mbSupportConversion;
-	enum surfaceType {
+
+	enum SSurfaceType {
 		SUPPORT_TEXTURE,
 		SUPPORT_SURFACE
 	};
-	int32_t mSupportSurfaceType;
-	IDirect3DTexture9 *mpD3D9Texture;
-	IDirect3DTexture9 *mpD3D9Texture2;
-	IDirect3DSurface9 *mpD3D9Surface;
-	IDirect3DSurface9 *mpD3D9Surface2;
-	volatile LPVOID mpReadyObj;
-	volatile LPVOID mpFreeObj;
 
-	CRITICAL_SECTION cs;
+	SSurfaceType mSupportSurfaceType;
+	int32_t mCurPushObjIndex;
+	int32_t mCurRenderObjIndex;
+	IDirect3DTexture9 *mpD3D9Texture[MAX_RENDER_OBJ];
+	IDirect3DSurface9 *mpD3D9Surface[MAX_RENDER_OBJ];
 
 	LPD3DXFONT mPFont;
 	ID3DXSprite *mSprite;
