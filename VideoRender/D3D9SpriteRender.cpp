@@ -115,8 +115,8 @@ BOOL D3D9SpriteRender::InitRender(HWND hWnd, int width, int height, DWORD pixelF
 	d3dpp.BackBufferWidth = width; //set the buffer to our window width
 	d3dpp.BackBufferHeight = height; //set the buffer to out window height
 	d3dpp.BackBufferFormat = GetD3D9PixelFmtByFourCC(pixelFormatInFourCC);
-	d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD; //SwapEffect
-	d3dpp.Flags |= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER | D3DPRESENTFLAG_VIDEO;
+	d3dpp.SwapEffect = D3DSWAPEFFECT_FLIP; //SwapEffect
+	d3dpp.Flags |= D3DPRESENTFLAG_VIDEO;
 	d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE; // wait for VSync
 	d3dpp.MultiSampleType = D3DMULTISAMPLE_NONE;
 
@@ -264,18 +264,21 @@ BOOL D3D9SpriteRender::OutputInformation()
 	if (mInputStatis.Samples() > 2 && mRenderStatis.Samples() > 2){
 		mInputStatis.MinMaxSample(minInputSample, maxInputSample);
 		mRenderStatis.MinMaxSample(minRenderSample, maxRenderSample);
+		if (SUCCEEDED(mpD3D9Device->BeginScene())){
+			OSDText(NULL, &FontPos,
+				TEXT("FPS: %.2f"),
+				mInputStatis.Frequency());
 
-		OSDText(NULL, &FontPos, 
-			TEXT("FPS: %.2f"),
-			mInputStatis.Frequency());
+			OSDText(NULL, &FontPos,
+				TEXT("Input: %2lld, Avg:%2llu(%2d~%2d)"),
+				mCurPtsInterval, mInputStatis.AvgSampleSize(), minInputSample, maxInputSample);
 
-		OSDText(NULL, &FontPos,
-			TEXT("Input: %2lld, Avg:%2llu(%2d~%2d)"),
-			mCurPtsInterval, mInputStatis.AvgSampleSize(), minInputSample, maxInputSample);
+			OSDText(NULL, &FontPos,
+				TEXT("Render: %2d Avg:%2llu(%2d~%2d)"),
+				mCurRenderInterval, mRenderStatis.AvgSampleSize(), minRenderSample, maxRenderSample);
 
-		OSDText(NULL, &FontPos,
-			TEXT("Render: %2d Avg:%2llu(%2d~%2d)"),
-			mCurRenderInterval, mRenderStatis.AvgSampleSize(), minRenderSample, maxRenderSample);
+			mpD3D9Device->EndScene();
+		}
 	}
 
 	return TRUE;
@@ -320,9 +323,9 @@ DWORD D3D9SpriteRender::RenderLoop()
 
 			OutputInformation();
 
-			EnterCriticalSection(&cs);
+//			EnterCriticalSection(&cs);
 			hr = mpD3D9Device->Present(nullptr, nullptr, nullptr, nullptr);
-			LeaveCriticalSection(&cs);
+//			LeaveCriticalSection(&cs);
 		} else if ( dwRet == WAIT_TIMEOUT ){
 			continue;
 		} else {
