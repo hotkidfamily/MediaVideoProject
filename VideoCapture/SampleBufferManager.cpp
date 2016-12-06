@@ -73,9 +73,9 @@ BOOL CSampleBufferManager::LockFrame(CSampleBuffer *&buf)
 
 	if (!readyList.empty()){
 		CSampleBuffer *sample = readyList.front();
-		buf = sample;
-		occupyList.push_back(sample);
 		readyList.pop_front();
+		occupyList.push_back(sample);
+		buf = sample;
 		bRet = TRUE;
 	}
 
@@ -87,8 +87,8 @@ BOOL CSampleBufferManager::UnlockFrame(CSampleBuffer *&sample)
 	BOOL bRet = TRUE;
 
 	if (sample){
-		emptyList.push_back(sample);
 		occupyList.remove(sample);
+		emptyList.push_back(sample);
 	}
 
 	return bRet;

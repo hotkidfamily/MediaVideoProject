@@ -435,7 +435,7 @@ BOOL D3D9SpriteRender::OSDText(HDC, RECT *rc, TCHAR *format, ...)
 	vswprintf_s(buf, format, va_alist);
 	va_end(va_alist);
 
-	OffsetRect(rc, 2, 2);
+	OffsetRect(rc, 0, 2);
 
 	hr = mPFont->DrawText(nullptr, buf, -1, rc, DT_LEFT | DT_TOP, D3DCOLOR_ARGB(255, 0, 255, 0));
 
