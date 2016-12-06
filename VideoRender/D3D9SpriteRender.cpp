@@ -24,7 +24,7 @@ D3D9SpriteRender::D3D9SpriteRender()
 
 	, mVppFactory(nullptr)
 	, mVpp(nullptr)
-	, transSampleBuffer(NULL)
+	, mVppTransSampleBuffer(NULL)
 	, mbNeedVpp(FALSE)
 
 	, mCurRenderInterval(0)
@@ -140,8 +140,8 @@ BOOL D3D9SpriteRender::InitRender(HWND hWnd, int width, int height, DWORD pixelF
 				hr = E_FAIL;
 				goto done;
 			}
-			transSampleBuffer = AllocSampleBuffer(width, height, (CPPixelFormat)vppParams.dstPixelInFormatFourCC);
-			if (transSampleBuffer){
+			mVppTransSampleBuffer = AllocSampleBuffer(width, height, (CPPixelFormat)vppParams.dstPixelInFormatFourCC);
+			if (mVppTransSampleBuffer){
 				mbNeedVpp = TRUE;
 			}
 			
@@ -235,9 +235,9 @@ BOOL D3D9SpriteRender::DeinitRender()
 	ReleaseVPPFactoryObj(mVppFactory);
 	mVppFactory = nullptr;
 
-	if (transSampleBuffer){
-		DeallocSampleBuffer(transSampleBuffer);
-		transSampleBuffer = NULL;
+	if (mVppTransSampleBuffer){
+		DeallocSampleBuffer(mVppTransSampleBuffer);
+		mVppTransSampleBuffer = NULL;
 	}
 
 	DeleteCriticalSection(&cs);
@@ -403,8 +403,8 @@ BOOL D3D9SpriteRender::PushFrame(CSampleBuffer *inframe)
 	mLastPts = ptss;
 
 	if (mbNeedVpp){
-		mVpp->ProcessFrame(inframe, transSampleBuffer);
-		frame = transSampleBuffer;
+		mVpp->ProcessFrame(inframe, mVppTransSampleBuffer);
+		frame = mVppTransSampleBuffer;
 	}
 
 	hr = updateContent(frame);

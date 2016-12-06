@@ -64,7 +64,7 @@ private:
 	IVPPFactory *mVppFactory;
 	IVPP *mVpp;
 	IVPPPARAMETER vppParams;
-	CSampleBuffer *transSampleBuffer;
+	CSampleBuffer *mVppTransSampleBuffer;
 
 	// statistics 
 	int64_t mLastPts;
