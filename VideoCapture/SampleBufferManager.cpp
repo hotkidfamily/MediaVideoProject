@@ -9,11 +9,13 @@ CSampleBufferManager::CSampleBufferManager()
 	readyList.clear();
 	emptyList.clear();
 	occupyList.clear();
+	InitializeCriticalSection(&mCs);
 }
 
 CSampleBufferManager::~CSampleBufferManager()
 {
 	ReleaseMemory();
+	DeleteCriticalSection(&mCs);
 }
 
 BOOL CSampleBufferManager::Reset(int32_t res, int32_t nbFrames)
@@ -49,6 +51,7 @@ errRet:
 BOOL CSampleBufferManager::FillFrame(FRAME_DESC &desc)
 {
 	BOOL bRet = FALSE;
+	CAutoLock lock(mCs);
 
 	if (!emptyList.empty()){
 		CSampleBuffer *sample = emptyList.front();
@@ -70,6 +73,7 @@ BOOL CSampleBufferManager::FillFrame(FRAME_DESC &desc)
 BOOL CSampleBufferManager::LockFrame(CSampleBuffer *&buf)
 {
 	BOOL bRet = FALSE;
+	CAutoLock lock(mCs);
 
 	if (!readyList.empty()){
 		CSampleBuffer *sample = readyList.front();
@@ -85,6 +89,7 @@ BOOL CSampleBufferManager::LockFrame(CSampleBuffer *&buf)
 BOOL CSampleBufferManager::UnlockFrame(CSampleBuffer *&sample)
 {
 	BOOL bRet = TRUE;
+	CAutoLock lock(mCs);
 
 	if (sample){
 		occupyList.remove(sample);

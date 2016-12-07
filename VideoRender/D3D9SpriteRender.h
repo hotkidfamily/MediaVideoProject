@@ -5,7 +5,7 @@
 #include <d3dx9.h>
 #include "SlidingWindowCalc.h"
 
-#define MAX_RENDER_OBJ (5)
+#define MAX_RENDER_OBJ (60)
 
 class D3D9SpriteRender : public IRender
 {

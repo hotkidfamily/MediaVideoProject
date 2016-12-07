@@ -300,7 +300,7 @@ DWORD D3D9SpriteRender::RenderLoop()
 {
 	HRESULT hr = S_OK;
 	DWORD dwRet = WAIT_OBJECT_0;
-	int32_t iLastPost = 0;
+	static int32_t iLastPost = 0;
 	LPDIRECT3DSURFACE9 pCurSurface = NULL;
 	LPDIRECT3DTEXTURE9 pCurTexture = NULL;
 
@@ -316,12 +316,12 @@ DWORD D3D9SpriteRender::RenderLoop()
 		if (dwRet == WAIT_OBJECT_0){
 			UpdateRenderStatis(); 
 
-			mCurRenderObjIndex = mCurPushObjIndex - 2;
+			mCurRenderObjIndex = mCurPushObjIndex - 1;
 			if (mCurRenderObjIndex < 0){
-				mCurRenderObjIndex += MAX_RENDER_OBJ;
+				mCurRenderObjIndex = MAX_RENDER_OBJ - 1;
 			}
 
-			internel_log(Info, "render %d, push %d, %d \n", mCurRenderObjIndex, mCurPushObjIndex, iLastPost++);
+			//internel_log(Info, "render %d, push %d, %d \n", mCurRenderObjIndex, mCurPushObjIndex, iLastPost++);
 
 			if (mSupportSurfaceType == SUPPORT_TEXTURE){
 				pCurTexture = mpD3D9Texture[mCurRenderObjIndex];
