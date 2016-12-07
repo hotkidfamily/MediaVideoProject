@@ -29,7 +29,7 @@ protected:
 	BOOL IfSupportedConversionFormat(D3DDISPLAYMODE , D3DFORMAT);
 	HRESULT UpdateRenderSurface(CSampleBuffer *&);
 	BOOL OSDText(HDC, RECT *, TCHAR *format, ...);
-	BOOL RenderStatus();
+	BOOL DrawStatus();
 	BOOL UpdatePushStatis(CSampleBuffer *&);
 	BOOL UpdateRenderStatis();
 

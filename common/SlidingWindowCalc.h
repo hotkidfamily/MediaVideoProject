@@ -52,7 +52,6 @@ protected:
 	RateSample *mSampleRingBuffer;
 	long mSampleRingCapability;
 	volatile long mRingWirtePos;
-	volatile long mRingReadPos;
 
 	CRITICAL_SECTION cs;
 };

@@ -9,10 +9,9 @@ CSlidingWindowCalc::CSlidingWindowCalc()
 	, mTotalSampleCount(0)
 	, mTotalStreamSize(0)
 	, mStartTickCount(GetTickCount())
-	, mRingReadPos(0)
 	, mRingWirtePos(0)
+	, mSampleRingCapability(6 * SAMPLE_COUNT_FPS)
 {
-	mSampleRingCapability = mIntervalInMs / 1000 * SAMPLE_COUNT_FPS + SAMPLE_COUNT_FPS;
 	mSampleRingBuffer = new RateSample[mSampleRingCapability];
 	InitializeCriticalSection(&cs);
 }
@@ -29,7 +28,6 @@ void CSlidingWindowCalc::Destory()
 		delete[] mSampleRingBuffer;
 		mSampleRingCapability = 0;
 		mRingWirtePos = 0;
-		mRingReadPos = 0;
 	}
 }
 
@@ -39,7 +37,6 @@ void CSlidingWindowCalc::Reset() {
 	mStartTickCount = GetTickCount();
 
 	mRingWirtePos = 0;
-	mRingReadPos = 0;
 }
 
 void CSlidingWindowCalc::Reset(uint32_t durationInMS, uint32_t fps) {
@@ -50,11 +47,8 @@ void CSlidingWindowCalc::Reset(uint32_t durationInMS, uint32_t fps) {
 
 	Destory();
 
-	mSampleRingCapability = mIntervalInMs / 1000 * fps + SAMPLE_COUNT_FPS;
-
 	mSampleRingBuffer = new RateSample[mSampleRingCapability];
 	mRingWirtePos = 0;
-	mRingReadPos = 0;
 }
 
 int32_t CSlidingWindowCalc::AppendSample(uint32_t size)
@@ -108,15 +102,23 @@ BOOL CSlidingWindowCalc::MinMaxSample(int32_t &minV, int32_t &maxV)
 
 	uint32_t minSize = 0xffffffff;
 	uint32_t maxSize = 0;
-	uint64_t size = Samples();
-	long readPos = mRingReadPos;
 
-	for (uint64_t i = readPos; i < readPos + size; i++){
-		uint32_t sampleSize = mSampleRingBuffer[i%mSampleRingCapability].sampleSize;
-		if (minSize > sampleSize)
-			minSize = sampleSize;
-		else if (maxSize < sampleSize)
-			maxSize = sampleSize;
+	if (mTotalSampleCount > mSampleRingCapability){
+		for (uint64_t i = 0; i < mSampleRingCapability; i++){
+			uint32_t sampleSize = mSampleRingBuffer[i].sampleSize;
+			if (minSize > sampleSize)
+				minSize = sampleSize;
+			else if (maxSize < sampleSize)
+				maxSize = sampleSize;
+		}
+	} else{
+		for (uint64_t i = 0; i < mRingWirtePos; i++){
+			uint32_t sampleSize = mSampleRingBuffer[i].sampleSize;
+			if (minSize > sampleSize)
+				minSize = sampleSize;
+			else if (maxSize < sampleSize)
+				maxSize = sampleSize;
+		}
 	}
 
 	minV = minSize == 0xffffffff ? 0 : minSize; maxV = maxSize;
@@ -132,15 +134,18 @@ uint64_t CSlidingWindowCalc::TotalSampleSize() const
 uint64_t CSlidingWindowCalc::SampleSize()
 {
 	uint64_t sampleSize = 0;
-	long readPos = 0;
-	readPos = (mRingWirtePos - 1);
-	if (readPos < 0){
-		readPos = 0;
-	}
+	long recentPos = 0;
+	long oldestPos = 0;
 
-	if (mTotalSampleCount > 2){
-		sampleSize = mSampleRingBuffer[mRingWirtePos].streamSize - mSampleRingBuffer[readPos].streamSize;
+	recentPos = (mRingWirtePos - 1);
+	if (recentPos < 0){
+		recentPos = mSampleRingCapability - 1;
 	}
+	
+	if (mTotalSampleCount > mSampleRingCapability){
+		oldestPos = mRingWirtePos;
+	}
+	sampleSize = mSampleRingBuffer[recentPos].streamSize - mSampleRingBuffer[oldestPos].streamSize;
 
 	return sampleSize;
 }
@@ -156,8 +161,11 @@ uint64_t CSlidingWindowCalc::Samples()
 
 	if (mTotalSampleCount < mSampleRingCapability){
 		size = mRingWirtePos - 1;
+		if (size <= 0){
+			size = 1;
+		}
 	}else{
-		size = mSampleRingCapability - 1;
+		size = mSampleRingCapability;
 	}
 
 	return size;
@@ -171,18 +179,18 @@ uint64_t CSlidingWindowCalc::TotalDuration() const
 uint64_t CSlidingWindowCalc::Duration()
 {
 	uint64_t durationTime = 1;
-	long readPos = 0;
-	long writePos = mRingWirtePos - 1;
-	if (writePos < 0){
-		writePos = 0;
+	long oldestPos = 0;
+	long recentPos = mRingWirtePos - 1;
+	if (recentPos < 0){
+		recentPos = mSampleRingCapability - 1;
 	}
 
-	if (mTotalSampleCount >= mSampleRingCapability){
-		readPos = mRingWirtePos;
+	if (mTotalSampleCount > mSampleRingCapability){
+		oldestPos = mRingWirtePos;
 	}
 
-	if (mTotalSampleCount > 2){
-		durationTime = mSampleRingBuffer[writePos].timestamp - mSampleRingBuffer[readPos].timestamp;
+	if (recentPos != oldestPos){
+		durationTime = mSampleRingBuffer[recentPos].timestamp - mSampleRingBuffer[oldestPos].timestamp;
 	}
 
 	return durationTime;
