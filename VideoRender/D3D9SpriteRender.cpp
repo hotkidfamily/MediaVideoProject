@@ -118,7 +118,7 @@ BOOL D3D9SpriteRender::InitRender(HWND hWnd, int width, int height, DWORD pixelF
 	d3dpp.BackBufferFormat = GetD3D9PixelFmtByFourCC(pixelFormatInFourCC);
 	d3dpp.SwapEffect = D3DSWAPEFFECT_FLIP; //SwapEffect
 	d3dpp.Flags |= D3DPRESENTFLAG_VIDEO;
-	d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE; // wait for VSync
+	d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE; // wait for VSync
 	d3dpp.MultiSampleType = D3DMULTISAMPLE_NONE;
 
 	CHECK_HR((hr = Direct3DCreate9Ex(D3D_SDK_VERSION, &mpD3D9OBj))); //Create the presentation parameters
@@ -152,10 +152,10 @@ BOOL D3D9SpriteRender::InitRender(HWND hWnd, int width, int height, DWORD pixelF
 			d3dpp.BackBufferFormat = mode.Format;
 		}
 	}
-
+	
 	mpD3D9OBj->GetDeviceCaps(D3DADAPTER_DEFAULT, mD3D9DeviceType, &mpD3D9DeviceCaps);
 
-	DWORD devBehaviorFlags = 0;
+	DWORD devBehaviorFlags = D3DCREATE_MULTITHREADED;
 	if (mpD3D9DeviceCaps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT)
 		devBehaviorFlags |= D3DCREATE_HARDWARE_VERTEXPROCESSING;
 	else
@@ -251,7 +251,7 @@ BOOL D3D9SpriteRender::DeinitRender()
 	return TRUE;
 }
 
-BOOL D3D9SpriteRender::RenderStatus()
+BOOL D3D9SpriteRender::DrawStatus()
 {
 	RECT FontPos;
 	HRESULT hr = S_OK;
@@ -301,7 +301,8 @@ DWORD D3D9SpriteRender::RenderLoop()
 	HRESULT hr = S_OK;
 	DWORD dwRet = WAIT_OBJECT_0;
 	int32_t iLastPost = 0;
-	IDirect3DSurface9 *pCurSurface = NULL;
+	LPDIRECT3DSURFACE9 pCurSurface = NULL;
+	LPDIRECT3DTEXTURE9 pCurTexture = NULL;
 
 	while (mRenderThreadRuning){
 		hr = mpD3D9Device->WaitForVBlank(0);
@@ -315,43 +316,39 @@ DWORD D3D9SpriteRender::RenderLoop()
 		if (dwRet == WAIT_OBJECT_0){
 			UpdateRenderStatis(); 
 
-			mCurRenderInterval = mCurPushObjIndex - 1;
-			if (mCurRenderInterval < 0){
-				mCurRenderInterval = MAX_RENDER_OBJ - 1;
+			mCurRenderObjIndex = mCurPushObjIndex - 2;
+			if (mCurRenderObjIndex < 0){
+				mCurRenderObjIndex += MAX_RENDER_OBJ;
 			}
+
+			internel_log(Info, "render %d, push %d, %d \n", mCurRenderObjIndex, mCurPushObjIndex, iLastPost++);
 
 			if (mSupportSurfaceType == SUPPORT_TEXTURE){
-				IDirect3DTexture9 *pCur = mpD3D9Texture[mCurRenderInterval];
-				hr = pCur->GetSurfaceLevel(0, &pCurSurface);
-				if (FAILED(hr)){
-					continue;
+				pCurTexture = mpD3D9Texture[mCurRenderObjIndex];
+				if (SUCCEEDED(mpD3D9Device->BeginScene())){
+					if (SUCCEEDED(mSprite->Begin(D3DXSPRITE_ALPHABLEND))){
+						hr = mSprite->Draw(pCurTexture, NULL, NULL, &D3DXVECTOR3(0, 0, 0), 0XFFFFFFFF);
+						mSprite->End();
+					}
+					mpD3D9Device->EndScene();
 				}
 			} else{
-				pCurSurface = mpD3D9Surface[mCurRenderInterval];
-			}
-
-			internel_log(Info, "begin %d\n", mCurRenderInterval);
-
-			if ( (hr = mpD3D9Device->BeginScene()) == D3D_OK ){
+				pCurSurface = mpD3D9Surface[mCurRenderObjIndex];
 				IDirect3DSurface9 *pBackBuffer = nullptr;
-				if ( (hr = mpD3D9Device->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer)) == D3D_OK ){
-					hr = mpD3D9Device->StretchRect(pCurSurface, NULL, pBackBuffer, NULL, D3DTEXF_NONE);
-					pBackBuffer->Release();
+				if (SUCCEEDED(mpD3D9Device->BeginScene())){
+					if (SUCCEEDED(mpD3D9Device->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer))){
+						mpD3D9Device->StretchRect(pCurSurface, NULL, pBackBuffer, NULL, D3DTEXF_NONE);
+						pBackBuffer->Release();
+					}
+					mpD3D9Device->EndScene();
 				}
-				hr = mpD3D9Device->EndScene();
 			}
 
-			internel_log(Info, "end %d\n", mCurRenderInterval);
+			DrawStatus();
 
-			//if (mCurRenderInterval != mCurPushObjIndex){
-				RenderStatus();
-				if ((hr = mpD3D9Device->Present(nullptr, nullptr, nullptr, nullptr)) != D3D_OK){
-					hr = hr;
-				}
-			//}
-
-			//hr = mpD3D9Device->Present(nullptr, nullptr, nullptr, nullptr);
-
+			if ((hr = mpD3D9Device->Present(nullptr, nullptr, nullptr, nullptr)) != D3D_OK){
+			//	GetD3D9ErrorString(hr);
+			}
 		} else if ( dwRet == WAIT_TIMEOUT ){
 			continue;
 		} else {
@@ -371,33 +368,42 @@ HRESULT D3D9SpriteRender::UpdateRenderSurface(CSampleBuffer *&frame)
 	int32_t frameHeight = 0;
 	D3DLOCKED_RECT dstRect = { 0 };
 	IDirect3DSurface9 *pCurSurface = NULL;
+	IDirect3DTexture9 *pCurTexture = NULL;
 
 	srcDataptr = frame->GetDataPtr();
 	srcLineSize = frame->GetLineSize();
 	frameHeight = frame->GetHeight();
 
 	if (mSupportSurfaceType == SUPPORT_TEXTURE){
-		IDirect3DTexture9 *pCur = mpD3D9Texture[mCurPushObjIndex];
-		hr = pCur->GetSurfaceLevel(0, &pCurSurface);
-		if (FAILED(hr)){
-			return hr;
+		pCurTexture = mpD3D9Texture[mCurPushObjIndex];
+		if (SUCCEEDED(hr = pCurTexture->LockRect(0, &dstRect, NULL, 0))){
+			dstDataPtr = (uint8_t*)dstRect.pBits;
+			if (dstRect.Pitch == srcLineSize){
+				memcpy(dstDataPtr, srcDataptr, frame->GetDataSize());
+			} else{
+				for (int i = 0; i < frameHeight; i++){
+					uint8_t *dstlineBuffer = (uint8_t*)(dstDataPtr + i*dstRect.Pitch);
+					uint8_t* srcLineBuffer = srcDataptr + srcLineSize*i;
+					memcpy_s(dstlineBuffer, dstRect.Pitch, srcLineBuffer, srcLineSize);
+				}
+			}
+			pCurTexture->UnlockRect(0);
 		}
 	} else{
 		pCurSurface = mpD3D9Surface[mCurPushObjIndex];
-	}
-
-	if (SUCCEEDED(hr = pCurSurface->LockRect(&dstRect, NULL, 0))){
-		dstDataPtr = (uint8_t*)dstRect.pBits;
-		if (dstRect.Pitch == srcLineSize){
-			memcpy(dstDataPtr, srcDataptr, frame->GetDataSize());
-		} else{
-			for (int i = 0; i < frameHeight; i++){
-				uint8_t *dstlineBuffer = (uint8_t*)(dstDataPtr + i*dstRect.Pitch);
-				uint8_t* srcLineBuffer = srcDataptr + srcLineSize*i;
-				memcpy_s(dstlineBuffer, dstRect.Pitch, srcLineBuffer, srcLineSize);
+		if (SUCCEEDED(hr = pCurSurface->LockRect(&dstRect, NULL, 0))){
+			dstDataPtr = (uint8_t*)dstRect.pBits;
+			if (dstRect.Pitch == srcLineSize){
+				memcpy(dstDataPtr, srcDataptr, frame->GetDataSize());
+			} else{
+				for (int i = 0; i < frameHeight; i++){
+					uint8_t *dstlineBuffer = (uint8_t*)(dstDataPtr + i*dstRect.Pitch);
+					uint8_t* srcLineBuffer = srcDataptr + srcLineSize*i;
+					memcpy_s(dstlineBuffer, dstRect.Pitch, srcLineBuffer, srcLineSize);
+				}
 			}
+			pCurSurface->UnlockRect();
 		}
-		pCurSurface->UnlockRect();
 	}
 
 	internel_log(Info, "push %d\n", mCurPushObjIndex);

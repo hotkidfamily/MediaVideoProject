@@ -5,7 +5,7 @@
 #include <d3dx9.h>
 #include "SlidingWindowCalc.h"
 
-#define MAX_RENDER_OBJ (10)
+#define MAX_RENDER_OBJ (5)
 
 class D3D9SpriteRender : public IRender
 {
@@ -50,8 +50,8 @@ private:
 	SSurfaceType mSupportSurfaceType;
 	int32_t mCurPushObjIndex;
 	int32_t mCurRenderObjIndex;
-	IDirect3DTexture9 *mpD3D9Texture[MAX_RENDER_OBJ];
-	IDirect3DSurface9 *mpD3D9Surface[MAX_RENDER_OBJ];
+	LPDIRECT3DTEXTURE9 mpD3D9Texture[MAX_RENDER_OBJ];
+	LPDIRECT3DSURFACE9 mpD3D9Surface[MAX_RENDER_OBJ];
 
 	LPD3DXFONT mPFont;
 	ID3DXSprite *mSprite;
