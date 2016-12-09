@@ -101,7 +101,9 @@
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>
     </ClCompile>
     <ClCompile Include="dshowVideoCapture.cpp" />
+    <ClCompile Include="filesVideoCapture.cpp" />
     <ClCompile Include="ISampleGrabberCBImpl.cpp" />
+    <ClCompile Include="mediafoundationVideoCapture.cpp" />
     <ClCompile Include="mtype.cpp" />
     <ClCompile Include="SampleBufferManager.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -111,15 +113,14 @@
     <ClCompile Include="VideoCapture.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AutoLock.h" />
     <ClInclude Include="dshowutil.h" />
     <ClInclude Include="dshowVideoCapture.h" />
+    <ClInclude Include="filesVideoCapture.h" />
     <ClInclude Include="ISampleGrabber.h" />
     <ClInclude Include="ISampleGrabberCBImpl.h" />
     <ClInclude Include="IVideoCapture.h" />
     <ClInclude Include="mediafoundationVideoCapture.h" />
     <ClInclude Include="mtype.h" />
-    <ClInclude Include="SampleBuffer.h" />
     <ClInclude Include="SampleBufferManager.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />

@@ -93,8 +93,6 @@ public:
 #ifdef __cplusplus
 extern "C" {
 #endif
-	VIDEOCAPTURE_API void SetLogCallback(PVIDEO_CAPTURE_LOG_CALLBACK_FUNC);
-
 	VIDEOCAPTURE_API IVideoCapture *GetVideoCaptureObj();
 	VIDEOCAPTURE_API void ReleaseVideoCaptureObj(IVideoCapture *);
 

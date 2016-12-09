@@ -2,10 +2,9 @@
 #define __VIDEOCAPTURE_H__
 
 #include "IVideoCapture.h"
-#include "logger.h"
 #include "dshowVideoCapture.h"
 #include "mediafoundationVideoCapture.h"
-#include "SampleBufferManager.h"
+#include "filesVideoCapture.h"
 
 typedef struct tagFrameBility{
 	enum ability{
@@ -56,6 +55,7 @@ protected:
 private:
 	DShowVideoCapture *mDShowCapture;
 	MediaFoundationVideoCapture *mMFCapture;
+	FilesVideoCapture *mFilesCapture;
 };
 
 #endif //__VIDEOCAPTURE_H__

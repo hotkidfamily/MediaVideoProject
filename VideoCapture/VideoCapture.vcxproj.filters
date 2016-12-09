@@ -37,6 +37,12 @@
     <Filter Include="Header Files\utils">
       <UniqueIdentifier>{c36ece20-df28-473c-bd71-eeab10965c16}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\filesinterface">
+      <UniqueIdentifier>{b7b922f2-32eb-4c11-b867-1422f988c5fc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\filesinterface">
+      <UniqueIdentifier>{708d2876-2a87-4b36-a647-848ec4f3ea21}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dshowVideoCapture.cpp">
@@ -59,6 +65,12 @@
     </ClCompile>
     <ClCompile Include="mtype.cpp">
       <Filter>Source Files\dshowInterface</Filter>
+    </ClCompile>
+    <ClCompile Include="filesVideoCapture.cpp">
+      <Filter>Source Files\filesinterface</Filter>
+    </ClCompile>
+    <ClCompile Include="mediafoundationVideoCapture.cpp">
+      <Filter>Source Files\mediafoundationinterface</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -83,12 +95,6 @@
     <ClInclude Include="SampleBufferManager.h">
       <Filter>Header Files\buffermanager</Filter>
     </ClInclude>
-    <ClInclude Include="SampleBuffer.h">
-      <Filter>Header Files\buffermanager</Filter>
-    </ClInclude>
-    <ClInclude Include="AutoLock.h">
-      <Filter>Header Files\buffermanager</Filter>
-    </ClInclude>
     <ClInclude Include="dshowutil.h">
       <Filter>Header Files\utils</Filter>
     </ClInclude>
@@ -100,6 +106,9 @@
     </ClInclude>
     <ClInclude Include="mtype.h">
       <Filter>Header Files\dshowinterface</Filter>
+    </ClInclude>
+    <ClInclude Include="filesVideoCapture.h">
+      <Filter>Header Files\filesinterface</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

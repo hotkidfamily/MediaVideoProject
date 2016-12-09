@@ -4,7 +4,9 @@
 
 class MediaFoundationVideoCapture
 {
-
+public:
+	MediaFoundationVideoCapture();
+	~MediaFoundationVideoCapture();
 };
 
 
