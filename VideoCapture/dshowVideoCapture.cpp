@@ -132,7 +132,7 @@ BOOL DShowVideoCapture::Runing()
 	return bRet;
 }
 
-HRESULT DShowVideoCapture::Start(OPEN_DEVICE_PARAM &params)
+HRESULT DShowVideoCapture::Start(CAPTURECONFIG &params)
 {
 	HRESULT hr = S_OK;
 	ASSERT(mMediaControl);
@@ -154,7 +154,7 @@ HRESULT DShowVideoCapture::Start(OPEN_DEVICE_PARAM &params)
 	mWorkParams.width = mWorkMediaType.BitmapHeader()->biWidth;
 	mWorkParams.height = mWorkMediaType.BitmapHeader()->biHeight;
 	mWorkParams.fps = RefTimeToFramesPerSec(mWorkMediaType.AvgReferenceTime());
-	mWorkParams.pixelFormatInFourCC = mWorkMediaType.subtype.Data1;
+	mWorkParams.pixelFormat = mWorkMediaType.subtype.Data1;
 	params = mWorkParams;
 	
 	do{

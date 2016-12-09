@@ -53,7 +53,7 @@ public:
 	DShowVideoCapture();
 	~DShowVideoCapture();
 	HRESULT Stop();
-	HRESULT Start(OPEN_DEVICE_PARAM&);
+	HRESULT Start(CAPTURECONFIG&);
 	HRESULT EnumCaptureDevices();
 	HRESULT GetDevicesName(VECT &);
 	HRESULT ShowCapturePropertyWindow();
@@ -94,7 +94,7 @@ private:
 
 	VideoCaptureCallback *mcb;
 
-	OPEN_DEVICE_PARAM mWorkParams;
+	CAPTURECONFIG mWorkParams;
 	CAMERALIST mCameraList;
 	CSlidingWindowCalc mFpsStats;
 	CSampleBufferManager mBufferManager;

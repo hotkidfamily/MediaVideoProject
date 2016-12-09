@@ -20,11 +20,11 @@ BOOL StartCaptureWork(THIS_CONTEXT *ctx)
 		captureList.clear();
 
 		ctx->capture->RegisterCallback(ctx->callBack);
-		ctx->captureArgs.parentWindow = ctx->hMainWnd;
-		ctx->captureArgs.fps = 30;
-		ctx->captureArgs.width = 1280;
-		ctx->captureArgs.height = 720;
-		hr = ctx->capture->StartCaptureWithParam(ctx->captureArgs);
+		ctx->captureCfg.parentWindow = ctx->hMainWnd;
+		ctx->captureCfg.fps = 30;
+		ctx->captureCfg.width = 1280;
+		ctx->captureCfg.height = 720;
+		hr = ctx->capture->StartCaptureWithParam(ctx->captureCfg);
 		if (hr == HRESULT_FROM_WIN32(ERROR_SHARING_VIOLATION)){
 			MessageBox(ctx->hMainWnd, TEXT("Device have been occured."), TEXT("ERROR"), MB_OK);
 		}
@@ -67,16 +67,16 @@ BOOL SetupEncodeWork(THIS_CONTEXT *ctx)
 
 	if (bRet)
 	{
-		ctx->encoderArgs.fps = (uint32_t)(ctx->captureArgs.fps);
-		ctx->encoderArgs.width = ctx->captureArgs.width;
-		ctx->encoderArgs.height = ctx->captureArgs.height;
-		ctx->encoderArgs.avgBitrateInKb = 2000;
-		ctx->encoderArgs.minBitrateInKb = 2000;
-		ctx->encoderArgs.maxBitrateInKb = 2000;
-		ctx->encoderArgs.pixelFormatInFourCC = ctx->captureArgs.pixelFormatInFourCC;
-		ctx->encoderArgs.cfgStr.append(TEXT("keyint=75:min-keyint=75:scenecut=0:bframes=2:b-adapt=0:b-pyramid=none:threads=1:sliced-threads=0:ref=2:subme=2:me=hex:analyse=i4x4,i8x8,p8x8,p4x4,b8x8:direct=spatial:weightp=1:weightb=1:8x8dct=1:cabac=1:deblock=0,0:psy=0:trellis=0:aq-mode=1:rc-lookahead=0:sync-lookahead=0:mbtree=0:"));
+		ctx->encoderCfg.fps = (uint32_t)(ctx->captureCfg.fps);
+		ctx->encoderCfg.width = ctx->captureCfg.width;
+		ctx->encoderCfg.height = ctx->captureCfg.height;
+		ctx->encoderCfg.avgBitrateInKb = 2000;
+		ctx->encoderCfg.minBitrateInKb = 2000;
+		ctx->encoderCfg.maxBitrateInKb = 2000;
+		ctx->encoderCfg.pixelFormatInFourCC = ctx->captureCfg.pixelFormat;
+		ctx->encoderCfg.cfgStr.append(TEXT("keyint=75:min-keyint=75:scenecut=0:bframes=2:b-adapt=0:b-pyramid=none:threads=1:sliced-threads=0:ref=2:subme=2:me=hex:analyse=i4x4,i8x8,p8x8,p4x4,b8x8:direct=spatial:weightp=1:weightb=1:8x8dct=1:cabac=1:deblock=0,0:psy=0:trellis=0:aq-mode=1:rc-lookahead=0:sync-lookahead=0:mbtree=0:"));
 
-		ctx->codec->setConfig(ctx->encoderArgs);
+		ctx->codec->setConfig(ctx->encoderCfg);
 		bRet = ctx->codec->open();
 	}
 
@@ -99,7 +99,7 @@ BOOL StopEncodeWork(THIS_CONTEXT *ctx)
 		ctx->encFactory = nullptr;
 	}
 
-	ctx->encoderArgs.cfgStr.clear();
+	ctx->encoderCfg.cfgStr.clear();
 
 	return TRUE;
 }
@@ -161,8 +161,16 @@ BOOL StartRenderWork(THIS_CONTEXT *ctx)
 		bRet = ctx->renderFactory->CreateRenderObj(ctx->render);
 	}
 
+	ctx->renderCfg.bWaitVSync = TRUE;
+	ctx->renderCfg.hWnd = ctx->hMainWnd;
+	ctx->renderCfg.width = ctx->captureCfg.width;
+	ctx->renderCfg.height = ctx->captureCfg.height;
+	ctx->renderCfg.pixelFormat = ctx->captureCfg.pixelFormat;
+	ctx->renderCfg.fps.num = ctx->captureCfg.fps;
+	ctx->renderCfg.fps.den = 1;
+
 	if(bRet){
-		bRet = ctx->render->InitRender(ctx->hMainWnd, ctx->captureArgs.width, ctx->captureArgs.height, ctx->captureArgs.pixelFormatInFourCC);
+		bRet = ctx->render->InitRender(ctx->renderCfg);
 	}
 
 	if(!bRet){

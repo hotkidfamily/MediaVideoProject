@@ -19,19 +19,21 @@ typedef void(*PVIDEO_CAPTURE_LOG_CALLBACK_FUNC)(int, const char* format, va_list
 //---------------------------------------------------------
 typedef std::vector<const TCHAR*> VECT;
 
-typedef struct tagDevParam{
+struct CAPTURECONFIG
+{
 	int32_t index;
 	int32_t width;
 	int32_t height;
 	double fps; // number? 
 	HWND parentWindow;
 	HWND attachWindow;
-	DWORD pixelFormatInFourCC;
+	DWORD pixelFormat;
 
-	tagDevParam(){
-		ZeroMemory(this, sizeof(struct tagDevParam));
+	CAPTURECONFIG()
+	{
+		ZeroMemory(this, sizeof(struct CAPTURECONFIG));
 	}
-}OPEN_DEVICE_PARAM;
+};
 
 //---------------------------------------------------------
 // video call back interface
@@ -70,7 +72,7 @@ public:
 	// step 1, get device list
 	virtual HRESULT GetDeviceList(VECT &) = 0;
 	// step 2, start capture
-	virtual HRESULT StartCaptureWithParam(OPEN_DEVICE_PARAM&) = 0;
+	virtual HRESULT StartCaptureWithParam(CAPTURECONFIG&) = 0;
 	
 	// step 3.x other feature support: show property setting window
 	virtual HRESULT ShowPropertyWindow(HWND parentWindowHandle) = 0;

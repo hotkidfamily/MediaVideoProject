@@ -253,14 +253,14 @@ DWORD WINAPI RenderThread(LPVOID args)
 	return pRender->RenderLoop();
 }
 
-BOOL DDrawRender::InitRender(HWND hWnd, int width, int height, DWORD pixelFormatInFourCC)
+BOOL DDrawRender::InitRender(const RENDERCONFIG &config)
 {
 	HRESULT hr = DD_OK;
 	DDBLTFX ddbltfx = { 0 };
 	ZeroMemory(&mHwCaps, sizeof(DDCAPS));
 	ZeroMemory(&mHelCaps, sizeof(DDCAPS));
 
-	mHwnd = hWnd;
+	mHwnd = config.hWnd;
 
 	CHECK_HR(hr = CoInitialize(nullptr));
 
@@ -272,7 +272,7 @@ BOOL DDrawRender::InitRender(HWND hWnd, int width, int height, DWORD pixelFormat
 	mHelCaps.dwSize = sizeof(DDCAPS);
 	mDDrawObj->GetCaps(&mHwCaps, &mHelCaps);
 
-	CHECK_HR(hr = CreateSurfaces(width, height, pixelFormatInFourCC));
+	CHECK_HR(hr = CreateSurfaces(config.width, config.height, config.pixelFormat));
 
 	CHECK_HR(hr = mDDrawObj->CreateClipper(0, &mDDrawClippper, nullptr));
 	CHECK_HR(hr = mDDrawClippper->SetHWnd(0, mHwnd));
@@ -288,8 +288,8 @@ BOOL DDrawRender::InitRender(HWND hWnd, int width, int height, DWORD pixelFormat
 
 	mLastPts = 0;
 	mLastTime = 0;
-	mScreenSizeInPixel.cx = width;
-	mScreenSizeInPixel.cy = height;
+	mScreenSizeInPixel.cx = config.width;
+	mScreenSizeInPixel.cy = config.height;
 	mRenderEvent = CreateEvent(nullptr, FALSE, FALSE, TEXT("Render Event"));
 	if (mRenderEvent == INVALID_HANDLE_VALUE){
 		hr = E_FAIL;

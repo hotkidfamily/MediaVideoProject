@@ -41,7 +41,7 @@ public:
 	virtual ~IVideoCaptureDelegate();
 	virtual void RegisterCallback(VideoCaptureCallback *);
 	virtual HRESULT GetDeviceList(VECT &);
-	virtual HRESULT StartCaptureWithParam(OPEN_DEVICE_PARAM &);
+	virtual HRESULT StartCaptureWithParam(CAPTURECONFIG &);
 	virtual BOOL GetFrame(CSampleBuffer *&pSample);
 	virtual BOOL ReleaseFrame(CSampleBuffer *&pSample);
 	virtual HRESULT StopCapture();

@@ -27,18 +27,19 @@ typedef struct tagProgramContext{
 	DWORD dwRenderThreadID;
 
 	/* capture */
-	OPEN_DEVICE_PARAM captureArgs;
+	CAPTURECONFIG captureCfg;
 	IVideoCapture *capture;
 	CVideoCallback *callBack;
 
 	/* codec */
 	ICodecFactory *encFactory;
 	ICodec *codec;
-	ENCODECCFG encoderArgs;
+	ENCODECCFG encoderCfg;
 
 	/* render */
 	IRenderFactory *renderFactory;
 	IRender *render;
+	RENDERCONFIG renderCfg;
 
 	CRITICAL_SECTION listLock;
 	

@@ -100,22 +100,23 @@ HRESULT D3D9SpriteRender::IfSupportedFormat(D3DDISPLAYMODE mode, D3DFORMAT pixel
 	return hr == S_OK;
 }
 
-BOOL D3D9SpriteRender::InitRender(HWND hWnd, int width, int height, DWORD pixelFormatInFourCC)
+BOOL D3D9SpriteRender::InitRender(const RENDERCONFIG &config)
 {
 	HRESULT hr = S_OK;
 	RECT rect = { 0 };
 	D3DPRESENT_PARAMETERS d3dpp; //the presentation parameters that will be used when we will create the device
 	D3DDISPLAYMODE mode;
 
-	mhWnd = hWnd;
+	mConfig = config;
+	mhWnd = config.hWnd;
 
 	ZeroMemory(&d3dpp, sizeof(d3dpp)); //to be sure d3dpp is empty
 	d3dpp.Windowed = TRUE; //use our global windowed variable to tell if the program is windowed or not
 	d3dpp.hDeviceWindow = mhWnd; //give the window handle of the window we created above
 	d3dpp.BackBufferCount = 1; //set it to only use 1 back buffer
-	d3dpp.BackBufferWidth = width; //set the buffer to our window width
-	d3dpp.BackBufferHeight = height; //set the buffer to out window height
-	d3dpp.BackBufferFormat = GetD3D9PixelFmtByFourCC(pixelFormatInFourCC);
+	d3dpp.BackBufferWidth = config.width; //set the buffer to our window width
+	d3dpp.BackBufferHeight = config.height; //set the buffer to out window height
+	d3dpp.BackBufferFormat = GetD3D9PixelFmtByFourCC(config.pixelFormat);
 	d3dpp.SwapEffect = D3DSWAPEFFECT_FLIP; //SwapEffect
 	d3dpp.Flags |= D3DPRESENTFLAG_VIDEO;
 	d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE; // wait for VSync
@@ -130,18 +131,18 @@ BOOL D3D9SpriteRender::InitRender(HWND hWnd, int width, int height, DWORD pixelF
 			if (GetVPPFactoryObj(mVppFactory)) {
 				mVppFactory->CreateVPPObj(mVpp);
 			}
-			vppParams.srcWidth = width;
-			vppParams.srcHeight = height;
-			vppParams.srcPixelInFormatFourCC = pixelFormatInFourCC;
-			vppParams.dstWidth = width;
-			vppParams.dstHeight = height;
+			vppParams.srcWidth = config.width;
+			vppParams.srcHeight = config.height;
+			vppParams.srcPixelInFormatFourCC = config.pixelFormat;
+			vppParams.dstWidth = config.width;
+			vppParams.dstHeight = config.height;
 			vppParams.dstPixelInFormatFourCC = GetFourCCByD3D9PixelFmt(mode.Format);
 			vppParams.flags = SWS_POINT;
 			if (!mVpp->InitContext(vppParams)){
 				hr = E_FAIL;
 				goto done;
 			}
-			mVppTransSampleBuffer = AllocSampleBuffer(width, height, (CPPixelFormat)vppParams.dstPixelInFormatFourCC);
+			mVppTransSampleBuffer = AllocSampleBuffer(config.width, config.height, (CPPixelFormat)vppParams.dstPixelInFormatFourCC);
 			if (mVppTransSampleBuffer){
 				mbNeedVpp = TRUE;
 			}
@@ -164,21 +165,21 @@ BOOL D3D9SpriteRender::InitRender(HWND hWnd, int width, int height, DWORD pixelF
 	CHECK_HR(hr = mpD3D9OBj->CreateDeviceEx(D3DADAPTER_DEFAULT, mD3D9DeviceType, mhWnd, devBehaviorFlags, &d3dpp, FALSE, &mpD3D9Device));
 
 	if (mbSupportConversion)
-		d3dpp.BackBufferFormat = GetD3D9PixelFmtByFourCC(pixelFormatInFourCC);
+		d3dpp.BackBufferFormat = GetD3D9PixelFmtByFourCC(config.pixelFormat);
 
 	mSupportSurfaceType = SUPPORT_TEXTURE; /* texture */
-	if (FAILED(hr = mpD3D9Device->CreateTexture(width, height, 0, 0, d3dpp.BackBufferFormat, D3DPOOL_MANAGED, &mpD3D9Texture[0], NULL))){
-		if (FAILED(hr = mpD3D9Device->CreateOffscreenPlainSurface(width, height, d3dpp.BackBufferFormat, D3DPOOL_DEFAULT, &mpD3D9Surface[0], NULL))){
+	if (FAILED(hr = mpD3D9Device->CreateTexture(config.width, config.height, 0, 0, d3dpp.BackBufferFormat, D3DPOOL_MANAGED, &mpD3D9Texture[0], NULL))) {
+		if (FAILED(hr = mpD3D9Device->CreateOffscreenPlainSurface(config.width, config.height, d3dpp.BackBufferFormat, D3DPOOL_DEFAULT, &mpD3D9Surface[0], NULL))) {
 			goto done;
 		} else{
 			for (int i = 1; i < MAX_RENDER_OBJ; i++){
-				hr = mpD3D9Device->CreateOffscreenPlainSurface(width, height, d3dpp.BackBufferFormat, D3DPOOL_DEFAULT, &mpD3D9Surface[i], NULL);
+				hr = mpD3D9Device->CreateOffscreenPlainSurface(config.width, config.height, d3dpp.BackBufferFormat, D3DPOOL_DEFAULT, &mpD3D9Surface[i], NULL);
 			}
 			mSupportSurfaceType = SUPPORT_SURFACE; /* surface */
 		}
 	} else{
 		for (int i = 1; i < MAX_RENDER_OBJ; i++){
-			hr = mpD3D9Device->CreateTexture(width, height, 0, 0, d3dpp.BackBufferFormat, D3DPOOL_MANAGED, &mpD3D9Texture[i], NULL);
+			hr = mpD3D9Device->CreateTexture(config.width, config.height, 0, 0, d3dpp.BackBufferFormat, D3DPOOL_MANAGED, &mpD3D9Texture[i], NULL);
 		}
 	}
 
@@ -190,7 +191,7 @@ BOOL D3D9SpriteRender::InitRender(HWND hWnd, int width, int height, DWORD pixelF
 
 	CHECK_HR(hr = D3DXCreateSprite(mpD3D9Device, &mSprite));
 
-	SetupMatrices();
+	//SetupMatrices();
 	
 	mRenderEvent = CreateEvent(nullptr, FALSE, FALSE, TEXT("sprite Render Event"));
 	if (mRenderEvent == INVALID_HANDLE_VALUE){
@@ -264,7 +265,11 @@ BOOL D3D9SpriteRender::DrawStatus()
 		mRenderStatis.MinMaxSample(minRenderSample, maxRenderSample);
 		if ((hr = mpD3D9Device->BeginScene()) == D3D_OK ){
 			OSDText(NULL, &FontPos,
-				TEXT("In fps: %.2f, Out fps: %.2f Current: %d"),
+				TEXT("Frame: %dx%d, %.3f"),
+				mConfig.width, mConfig.height, mConfig.fps.num/mConfig.fps.den);
+
+			OSDText(NULL, &FontPos,
+				TEXT("FPS: In %.2f, Out %.2f, Current surface: %d"),
 				mInputStatis.Frequency(), mRenderStatis.Frequency(), mCurPushObjIndex);
 
 			OSDText(NULL, &FontPos,

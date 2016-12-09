@@ -14,7 +14,7 @@ public:
 	D3D9Render();
 	~D3D9Render();
 
-	BOOL InitRender(HWND , int , int , DWORD );
+	BOOL InitRender(const RENDERCONFIG &);
 	BOOL DeinitRender();
 	BOOL PushFrame(CSampleBuffer *);
 	BOOL Repaint() { return S_OK; };
@@ -38,7 +38,6 @@ private:
 	IDirect3DSurface9* mPrimerySurface;
 	IDirect3DSurface9* mpRenderTarget;
 	LPD3DXFONT mPFont;
-	IDirect3DTexture9* mPrimeryTexture[3]; /* for YUV */
 
 	HANDLE mRenderEvent;
 	BOOL mSupportVSync;

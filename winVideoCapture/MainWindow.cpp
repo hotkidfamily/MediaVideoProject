@@ -271,12 +271,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 						StopRenderWork(gContext);
 					}
 					else{
-						gContext->captureArgs.index = idx;
+						gContext->captureCfg.index = idx;
 						if (StartCaptureWork(gContext)){
 							CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_CHECKED);
 							RECT rect = { 0 };
 							GetWindowRect(gContext->hMainWnd, &rect);
-							MoveWindow(gContext->hMainWnd, rect.left, rect.top, gContext->captureArgs.width, gContext->captureArgs.height + 16, TRUE);
+							MoveWindow(gContext->hMainWnd, rect.left, rect.top, gContext->captureCfg.width, gContext->captureCfg.height + 16, TRUE);
 							StartRenderWork(gContext);
 							CreateWorkThread(gContext);
 						}

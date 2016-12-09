@@ -8,16 +8,35 @@
 
 #include "SampleBuffer.h"
 
+struct RENDERCONFIG
+{
+	RENDERCONFIG()
+	{
+		ZeroMemory(this, sizeof(struct RENDERCONFIG));
+	}
+
+	HWND hWnd; /* NULL£º full screen, else windowed */
+	int32_t width;
+	int32_t height;
+	DWORD pixelFormat;
+	BOOL bWaitVSync;
+	struct 
+	{
+		double num;
+		int32_t den;
+	}fps;
+};
+
 class IRender{
 protected:
 	~IRender(){};
 
 public:
 	virtual BOOL Repaint() = 0;
-	virtual BOOL InitRender(HWND, int32_t, int32_t, DWORD) = 0;
+	virtual BOOL InitRender(const RENDERCONFIG &) = 0;
 	virtual BOOL DeinitRender() = 0;
 
-	virtual BOOL PushFrame(CSampleBuffer *frame) = 0;
+	virtual BOOL PushFrame(CSampleBuffer *) = 0;
 	virtual const char *GetRenderDescriptor() const = 0;
 };
 

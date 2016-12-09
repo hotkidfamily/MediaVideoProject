@@ -15,7 +15,7 @@ public:
 
 public:
 	virtual BOOL Repaint() { return TRUE; }
-	virtual BOOL InitRender(HWND, int32_t, int32_t, DWORD);
+	virtual BOOL InitRender(const RENDERCONFIG &);
 	virtual BOOL DeinitRender();
 
 	virtual BOOL PushFrame(CSampleBuffer *);
@@ -41,6 +41,7 @@ private:
 	D3DDEVTYPE mD3D9DeviceType;
 	D3DCAPS9 mpD3D9DeviceCaps;
 	BOOL mbSupportConversion;
+	RENDERCONFIG mConfig;
 
 	enum SSurfaceType {
 		SUPPORT_TEXTURE,

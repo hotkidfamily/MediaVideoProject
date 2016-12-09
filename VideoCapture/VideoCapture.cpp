@@ -45,7 +45,7 @@ HRESULT IVideoCaptureDelegate::GetDeviceList(VECT &camNames)
 	return hr;
 }
 
-HRESULT IVideoCaptureDelegate::StartCaptureWithParam(OPEN_DEVICE_PARAM &param)
+HRESULT IVideoCaptureDelegate::StartCaptureWithParam(CAPTURECONFIG &param)
 {
 	HRESULT hr = S_OK;
 	hr = mDShowCapture->Start(param);

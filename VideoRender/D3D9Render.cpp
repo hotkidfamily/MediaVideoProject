@@ -20,9 +20,6 @@ D3D9Render::D3D9Render()
 	, mVpp(nullptr)
 	, mpRenderTarget(nullptr)
 {
-	mPrimeryTexture[0] = nullptr;
-	mPrimeryTexture[1] = nullptr;
-	mPrimeryTexture[2] = nullptr;
 }
 
 D3D9Render::~D3D9Render()
@@ -120,22 +117,22 @@ HRESULT D3D9Render::IfSupportedFormat(D3DDISPLAYMODE mode, D3DFORMAT pixelFormat
 	return hr;
 }
 
-BOOL D3D9Render::InitRender(HWND hWnd, int width, int height, DWORD pixelFormatInFourCC)
+BOOL D3D9Render::InitRender(const RENDERCONFIG& config)
 {
 	HRESULT hr = S_OK;
 	RECT rect = { 0 };
 	D3DPRESENT_PARAMETERS d3dpp; //the presentation parameters that will be used when we will create the device
 	D3DDISPLAYMODE mode;
 
-	mhWnd = hWnd;
+	mhWnd = config.hWnd;
 
 	ZeroMemory(&d3dpp, sizeof(d3dpp)); //to be sure d3dpp is empty
 	d3dpp.Windowed = TRUE; //use our global windowed variable to tell if the program is windowed or not
 	d3dpp.hDeviceWindow = mhWnd; //give the window handle of the window we created above
 	d3dpp.BackBufferCount = 3; //set it to only use 1 back buffer
-	d3dpp.BackBufferWidth = width; //set the buffer to our window width
-	d3dpp.BackBufferHeight = height; //set the buffer to out window height
-	d3dpp.BackBufferFormat = GetD3D9PixelFmtByFourCC(pixelFormatInFourCC);
+	d3dpp.BackBufferWidth = config.width; //set the buffer to our window width
+	d3dpp.BackBufferHeight = config.height; //set the buffer to out window height
+	d3dpp.BackBufferFormat = GetD3D9PixelFmtByFourCC(config.pixelFormat);
 	d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD; //SwapEffect
 	d3dpp.Flags |= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER | D3DPRESENTFLAG_VIDEO;
 	d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE; // wait for VSync
@@ -149,11 +146,11 @@ BOOL D3D9Render::InitRender(HWND hWnd, int width, int height, DWORD pixelFormatI
 		if (GetVPPFactoryObj(mVppFactory)) {
 			mVppFactory->CreateVPPObj(mVpp);
 		}
-		vppParams.srcWidth = width;
-		vppParams.srcHeight = height;
-		vppParams.srcPixelInFormatFourCC = pixelFormatInFourCC;
-		vppParams.dstWidth = width;
-		vppParams.dstHeight = height;
+		vppParams.srcWidth = config.width;
+		vppParams.srcHeight = config.height;
+		vppParams.srcPixelInFormatFourCC = config.pixelFormat;
+		vppParams.dstWidth = config.width;
+		vppParams.dstHeight = config.height;
 		vppParams.dstPixelInFormatFourCC = PIXEL_FORMAT_RGB32;
 		vppParams.flags = SWS_POINT;
 		if (!mVpp->InitContext(vppParams)){
@@ -177,17 +174,11 @@ BOOL D3D9Render::InitRender(HWND hWnd, int width, int height, DWORD pixelFormatI
 
 	CHECK_HR(hr = mpD3D9OBj->CreateDevice(D3DADAPTER_DEFAULT, mD3D9DeviceType, mhWnd, devBehaviorFlags, &d3dpp, &mpD3D9Device));
 
-	if (mbNeedConversion){
-		CHECK_HR(hr = mpD3D9Device->CreateTexture(width, height, 1, 0, D3DFMT_L8, D3DPOOL_MANAGED, &mPrimeryTexture[0], NULL));
-		CHECK_HR(hr = mpD3D9Device->CreateTexture(width / 2, height / 2, 1, 0, D3DFMT_L8, D3DPOOL_MANAGED, &mPrimeryTexture[1], NULL));
-		CHECK_HR(hr = mpD3D9Device->CreateTexture(width / 2, height / 2, 1, 0, D3DFMT_L8, D3DPOOL_MANAGED, &mPrimeryTexture[2], NULL));
-	}
-
 	CHECK_HR(hr = D3DXCreateFont(mpD3D9Device, 30, 0, FW_LIGHT, 1, TRUE, 
 		DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &mPFont));
 
-	CHECK_HR(hr = mpD3D9Device->CreateOffscreenPlainSurface(width, height, d3dpp.BackBufferFormat, D3DPOOL_SYSTEMMEM, &mPrimerySurface, nullptr));
-	CHECK_HR(hr = mpD3D9Device->CreateRenderTarget(width, height, mode.Format, d3dpp.MultiSampleType, d3dpp.MultiSampleQuality,
+	CHECK_HR(hr = mpD3D9Device->CreateOffscreenPlainSurface(config.width, config.height, d3dpp.BackBufferFormat, D3DPOOL_SYSTEMMEM, &mPrimerySurface, nullptr));
+	CHECK_HR(hr = mpD3D9Device->CreateRenderTarget(config.width, config.height, mode.Format, d3dpp.MultiSampleType, d3dpp.MultiSampleQuality,
 		TRUE, &mpRenderTarget, NULL));
 
 	// SetupMatrices();
@@ -238,9 +229,6 @@ BOOL D3D9Render::DeinitRender()
 	mVppFactory = nullptr;
 
 	SAFE_RELEASE(mPrimerySurface);
-	SAFE_RELEASE(mPrimeryTexture[0]);
-	SAFE_RELEASE(mPrimeryTexture[1]);
-	SAFE_RELEASE(mPrimeryTexture[2]);
 	SAFE_RELEASE(mPFont);
 	SAFE_RELEASE(mpD3D9Device);
 	SAFE_RELEASE(mpD3D9OBj);

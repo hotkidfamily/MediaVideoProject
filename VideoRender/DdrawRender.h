@@ -17,7 +17,7 @@ public:
 	DDrawRender(HWND);
 	~DDrawRender();
 
-	BOOL InitRender(HWND, int, int, DWORD);
+	BOOL InitRender(const RENDERCONFIG &);
 	BOOL DeinitRender();
 	BOOL Repaint() { return S_OK; };
 
