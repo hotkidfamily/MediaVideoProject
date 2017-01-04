@@ -46,19 +46,6 @@ DWORD WINAPI D3d9SpriteRenderThread(LPVOID args)
 	return pRender->RenderLoop();
 }
 
-void D3D9SpriteRender::SetupMatrices()
-{
-	// setup world matrix
-	D3DXMATRIX  matrixScale, matrixRotation, matrixTranslation, matrixWorld;
-
-	D3DXMatrixScaling(&matrixScale, 1.0f, 1.0f, 1.0f); // no scale
-	D3DXMatrixRotationZ(&matrixRotation, 0.0); // no z rotation
-	D3DXMatrixTranslation(&matrixTranslation, 0, 0, 0); // no translate
-	D3DXMatrixMultiply(&matrixWorld, &matrixScale, &matrixRotation);
-	D3DXMatrixMultiply(&matrixWorld, &matrixWorld, &matrixTranslation);
-	mSprite->SetTransform(&matrixWorld);
-}
-
 HRESULT D3D9SpriteRender::GetDeviceType(D3DDISPLAYMODE mode)
 {
 	HRESULT hr = S_OK;
@@ -191,8 +178,6 @@ BOOL D3D9SpriteRender::InitRender(const RENDERCONFIG &config)
 
 	CHECK_HR(hr = D3DXCreateSprite(mpD3D9Device, &mSprite));
 
-	//SetupMatrices();
-	
 	mRenderEvent = CreateEvent(nullptr, FALSE, FALSE, TEXT("sprite Render Event"));
 	if (mRenderEvent == INVALID_HANDLE_VALUE){
 		hr = E_FAIL;
@@ -277,7 +262,8 @@ BOOL D3D9SpriteRender::DrawStatus()
 				mCurPtsInterval, mInputStatis.AvgSampleSize(), minInputSample, maxInputSample);
 
 			OSDText(NULL, &FontPos,
-				TEXT("Render: %2d Avg:%2llu(%2d~%2d)"),
+				TEXT("Render(%s): %2d Avg:%2llu(%2d~%2d)"), 
+				(mSupportSurfaceType == SUPPORT_SURFACE) ? _T("SURFACE") : _T("TEXTTURE"),
 				mCurRenderInterval, mRenderStatis.AvgSampleSize(), minRenderSample, maxRenderSample);
 
 			mpD3D9Device->EndScene();
@@ -336,23 +322,20 @@ DWORD D3D9SpriteRender::RenderLoop()
 
 			if (mSupportSurfaceType == SUPPORT_TEXTURE){
 				pCurTexture = mpD3D9Texture[mCurRenderObjIndex];
-				if (SUCCEEDED(mpD3D9Device->BeginScene())){
-					if (SUCCEEDED(mSprite->Begin(D3DXSPRITE_ALPHABLEND))){
-						hr = mSprite->Draw(pCurTexture, NULL, NULL, &D3DXVECTOR3(0, 0, 0), 0XFFFFFFFF);
-						mSprite->End();
-					}
-					mpD3D9Device->EndScene();
+				if (!SUCCEEDED(pCurTexture->GetSurfaceLevel(0, &pCurSurface))) {
+					continue;
 				}
 			} else{
 				pCurSurface = mpD3D9Surface[mCurRenderObjIndex];
-				IDirect3DSurface9 *pBackBuffer = nullptr;
-				if (SUCCEEDED(mpD3D9Device->BeginScene())){
-					if (SUCCEEDED(mpD3D9Device->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer))){
-						mpD3D9Device->StretchRect(pCurSurface, NULL, pBackBuffer, NULL, D3DTEXF_NONE);
-						pBackBuffer->Release();
-					}
-					mpD3D9Device->EndScene();
+			}
+
+			IDirect3DSurface9 *pBackBuffer = nullptr;
+			if (SUCCEEDED(mpD3D9Device->BeginScene())) {
+				if (SUCCEEDED(mpD3D9Device->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer))) {
+					mpD3D9Device->StretchRect(pCurSurface, NULL, pBackBuffer, NULL, D3DTEXF_NONE);
+					pBackBuffer->Release();
 				}
+				mpD3D9Device->EndScene();
 			}
 
 			DrawStatus();
