@@ -152,7 +152,7 @@ BOOL D3D9Render::InitRender(const RENDERCONFIG& config)
 		vppParams.dstWidth = config.width;
 		vppParams.dstHeight = config.height;
 		vppParams.dstPixelInFormatFourCC = PIXEL_FORMAT_RGB32;
-		vppParams.flags = SWS_POINT;
+		vppParams.flags = 0x10;
 		if (!mVpp->InitContext(vppParams)){
 			hr = E_FAIL;
 			goto done;
@@ -356,7 +356,7 @@ BOOL D3D9Render::PushFrame(CSampleBuffer *frame)
 done:
 	GetD3D9ErrorString(hr);
 
-	return hr != DD_OK;
+	return hr != D3D_OK;
 }
 
 BOOL D3D9Render::OSDText(HDC, RECT rc, TCHAR *format, ...)

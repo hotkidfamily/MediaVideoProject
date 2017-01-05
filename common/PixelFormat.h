@@ -1,10 +1,6 @@
 #pragma once
 
-#include <dshow.h>
-#include <d3d9.h>
-extern "C" {
-#include "libswscale\swscale.h"
-}
+#include <stdint.h>
 
 // capture output format
 #undef FMT

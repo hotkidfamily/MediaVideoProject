@@ -18,5 +18,3 @@
 #include <tchar.h>
 
 #include "utils.h"
-
-#include "IVideoCapture.h"

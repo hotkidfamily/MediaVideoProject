@@ -4,8 +4,6 @@
 #include <assert.h>
 #include <fstream>
 
-#pragma comment(lib, "VideoCodec.lib")
-#pragma comment(lib, "VideoRender.lib")
 
 std::list<CSampleBuffer*> captureList;
 

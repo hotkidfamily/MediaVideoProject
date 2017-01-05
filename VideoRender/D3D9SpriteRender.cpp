@@ -3,6 +3,8 @@
 #include "RenderUtils.h"
 #include "logger.h"
 
+#include <timeapi.h>
+
 #define FONT_HEIGHT 30
 
 
@@ -124,7 +126,7 @@ BOOL D3D9SpriteRender::InitRender(const RENDERCONFIG &config)
 			vppParams.dstWidth = config.width;
 			vppParams.dstHeight = config.height;
 			vppParams.dstPixelInFormatFourCC = GetFourCCByD3D9PixelFmt(mode.Format);
-			vppParams.flags = SWS_POINT;
+			vppParams.flags = 0x10;
 			if (!mVpp->InitContext(vppParams)){
 				hr = E_FAIL;
 				goto done;
@@ -444,7 +446,7 @@ BOOL D3D9SpriteRender::PushFrame(CSampleBuffer *inframe)
 	if (FAILED(hr))
 		GetD3D9ErrorString(hr);
 
-	return hr != DD_OK;
+	return hr != D3D_OK;
 }
 
 BOOL D3D9SpriteRender::OSDText(HDC, RECT *rc, TCHAR *format, ...)

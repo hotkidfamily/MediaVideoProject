@@ -102,7 +102,7 @@ bool CLibx264::setConfig(const ENCODECCFG &config)
 		vppParams.dstWidth = config.width;
 		vppParams.dstHeight = config.height;
 		vppParams.dstPixelInFormatFourCC = config.pixelFormatInFourCC;
-		vppParams.flags = SWS_POINT;
+		vppParams.flags = 0x10/*SWS_POINT*/;
 	}
 
 	mCodecParams.b_annexb = 1;

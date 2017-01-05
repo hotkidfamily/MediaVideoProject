@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ivideocapture.h"
+
 class CVideoCallback :
 	public VideoCaptureCallback
 {
