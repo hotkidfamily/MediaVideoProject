@@ -674,7 +674,7 @@ void CMediaType::PrintGUID(GUID id)
 	const uint16_t *w = (const uint16_t *)&id.Data2;
 	const uint8_t  *c = (const uint8_t  *)&id.Data4;
 
-	internel_log(Info, "           \t0x%08x 0x%04x 0x%04x %02x%02x%02x%02x%02x%02x%02x%02x",
+	logger(Info, "           \t0x%08x 0x%04x 0x%04x %02x%02x%02x%02x%02x%02x%02x%02x",
 		d[0], w[0], w[1],
 		c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7]);
 }
@@ -706,7 +706,7 @@ CMediaType::PrintMessage(const char* format, ...)
 	vsprintf_s(buffer, 4096, format, vt);
 	va_end(vt);
 
-	internel_log(Info, "%s", buffer);
+	logger(Info, "%s", buffer);
 }
 
 // this also comes in useful when using the IEnumMediaTypes interface so

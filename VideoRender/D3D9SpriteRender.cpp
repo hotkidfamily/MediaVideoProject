@@ -311,7 +311,7 @@ DWORD D3D9SpriteRender::RenderLoop()
 				lastSurface = mCurPushObjIndex;
 			}
 
-			internel_log(Info, "render %d, push %d, %d \n", mCurRenderObjIndex, mCurPushObjIndex, step);
+			logger(Info, "render %d, push %d, %d \n", mCurRenderObjIndex, mCurPushObjIndex, step);
 
 			if (mSupportSurfaceType == SUPPORT_TEXTURE){
 				pCurTexture = mpD3D9Texture[mCurRenderObjIndex];
@@ -393,7 +393,7 @@ HRESULT D3D9SpriteRender::UpdateRenderSurface(CSampleBuffer *&frame)
 		}
 	}
 
-	//internel_log(Info, "push %d\n", mCurPushObjIndex);
+	//logger(Info, "push %d\n", mCurPushObjIndex);
 
 	mCurPushObjIndex = (mCurPushObjIndex + 1) % MAX_RENDER_OBJ;
 

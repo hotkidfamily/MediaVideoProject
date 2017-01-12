@@ -90,7 +90,7 @@ DShowVideoCapture::DShowVideoCapture()
 
 DShowVideoCapture::~DShowVideoCapture()
 {
-	internel_log(Info, "fps %f", mFpsStats.Frequency());
+	logger(Info, "fps %f", mFpsStats.Frequency());
 	ReleaseDShowInterfaces();
 }
 
@@ -99,7 +99,7 @@ void DShowVideoCapture::ShowDShowError(HRESULT hr)
 	if (FAILED(hr)){
 		_com_error err(hr);
 		LPCTSTR errMsg = err.ErrorMessage();
-		internel_log(Info, "dshow Error %s", errMsg);
+		logger(Info, "dshow Error %s", errMsg);
 	}
 }
 
@@ -188,7 +188,7 @@ HRESULT DShowVideoCapture::Stop()
 		long dropFrameCount = 0;
 		mDropFrameStatus->GetNumDropped(&dropFrameCount);
 		mDropFrameStatus->GetNumNotDropped(&capFrameCount);
-		internel_log(Info, "capture statistics: capture %ld, drop %ld",
+		logger(Info, "capture statistics: capture %ld, drop %ld",
 			dropFrameCount - mDropFrames, capFrameCount - mCapFrames);
 	}
 
