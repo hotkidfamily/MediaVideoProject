@@ -7,10 +7,11 @@
 #include <stdint.h>
 #include "PixelFormat.h"
 #include "utils.h"
+#include "RenderUtils.h"
 
 #include "SlidingWindowCalc.h"
 
-class DDrawRender :public IRender
+class DDrawRender :public IRender, public IRenderThread
 {
 public:
 	DDrawRender();
@@ -25,11 +26,10 @@ public:
 
 	const char *GetRenderDescriptor() const { return "Ddraw Render"; };
 
-	DWORD RenderLoop();
+	virtual DWORD RenderLoop();
 
 protected:
 	HRESULT CreateSurfaces(int, int, DWORD);
-	const TCHAR* GetErrorString(HRESULT );
 	void FillddPixelFormatFromFourCC(LPDDPIXELFORMAT ddPixelFormat, DWORD dwFourCC);
 	BOOL OSDText(HDC, char *, ...);
 

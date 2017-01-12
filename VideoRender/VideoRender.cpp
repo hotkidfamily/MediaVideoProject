@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "VideoRender.h"
 #include "DdrawRender.h"
-#include "D3D9Render.h"
 #include "D3D9SpriteRender.h"
 
 IRenderFactoryImpl::IRenderFactoryImpl()

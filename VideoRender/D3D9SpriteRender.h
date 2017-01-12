@@ -4,10 +4,11 @@
 #include <d3d9.h>
 #include <d3dx9.h>
 #include "SlidingWindowCalc.h"
+#include "RenderUtils.h"
 
 #define MAX_RENDER_OBJ (5)
 
-class D3D9SpriteRender : public IRender
+class D3D9SpriteRender : public IRender, public IRenderThread
 {
 public:
 	D3D9SpriteRender();
@@ -20,7 +21,8 @@ public:
 
 	virtual BOOL PushFrame(CSampleBuffer *);
 	virtual const char *GetRenderDescriptor() const { return "D3D9 sprite render"; };
-	DWORD RenderLoop();
+
+	virtual DWORD RenderLoop();
 
 protected:
 	void SetupMatrices();

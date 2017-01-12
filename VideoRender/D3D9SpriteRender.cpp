@@ -41,13 +41,6 @@ D3D9SpriteRender::~D3D9SpriteRender()
 {
 }
 
-
-DWORD WINAPI D3d9SpriteRenderThread(LPVOID args)
-{
-	D3D9SpriteRender *pRender = (D3D9SpriteRender*)args;
-	return pRender->RenderLoop();
-}
-
 HRESULT D3D9SpriteRender::GetDeviceType(D3DDISPLAYMODE mode)
 {
 	HRESULT hr = S_OK;
@@ -179,7 +172,7 @@ BOOL D3D9SpriteRender::InitRender(const RENDERCONFIG &config)
 		DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &mPFont));
 
 	CHECK_HR(hr = D3DXCreateSprite(mpD3D9Device, &mSprite));
-
+	
 	mRenderEvent = CreateEvent(nullptr, FALSE, FALSE, TEXT("sprite Render Event"));
 	if (mRenderEvent == INVALID_HANDLE_VALUE){
 		hr = E_FAIL;
@@ -187,7 +180,7 @@ BOOL D3D9SpriteRender::InitRender(const RENDERCONFIG &config)
 	}
 
 	mRenderThreadRuning = TRUE;
-	mRenderThreadHandle = CreateThread(nullptr, 0, D3d9SpriteRenderThread, this, NULL, &mRenderThreadId);
+	mRenderThreadHandle = CreateThread(nullptr, 0, RenderThread, this, NULL, &mRenderThreadId);
 
 done:
 	if (FAILED(hr)){
@@ -416,7 +409,7 @@ BOOL D3D9SpriteRender::UpdatePushStatis(CSampleBuffer *&frame)
 	frame->GetPts(ptss, ptse);
 	if (mLastPts){
 		mCurPtsInterval = ptss - mLastPts;
-		mInputStatis.AppendSample(mCurPtsInterval);
+		mInputStatis.AppendSample((int32_t)mCurPtsInterval);
 	}
 	mLastPts = ptss;
 
