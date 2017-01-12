@@ -1,5 +1,4 @@
 #include "stdafx.h"
-#include <windows.h>
 #include "PixelFormat.h"
 #include "SampleBuffer.h"
 #include "utils.h"

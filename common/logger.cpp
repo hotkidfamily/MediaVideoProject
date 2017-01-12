@@ -1,7 +1,5 @@
 #include "StdAfx.h"
 #include "logger.h"
-#include <stdio.h>
-#include <stdlib.h>
 
 static PLOG_CALLBACK_FUNC gLogCallback = nullptr;
 
@@ -10,7 +8,7 @@ void SetLogCallback( PLOG_CALLBACK_FUNC pCallbackFunction )
 	gLogCallback = pCallbackFunction;
 }
 
-void internel_log( int level, const char *fmt, ... )
+void logger( int level, const char *fmt, ... )
 {
 	va_list vl;
 	va_start(vl, fmt);

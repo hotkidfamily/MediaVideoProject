@@ -12,4 +12,4 @@ enum LogLevel
 
 typedef void(*PLOG_CALLBACK_FUNC)(int, const char* format, va_list);
 
-void internel_log( int level, const char *fmt, ... );
+void logger( int level, const char *fmt, ... );

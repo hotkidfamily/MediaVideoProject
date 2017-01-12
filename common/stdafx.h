@@ -11,5 +11,7 @@
 // Windows м╥нд╪Ч: 
 #include <windows.h>
 
-
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 

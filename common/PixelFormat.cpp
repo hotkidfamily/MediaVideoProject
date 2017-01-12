@@ -1,6 +1,4 @@
 #include "stdafx.h"
-#include <stdint.h>
-#include <dshow.h>
 #include "PixelFormat.h"
 
 const PIXELFORAMTDESC pixelFormatDescTable[] = {
