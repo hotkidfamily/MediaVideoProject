@@ -1,9 +1,6 @@
 #pragma once
 
-#include <list>
 #include "SampleBuffer.h"
-#include "utils.h"
-#include "AutoLock.h"
 
 enum resList{
 	RES320P,

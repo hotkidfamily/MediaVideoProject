@@ -1,8 +1,6 @@
 #include "stdafx.h"
 #include "IVPP.h"
 #include "VppUtils.h"
-#include "PixelFormat.h"
-#include <ddraw.h>
 
 typedef struct tagPixelFormatFFmpegFourCC{
 	DWORD pfFourCC;

@@ -1,15 +1,4 @@
 #pragma once
-#include "IRender.h"
-
-#include "SampleBuffer.h"
-#include <timeApi.h>
-#include <ddraw.h>
-#include <stdint.h>
-#include "PixelFormat.h"
-#include "utils.h"
-#include "RenderUtils.h"
-
-#include "SlidingWindowCalc.h"
 
 class DDrawRender :public IRender, public IRenderThread
 {
@@ -20,7 +9,6 @@ public:
 
 	BOOL InitRender(const RENDERCONFIG &);
 	BOOL DeinitRender();
-	BOOL Repaint() { return S_OK; };
 
 	BOOL PushFrame(CSampleBuffer *);
 

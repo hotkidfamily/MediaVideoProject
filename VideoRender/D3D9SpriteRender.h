@@ -1,11 +1,5 @@
 #pragma once
 
-#include "IRender.h"
-#include <d3d9.h>
-#include <d3dx9.h>
-#include "SlidingWindowCalc.h"
-#include "RenderUtils.h"
-
 #define MAX_RENDER_OBJ (5)
 
 class D3D9SpriteRender : public IRender, public IRenderThread
@@ -14,8 +8,6 @@ public:
 	D3D9SpriteRender();
 	~D3D9SpriteRender();
 
-public:
-	virtual BOOL Repaint() { return TRUE; }
 	virtual BOOL InitRender(const RENDERCONFIG &);
 	virtual BOOL DeinitRender();
 

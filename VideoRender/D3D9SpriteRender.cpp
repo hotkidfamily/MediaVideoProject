@@ -1,12 +1,7 @@
 #include "stdafx.h"
 #include "D3D9SpriteRender.h"
-#include "RenderUtils.h"
-#include "logger.h"
-
-#include <timeapi.h>
 
 #define FONT_HEIGHT 30
-
 
 D3D9SpriteRender::D3D9SpriteRender()
 	: mhWnd(nullptr)
@@ -113,6 +108,9 @@ BOOL D3D9SpriteRender::InitRender(const RENDERCONFIG &config)
 			if (GetVPPFactoryObj(mVppFactory)) {
 				mVppFactory->CreateVPPObj(mVpp);
 			}
+			if (!mVppFactory || !mVpp){
+				goto done;
+			}
 			vppParams.srcWidth = config.width;
 			vppParams.srcHeight = config.height;
 			vppParams.srcPixelInFormatFourCC = config.pixelFormat;
@@ -180,7 +178,7 @@ BOOL D3D9SpriteRender::InitRender(const RENDERCONFIG &config)
 	}
 
 	mRenderThreadRuning = TRUE;
-	mRenderThreadHandle = CreateThread(nullptr, 0, RenderThread, this, NULL, &mRenderThreadId);
+	mRenderThreadHandle = CreateThread(NULL, 0, CreateRenderThread, (IRenderThread*)this, NULL, &mRenderThreadId);
 
 done:
 	if (FAILED(hr)){
@@ -209,10 +207,10 @@ BOOL D3D9SpriteRender::DeinitRender()
 		mVpp->DeinitContext();
 		mVppFactory->DestoryVPPObj(mVpp);
 		mVpp = nullptr;
-	}
 
-	ReleaseVPPFactoryObj(mVppFactory);
-	mVppFactory = nullptr;
+		ReleaseVPPFactoryObj(mVppFactory);
+		mVppFactory = nullptr;
+	}
 
 	if (mVppTransSampleBuffer){
 		DeallocSampleBuffer(mVppTransSampleBuffer);

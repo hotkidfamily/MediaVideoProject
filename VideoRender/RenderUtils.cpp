@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "RenderUtils.h"
+#include "iRenderCommon.h"
 #include <d3d9.h>
 #include <ddraw.h>
 
@@ -235,7 +236,7 @@ DWORD GetFourCCByD3D9PixelFmt(D3DFORMAT format)
 	return fourCC;
 }
 
-DWORD WINAPI RenderThread(LPVOID args)
+DWORD WINAPI CreateRenderThread(void* args)
 {
 	IRenderThread *pRender = (IRenderThread*)args;
 	return pRender->RenderLoop();

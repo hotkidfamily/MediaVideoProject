@@ -1,5 +1,4 @@
 #include "stdafx.h"
-#include <stdint.h>
 #include <ddraw.h>
 extern "C" {
 #include "x264.h"

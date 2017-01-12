@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "ddrawRender.h"
-#include <stdlib.h>
 
 #pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "ddraw.lib")
@@ -169,7 +168,7 @@ BOOL DDrawRender::InitRender(const RENDERCONFIG &config)
 
 	mSupportVSync = FALSE;
 	mRenderThreadRuning = TRUE;
-	mRenderThreadHandle = CreateThread(NULL, 0, RenderThread, this, NULL, &mRenderThreadId);
+	mRenderThreadHandle = CreateThread(NULL, 0, CreateRenderThread, (IRenderThread*)this, NULL, &mRenderThreadId);
 
 	if ((hr = mDDrawObj->WaitForVerticalBlank(DDWAITVB_BLOCKBEGINEVENT, mRenderEvent)) == DD_OK){
 		mSupportVSync = TRUE;

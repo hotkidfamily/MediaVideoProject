@@ -32,7 +32,6 @@ protected:
 	~IRender(){};
 
 public:
-	virtual BOOL Repaint() = 0;
 	virtual BOOL InitRender(const RENDERCONFIG &) = 0;
 	virtual BOOL DeinitRender() = 0;
 
