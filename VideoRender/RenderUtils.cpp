@@ -171,7 +171,7 @@ const COMERROR d3d9ErrorList[] = {
 	COMERROR2STR(D3DERR_PRESENT_STATISTICS_DISJOINT)
 };
 
-PFDF PFDFTable[] = {
+PFDF PixelAndD3d9FmtTable[] = {
 		{ PIXEL_FORMAT_RGB24, D3DFMT_R8G8B8 },
 		{ PIXEL_FORMAT_RGB32, D3DFMT_X8R8G8B8 },
 		{ PIXEL_FORMAT_ARGB, D3DFMT_A8R8G8B8 },
@@ -217,9 +217,9 @@ const TCHAR* GetDDrawErrorString(HRESULT hr)
 D3DFORMAT GetD3D9PixelFmtByFourCC(DWORD pfFourCC)
 {
 	D3DFORMAT fp = D3DFMT_UNKNOWN;
-	for (int i = 0; i < ARRAYSIZE(PFDFTable); i++){
-		if (PFDFTable[i].pfFourCC == pfFourCC){
-			fp = PFDFTable[i].d3d9Format;
+	for (int i = 0; i < ARRAYSIZE(PixelAndD3d9FmtTable); i++){
+		if (PixelAndD3d9FmtTable[i].pfFourCC == pfFourCC){
+			fp = PixelAndD3d9FmtTable[i].d3d9Format;
 		}
 	}
 	return fp;
@@ -228,9 +228,9 @@ D3DFORMAT GetD3D9PixelFmtByFourCC(DWORD pfFourCC)
 DWORD GetFourCCByD3D9PixelFmt(D3DFORMAT format)
 {
 	DWORD fourCC = 0;
-	for (int i = 0; i < ARRAYSIZE(PFDFTable); i++){
-		if (PFDFTable[i].d3d9Format == format){
-			fourCC = PFDFTable[i].pfFourCC;
+	for (int i = 0; i < ARRAYSIZE(PixelAndD3d9FmtTable); i++){
+		if (PixelAndD3d9FmtTable[i].d3d9Format == format){
+			fourCC = PixelAndD3d9FmtTable[i].pfFourCC;
 		}
 	}
 	return fourCC;

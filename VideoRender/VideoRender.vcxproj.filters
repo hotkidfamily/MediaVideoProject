@@ -39,10 +39,10 @@
     <ClInclude Include="D3D9SpriteRender.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="SyncClock.h">
+    <ClInclude Include="iRenderCommon.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="iRenderCommon.h">
+    <ClInclude Include="SyncRender.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -65,7 +65,7 @@
     <ClCompile Include="D3D9SpriteRender.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="SyncClock.cpp">
+    <ClCompile Include="SyncRender.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

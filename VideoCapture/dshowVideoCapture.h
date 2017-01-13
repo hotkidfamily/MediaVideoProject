@@ -10,7 +10,7 @@
 #include "SlidingWindowCalc.h"
 #include "IVideoCapture.h"
 #include "SampleBufferManager.h"
-
+#include "Clock.h"
 
 typedef struct tagCameraDevDesc{
 	int32_t index;
@@ -76,6 +76,9 @@ private:
 	HRESULT GetFilterFriendlyName(IBaseFilter * &filter, STRING name);
 
 private:
+
+	CClock mBaseClock;
+
 	DWORD mGraphRegisterHandler;
 	IGraphBuilder *mGraph;
 	ICaptureGraphBuilder2 *mGraphBuiler;

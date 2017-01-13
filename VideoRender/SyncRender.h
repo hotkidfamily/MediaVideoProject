@@ -1,10 +1,10 @@
 #pragma once
 
-class CSyncClock
+class CSyncRender
 {
 public:
-	CSyncClock();
-	~CSyncClock();
+	CSyncRender();
+	~CSyncRender();
 
 private:
 	//render 

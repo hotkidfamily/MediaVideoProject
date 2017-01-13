@@ -201,6 +201,7 @@ HRESULT DShowVideoCapture::Stop()
 	return S_OK;
 }
 
+// persent time is in ms, need convert to 100ns
 HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 {
 	FRAME_DESC desc;
@@ -214,10 +215,10 @@ HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 
 	hr = pSample->GetTime(&desc.ptsStart, &desc.ptsEnd);
 	if (FAILED(hr) || (desc.ptsStart == 0)){
-		desc.ptsStart = timeGetTime(); // convert to 100ns
+		desc.ptsStart = mBaseClock.GetCurrentTimeInMs(); 
 		desc.ptsEnd = desc.ptsStart + FramesPerSecToRefTime(mWorkParams.fps) / 10000;
 	}else{
-		desc.ptsStart = timeGetTime(); // convert to 100ns
+		desc.ptsStart = mBaseClock.GetCurrentTimeInMs(); 
 		if (hr == VFW_S_NO_STOP_TIME)
 			desc.ptsEnd = desc.ptsStart + FramesPerSecToRefTime(mWorkParams.fps) / 10000;
 	}
