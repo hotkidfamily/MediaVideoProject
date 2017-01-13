@@ -183,7 +183,7 @@ BOOL D3D9SpriteRender::InitRender(const RENDERCONFIG &config)
 done:
 	if (FAILED(hr)){
 		DeinitRender();
-		GetD3D9ErrorString(hr);
+		logger(Error, "%s", DXGetErrorStringA(hr));
 	}
 
 	return hr == S_OK;
@@ -334,7 +334,7 @@ DWORD D3D9SpriteRender::RenderLoop()
 			DrawStatus();
 
 			if ((hr = mpD3D9Device->Present(nullptr, nullptr, nullptr, nullptr)) != D3D_OK){
-			//	GetD3D9ErrorString(hr);
+				logger(Error, "%s", DXGetErrorStringA(hr));
 			}
 		} else if ( dwRet == WAIT_TIMEOUT ){
 			continue;
@@ -435,7 +435,7 @@ BOOL D3D9SpriteRender::PushFrame(CSampleBuffer *inframe)
 	SetEvent(mRenderEvent);
 
 	if (FAILED(hr))
-		GetD3D9ErrorString(hr);
+		logger(Error, "%s", DXGetErrorStringA(hr));
 
 	return hr != D3D_OK;
 }
@@ -455,7 +455,7 @@ BOOL D3D9SpriteRender::OSDText(HDC, RECT *rc, TCHAR *format, ...)
 	hr = mPFont->DrawText(nullptr, buf, -1, rc, DT_LEFT | DT_TOP, D3DCOLOR_ARGB(255, 0, 255, 0));
 
 	if (FAILED(hr))
-		GetD3D9ErrorString(hr);
+		logger(Error, "%s", DXGetErrorStringA(hr));
 
 	rc->top += FONT_HEIGHT;
 

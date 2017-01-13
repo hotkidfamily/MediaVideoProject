@@ -119,7 +119,7 @@ HRESULT DDrawRender::CreateSurfaces(int width, int height, DWORD pixelFormatInFo
 	mCanvasBpp = ddsd.ddpfPixelFormat.dwRGBBitCount;
 
 done:
-	GetDDrawErrorString(hr);
+	logger(Error, "%s", DXGetErrorStringA(hr));
 	return hr;
 }
 
@@ -175,7 +175,7 @@ BOOL DDrawRender::InitRender(const RENDERCONFIG &config)
 	}
 
 done:
-	GetDDrawErrorString(hr);
+	logger(Error, "%s", DXGetErrorStringA(hr));
 	return hr != DD_OK;
 }
 
@@ -301,7 +301,9 @@ BOOL DDrawRender::PushFrame(CSampleBuffer *frame)
 	mLastPts = ptss;
 	
 done:
-	GetDDrawErrorString(hr);
+	if (FAILED(hr))
+		logger(Error, "%s", DXGetErrorStringA(hr));
+
 	return hr != DD_OK;
 }
 
