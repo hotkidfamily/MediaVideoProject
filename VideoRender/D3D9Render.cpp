@@ -1,9 +1,9 @@
 #include "stdafx.h"
-#include "D3D9SpriteRender.h"
+#include "D3D9Render.h"
 
 #define FONT_HEIGHT 30
 
-D3D9SpriteRender::D3D9SpriteRender()
+D3D9Render::D3D9Render()
 	: mhWnd(nullptr)
 	, mpD3D9OBj(nullptr)
 	, mpD3D9Device(nullptr)
@@ -32,11 +32,11 @@ D3D9SpriteRender::D3D9SpriteRender()
 	ZeroMemory(mpD3D9Surface, sizeof(mpD3D9Surface));
 }
 
-D3D9SpriteRender::~D3D9SpriteRender()
+D3D9Render::~D3D9Render()
 {
 }
 
-HRESULT D3D9SpriteRender::GetDeviceType(D3DDISPLAYMODE mode)
+HRESULT D3D9Render::GetDeviceType(D3DDISPLAYMODE mode)
 {
 	HRESULT hr = S_OK;
 
@@ -50,7 +50,7 @@ HRESULT D3D9SpriteRender::GetDeviceType(D3DDISPLAYMODE mode)
 	return hr;
 }
 
-BOOL D3D9SpriteRender::IfSupportedConversionFormat(D3DDISPLAYMODE mode, D3DFORMAT pixelFormat)
+BOOL D3D9Render::IfSupportedConversionFormat(D3DDISPLAYMODE mode, D3DFORMAT pixelFormat)
 {
 	HRESULT hr = E_FAIL;
 	mD3D9DeviceType = D3DDEVTYPE_HAL;
@@ -63,7 +63,7 @@ BOOL D3D9SpriteRender::IfSupportedConversionFormat(D3DDISPLAYMODE mode, D3DFORMA
 	return hr == S_OK;
 }
 
-HRESULT D3D9SpriteRender::IfSupportedFormat(D3DDISPLAYMODE mode, D3DFORMAT pixelFormat)
+HRESULT D3D9Render::IfSupportedFormat(D3DDISPLAYMODE mode, D3DFORMAT pixelFormat)
 {
 	HRESULT hr = S_OK;
 
@@ -77,7 +77,7 @@ HRESULT D3D9SpriteRender::IfSupportedFormat(D3DDISPLAYMODE mode, D3DFORMAT pixel
 	return hr == S_OK;
 }
 
-BOOL D3D9SpriteRender::InitRender(const RENDERCONFIG &config)
+BOOL D3D9Render::InitRender(const RENDERCONFIG &config)
 {
 	HRESULT hr = S_OK;
 	RECT rect = { 0 };
@@ -189,7 +189,7 @@ done:
 	return hr == S_OK;
 }
 
-BOOL D3D9SpriteRender::DeinitRender()
+BOOL D3D9Render::DeinitRender()
 {
 	mRenderThreadRuning = FALSE;
 	if (mRenderThreadHandle != INVALID_HANDLE_VALUE){
@@ -230,7 +230,7 @@ BOOL D3D9SpriteRender::DeinitRender()
 	return TRUE;
 }
 
-BOOL D3D9SpriteRender::DrawStatus()
+BOOL D3D9Render::DrawStatus()
 {
 	RECT FontPos;
 	HRESULT hr = S_OK;
@@ -266,7 +266,7 @@ BOOL D3D9SpriteRender::DrawStatus()
 	return TRUE;
 }
 
-BOOL D3D9SpriteRender::UpdateRenderStatis()
+BOOL D3D9Render::UpdateRenderStatis()
 {
 	DWORD renderBefore = timeGetTime();
 
@@ -280,7 +280,7 @@ BOOL D3D9SpriteRender::UpdateRenderStatis()
 	return FALSE;
 }
 
-DWORD D3D9SpriteRender::RenderLoop()
+DWORD D3D9Render::RenderLoop()
 {
 	HRESULT hr = S_OK;
 	DWORD dwRet = WAIT_OBJECT_0;
@@ -346,7 +346,7 @@ DWORD D3D9SpriteRender::RenderLoop()
 	return 0;
 }
 
-HRESULT D3D9SpriteRender::UpdateRenderSurface(CSampleBuffer *&frame)
+HRESULT D3D9Render::UpdateRenderSurface(CSampleBuffer *&frame)
 {
 	HRESULT hr = E_FAIL;
 	uint8_t *dstDataPtr = nullptr;
@@ -400,7 +400,7 @@ HRESULT D3D9SpriteRender::UpdateRenderSurface(CSampleBuffer *&frame)
 	return hr;
 };
 
-BOOL D3D9SpriteRender::UpdatePushStatis(CSampleBuffer *&frame)
+BOOL D3D9Render::UpdatePushStatis(CSampleBuffer *&frame)
 {
 	int64_t ptss = 0, ptse = 0;
 
@@ -414,7 +414,7 @@ BOOL D3D9SpriteRender::UpdatePushStatis(CSampleBuffer *&frame)
 	return TRUE;
 }
 
-BOOL D3D9SpriteRender::PushFrame(CSampleBuffer *inframe)
+BOOL D3D9Render::PushFrame(CSampleBuffer *inframe)
 {
 	HRESULT hr = E_FAIL;
 	CSampleBuffer *frame = inframe;
@@ -440,7 +440,7 @@ BOOL D3D9SpriteRender::PushFrame(CSampleBuffer *inframe)
 	return hr != D3D_OK;
 }
 
-BOOL D3D9SpriteRender::OSDText(HDC, RECT *rc, TCHAR *format, ...)
+BOOL D3D9Render::OSDText(HDC, RECT *rc, TCHAR *format, ...)
 {
 	HRESULT hr = S_OK;
 	TCHAR buf[1024] = { TEXT('\0') };

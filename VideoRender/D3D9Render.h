@@ -2,11 +2,11 @@
 
 #define MAX_RENDER_OBJ (5)
 
-class D3D9SpriteRender : public IRender, public IRenderThread
+class D3D9Render : public IRender, public IRenderThread
 {
 public:
-	D3D9SpriteRender();
-	~D3D9SpriteRender();
+	D3D9Render();
+	~D3D9Render();
 
 	virtual BOOL InitRender(const RENDERCONFIG &);
 	virtual BOOL DeinitRender();
