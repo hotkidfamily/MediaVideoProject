@@ -84,6 +84,7 @@ DShowVideoCapture::DShowVideoCapture()
 	, mVideoGrabber(nullptr)
 	, mcb(nullptr)
 	, mGraphRegisterHandler(0)
+	, mbMapTimeToLocal(FALSE)
 {
 	
 }
@@ -201,7 +202,7 @@ HRESULT DShowVideoCapture::Stop()
 	return S_OK;
 }
 
-// persent time is in ms, need convert to 100ns
+// present time is in ms, need convert to 100ns
 HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 {
 	FRAME_DESC desc;
@@ -214,13 +215,18 @@ HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 	hr = pSample->GetMediaTime(&desc.frameStartIdx, &desc.frameEndIdx);
 
 	hr = pSample->GetTime(&desc.ptsStart, &desc.ptsEnd);
-	if (FAILED(hr) || (desc.ptsStart == 0)){
-		desc.ptsStart = mBaseClock.GetCurrentTimeInMs(); 
-		desc.ptsEnd = desc.ptsStart + FramesPerSecToRefTime(mWorkParams.fps) / 10000;
+	if (FAILED(hr)){
+		desc.ptsStart = mBaseClock.GetCurrentTimeIn100ns(); 
+		desc.ptsEnd = desc.ptsStart + FramesPerSecToRefTime(mWorkParams.fps);
 	}else{
-		desc.ptsStart = mBaseClock.GetCurrentTimeInMs(); 
+		if (!mbMapTimeToLocal){
+			// map pts to system clock in ms
+			mBaseClock.ResetBaseTime(desc.ptsStart);
+			mbMapTimeToLocal = TRUE;
+		}
+		desc.ptsStart = mBaseClock.GetCurrentTimeIn100ns(); 
 		if (hr == VFW_S_NO_STOP_TIME)
-			desc.ptsEnd = desc.ptsStart + FramesPerSecToRefTime(mWorkParams.fps) / 10000;
+			desc.ptsEnd = desc.ptsStart + FramesPerSecToRefTime(mWorkParams.fps);
 	}
 
 	desc.width = mWorkParams.width;

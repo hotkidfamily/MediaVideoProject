@@ -15,10 +15,13 @@ public:
 	CClock();
 	~CClock();
 
+	BOOL ResetBaseTime(LONGLONG);
 	LONGLONG GetCurrentTimeInMs();
 	LONGLONG GetCurrentTimeIn100ns();
 
 private:
 	LONGLONG m_llPerfFrequency;
+	LONGLONG m_baseRefTimeIn100ns;
+	LONGLONG m_baseRefTimeDiff;
 };
 

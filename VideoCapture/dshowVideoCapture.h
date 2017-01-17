@@ -17,8 +17,6 @@ typedef struct tagCameraDevDesc{
 	STRING name;
 	STRING path;
 
-	tagCameraDevDesc(){}
-
 	tagCameraDevDesc(VARIANT name, VARIANT path, int32_t index=0){
 		_bstr_t bName(name);
 		_bstr_t bPath(path);
@@ -77,6 +75,7 @@ private:
 
 private:
 
+	BOOL mbMapTimeToLocal;
 	CClock mBaseClock;
 
 	DWORD mGraphRegisterHandler;
