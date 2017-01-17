@@ -37,10 +37,10 @@ typedef struct tagCameraDevDesc{
 		this->index = index;
 	}
 
-	// true: equal
+	// true: equal, path maybe empty
 	bool operator ==(const struct tagCameraDevDesc &desc){
-		return !( (this->name.compare(desc.name))
-					&& (this->path.compare(desc.path)) );
+		return ( !(this->name.compare(desc.name))
+					&& !(this->path.compare(desc.path)) );
 	}
 }CAMERADESC;
 
