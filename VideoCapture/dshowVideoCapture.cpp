@@ -202,7 +202,6 @@ HRESULT DShowVideoCapture::Stop()
 	return S_OK;
 }
 
-// present time is in ms, need convert to 100ns
 HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 {
 	FRAME_DESC desc;
@@ -220,7 +219,7 @@ HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 		desc.ptsEnd = desc.ptsStart + FramesPerSecToRefTime(mWorkParams.fps);
 	}else{
 		if (!mbMapTimeToLocal){
-			// map pts to system clock in ms
+			// map pts to system clock, so that can easy map to millisecond
 			mBaseClock.ResetBaseTime(desc.ptsStart);
 			mbMapTimeToLocal = TRUE;
 		}
