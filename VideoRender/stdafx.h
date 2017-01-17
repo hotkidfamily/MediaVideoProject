@@ -24,7 +24,6 @@
 #include "utils.h"
 #include "logger.h"
 #include "SlidingWindowCalc.h"
-#include "SampleBuffer.h"
 
 #include "IVPP.h"
 

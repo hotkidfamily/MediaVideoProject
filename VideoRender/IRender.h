@@ -10,8 +10,7 @@
 
 struct RENDERCONFIG
 {
-	RENDERCONFIG()
-	{
+	RENDERCONFIG(){
 		ZeroMemory(this, sizeof(struct RENDERCONFIG));
 	}
 

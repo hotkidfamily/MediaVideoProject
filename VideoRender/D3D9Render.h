@@ -30,6 +30,8 @@ protected:
 private:
 	HWND mhWnd;
 
+	TCHAR *m_backModeDesc;
+	TCHAR *m_mainModeDesc;
 	IDirect3D9Ex* mpD3D9OBj;
 	IDirect3DDevice9Ex* mpD3D9Device;
 	D3DDEVTYPE mD3D9DeviceType;

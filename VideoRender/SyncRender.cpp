@@ -10,3 +10,14 @@ CSyncRender::CSyncRender()
 CSyncRender::~CSyncRender()
 {
 }
+
+BOOL CSyncRender::PushFrame()
+{
+
+	return TRUE;
+}
+
+BOOL CSyncRender::GetFrame()
+{
+	return TRUE;
+}

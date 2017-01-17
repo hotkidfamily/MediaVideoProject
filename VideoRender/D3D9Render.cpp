@@ -27,6 +27,9 @@ D3D9Render::D3D9Render()
 	, mCurPtsInterval(0)
 	, mLastRender(0)
 	, mLastPts(0)
+
+	, m_mainModeDesc(NULL)
+	, m_backModeDesc(NULL)
 {
 	ZeroMemory(mpD3D9Texture, sizeof(mpD3D9Texture));
 	ZeroMemory(mpD3D9Surface, sizeof(mpD3D9Surface));
@@ -81,8 +84,8 @@ BOOL D3D9Render::InitRender(const RENDERCONFIG &config)
 {
 	HRESULT hr = S_OK;
 	RECT rect = { 0 };
-	D3DPRESENT_PARAMETERS d3dpp; //the presentation parameters that will be used when we will create the device
 	D3DDISPLAYMODE mode;
+	D3DPRESENT_PARAMETERS d3dpp; //the presentation parameters that will be used when we will create the device
 
 	mConfig = config;
 	mhWnd = config.hWnd;
@@ -177,6 +180,9 @@ BOOL D3D9Render::InitRender(const RENDERCONFIG &config)
 		goto done;
 	}
 
+	m_backModeDesc = GetD3D9PixelFmtDescByFourCC(config.pixelFormat);
+	m_mainModeDesc = GetD3D9PixelFmtDescByD3D9Fmt(mode.Format);
+
 	mRenderThreadRuning = TRUE;
 	mRenderThreadHandle = CreateThread(NULL, 0, CreateRenderThread, (IRenderThread*)this, NULL, &mRenderThreadId);
 
@@ -207,7 +213,9 @@ BOOL D3D9Render::DeinitRender()
 		mVpp->DeinitContext();
 		mVppFactory->DestoryVPPObj(mVpp);
 		mVpp = nullptr;
+	}
 
+	if (mVppFactory){
 		ReleaseVPPFactoryObj(mVppFactory);
 		mVppFactory = nullptr;
 	}
@@ -247,16 +255,16 @@ BOOL D3D9Render::DrawStatus()
 				mConfig.width, mConfig.height, mConfig.fps.num/mConfig.fps.den);
 
 			OSDText(NULL, &FontPos,
-				TEXT("FPS: In %.2f, Out %.2f, Current surface: %d"),
-				mInputStatis.Frequency(), mRenderStatis.Frequency(), mCurPushObjIndex);
+				TEXT("%s(%s->%s->%s): %d"),
+				(mSupportSurfaceType == SUPPORT_SURFACE) ? _T("SURFACE") : _T("TEXTTURE"), 
+				m_backModeDesc, mbNeedVpp ? _T("SW") : _T("HW"), m_mainModeDesc, mCurPushObjIndex);
 
 			OSDText(NULL, &FontPos,
-				TEXT("Input: %2lld, Avg:%2llu(%2d~%2d)"),
-				mCurPtsInterval, mInputStatis.AvgSampleSize(), minInputSample, maxInputSample);
+				TEXT("Input: %.2f, %2lld, Avg:%2llu(%2d~%2d)"), mInputStatis.Frequency(),
+				mCurPtsInterval, mInputStatis.AvgSampleSize(), minInputSample / 10000, maxInputSample / 10000);
 
 			OSDText(NULL, &FontPos,
-				TEXT("Render(%s): %2d Avg:%2llu(%2d~%2d)"), 
-				(mSupportSurfaceType == SUPPORT_SURFACE) ? _T("SURFACE") : _T("TEXTTURE"),
+				TEXT("Output: %.2f, %2d Avg:%2llu(%2d~%2d)"), mRenderStatis.Frequency(),
 				mCurRenderInterval, mRenderStatis.AvgSampleSize(), minRenderSample, maxRenderSample);
 
 			mpD3D9Device->EndScene();

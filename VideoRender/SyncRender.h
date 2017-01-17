@@ -6,6 +6,10 @@ public:
 	CSyncRender();
 	~CSyncRender();
 
+	// placeholder
+	BOOL PushFrame();
+	BOOL GetFrame();
+
 private:
 	//render 
 	int64_t mLastRenderedFramePts;
