@@ -17,7 +17,6 @@ public:
 	virtual DWORD RenderLoop();
 
 protected:
-	void SetupMatrices();
 	HRESULT GetDeviceType(D3DDISPLAYMODE);
 	HRESULT IfSupportedFormat(D3DDISPLAYMODE , D3DFORMAT );
 	BOOL IfSupportedConversionFormat(D3DDISPLAYMODE , D3DFORMAT);

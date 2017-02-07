@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * // common information for osd
+ * // common information for OSD
  */
 
 class OSDInfo
@@ -15,6 +15,7 @@ private:
 	uint32_t m_jitterFrameCount; 
 	uint32_t m_pushFrameCount;
 	uint32_t m_popFrameCount;
+	BOOL m_bSoftwareConvert;
 
 	TCHAR m_OSDInfo[2048];
 };
