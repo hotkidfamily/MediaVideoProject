@@ -70,7 +70,7 @@ protected:
 public:	
 	// step 0. register call back function, free call back yourself
 	virtual void RegisterCallback(VideoCaptureCallback *) = 0;
-	// step 1, get device list
+	// step 1, get device list but using file capture mode
 	virtual HRESULT GetDeviceList(VECT &) = 0;
 	// step 2, start capture
 	virtual HRESULT StartCaptureWithParam(CAPTURECONFIG&) = 0;

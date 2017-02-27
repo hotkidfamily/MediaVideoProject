@@ -48,26 +48,25 @@ errRet:
 	return bRet;
 }
 
-BOOL CSampleBufferManager::FillFrame(FRAME_DESC &desc)
+QUEUE_RET CSampleBufferManager::FillFrame(FRAME_DESC &desc)
 {
-	BOOL bRet = FALSE;
+	QUEUE_RET ret = Q_SUCCESS;
 	CAutoLock lock(mCs);
 
 	if (!emptyList.empty()){
 		CSampleBuffer *sample = emptyList.front();
-		bRet = sample->FillData(desc);
-		if (bRet){
+		if (sample->FillData(desc)){
 			// FixME£º
 			emptyList.pop_front();
 			readyList.push_back(sample);
+		} else{
+			ret = Q_NOMEMORY;
 		}
+	} else{
+		ret = Q_FULL;
 	}
 
-	if(!bRet){
-		// drop one frame
-	}
-
-	return bRet;
+	return ret;
 }
 
 BOOL CSampleBufferManager::LockFrame(CSampleBuffer *&buf)

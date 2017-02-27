@@ -31,12 +31,20 @@ typedef struct tagFrameBility{
 	}
 }FRAMEABILITY, *PFRAMEABILITY;
 
+typedef enum tagSupportCaptureDevice{
+	CAP_DEV_NONE,
+	CAP_DEV_DSHOW,
+	CAP_DEV_FILE,
+	CAP_DEV_WMF,
+}CAPSUPPORTDEV;
+
 BOOL IsFormatSupport(const GUID *id, FRAMEABILITY & bility);
 
 class IVideoCaptureDelegate : 
 	public IVideoCapture
 {
 public:
+	IVideoCaptureDelegate();
 	virtual ~IVideoCaptureDelegate();
 	virtual void RegisterCallback(VideoCaptureCallback *);
 	virtual HRESULT GetDeviceList(VECT &);
@@ -53,6 +61,7 @@ public:
 protected:
 
 private:
+	CAPSUPPORTDEV mDevice;
 	DShowVideoCapture *mDShowCapture;
 	WMFVideoCapture *mMFCapture;
 	FilesVideoCapture *mFilesCapture;

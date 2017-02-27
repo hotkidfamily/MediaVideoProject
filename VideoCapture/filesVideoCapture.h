@@ -1,5 +1,7 @@
 #pragma once
 
+#include "SampleBufferManager.h"
+#include "IVideoCapture.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -16,13 +18,29 @@ extern "C" {
 #endif
 
 
-class FilesVideoCapture
+class FilesVideoCapture: public IVideoCapture
 {
 public:
 	FilesVideoCapture();
 	~FilesVideoCapture();
 
 	int32_t DecodeLoop();
+	virtual BOOL GetFrame(CSampleBuffer *&pSample);
+	virtual BOOL ReleaseFrame(CSampleBuffer *&pSample);
+
+	virtual void RegisterCallback(VideoCaptureCallback *) { return; };
+	// step 1, get device list
+	virtual HRESULT GetDeviceList(VECT &) { return E_NOTIMPL; };
+	// step 2, start capture
+	virtual HRESULT StartCaptureWithParam(CAPTURECONFIG&);
+	
+	// step 3.x other feature support: show property setting window
+	virtual HRESULT ShowPropertyWindow(HWND parentWindowHandle) { return E_NOTIMPL; };
+
+	// step 4, close capture
+	virtual HRESULT StopCapture();
+	// step 5, release callback
+	virtual HRESULT UnRegisterCallback() { return E_NOTIMPL; };
 
 protected:
 	BOOL initVideoContext(const char *filename);
@@ -38,8 +56,9 @@ private:
 	int32_t mDecDestCopiedBufferSize;
 	int64_t mFrameIndex;
 
-
-
 	HANDLE mDecodeThreadHandle;
 	DWORD mDecodeThreadID;
+	BOOL mDecodeThreadQuit;
+
+	CSampleBufferManager mBufferManager;
 };

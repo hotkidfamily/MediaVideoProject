@@ -50,6 +50,9 @@ BOOL FilesVideoCapture::initVideoContext(const char *filename)
 		goto fail;
 	}
 
+	mBufferManager.Reset(RES1080P, 20);
+
+	mDecodeThreadQuit = FALSE;
 	mDecodeThreadHandle = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)decodeThread, this, 0, &mDecodeThreadID);
 	if (mDecodeThreadHandle == NULL){
 		logger(Error, "Failed to create thread to decode file.\n");
@@ -68,6 +71,10 @@ fail:
 
 void FilesVideoCapture::cleanUp()
 {
+	if (mDecodeThreadHandle){
+		mDecodeThreadQuit = TRUE;
+	}
+
 	if (mVideoDecodeCtx){
 		avcodec_free_context(&mVideoDecodeCtx);
 	}
@@ -89,6 +96,7 @@ int32_t FilesVideoCapture::decodePacket(int *got_frame, int cached, AVPacket &pk
 {
 	int ret = 0;
 	int decoded = pkt.size;
+	QUEUE_RET q_ret = Q_SUCCESS;
 
 	*got_frame = 0;
 
@@ -128,13 +136,19 @@ int32_t FilesVideoCapture::decodePacket(int *got_frame, int cached, AVPacket &pk
 			desc.validDataSize = mDecDestCopiedBufferSize;
 		}
 		// push frame to queue
-
+		while ((q_ret = mBufferManager.FillFrame(desc)) != Q_SUCCESS){
+			if (q_ret == Q_FULL){
+				continue;
+			} else{
+				logger(Error, "queue is %d", q_ret);
+				break;
+			}
+		}
 	}
 
 fail:
 	return decoded;
 }
-
 
 int32_t FilesVideoCapture::DecodeLoop()
 {
@@ -146,16 +160,22 @@ int32_t FilesVideoCapture::DecodeLoop()
 	pkt.data = NULL;
 	pkt.size = 0;
 
-	while (av_read_frame(mFileCtx, &pkt)){
-		AVPacket orig_pkt = pkt;
-		do {
-			ret = decodePacket(&got_frame, 0, pkt);
-			if (ret < 0)
-				break;
-			pkt.data += ret;
-			pkt.size -= ret;
-		} while (pkt.size > 0);
-		av_packet_unref(&orig_pkt);
+	while (!mDecodeThreadQuit){
+		if (mDecodeThreadQuit){
+			break;
+		}
+
+		if (av_read_frame(mFileCtx, &pkt)){
+			AVPacket orig_pkt = pkt;
+			do {
+				ret = decodePacket(&got_frame, 0, pkt);
+				if (ret < 0)
+					break;
+				pkt.data += ret;
+				pkt.size -= ret;
+			} while (pkt.size > 0);
+			av_packet_unref(&orig_pkt);
+		}
 	}
 
 	/* flush cached frames */
@@ -164,9 +184,9 @@ int32_t FilesVideoCapture::DecodeLoop()
 	do {
 		decodePacket(&got_frame, 1, pkt);
 	} while (got_frame);
-	
-}
 
+	return 0;
+}
 
 FilesVideoCapture::FilesVideoCapture()
 {
@@ -176,5 +196,48 @@ FilesVideoCapture::FilesVideoCapture()
 FilesVideoCapture::~FilesVideoCapture()
 {
 	cleanUp();
+}
+
+BOOL FilesVideoCapture::GetFrame(CSampleBuffer *&pSample)
+{
+	BOOL bRet = FALSE;
+	if (mBufferManager.LockFrame(pSample)){
+		bRet = TRUE;
+	}
+
+	return bRet;
+}
+
+BOOL FilesVideoCapture::ReleaseFrame(CSampleBuffer *&pSample)
+{
+	BOOL bRet = FALSE;
+	if (mBufferManager.UnlockFrame(pSample)){
+		bRet = TRUE;
+	}
+
+	return bRet;
+}
+
+HRESULT FilesVideoCapture::StartCaptureWithParam(CAPTURECONFIG& params)
+{
+	BOOL bRet = FALSE;
+	std::string filename;
+	filename.append(params.filePath->begin(), params.filePath->end());
+
+	bRet = initVideoContext(filename.c_str());
+
+	params.width = mVideoDecodeCtx->width;
+	params.height = mVideoDecodeCtx->height;
+	params.pixelFormat = mVideoDecodeCtx->pix_fmt;
+	params.fps = mVideoDecodeCtx->framerate.num / mVideoDecodeCtx->framerate.den;
+
+	return bRet?S_OK:E_FAIL;
+}
+
+
+HRESULT FilesVideoCapture::StopCapture()
+{
+	cleanUp();
+	return S_OK;
 }
 
