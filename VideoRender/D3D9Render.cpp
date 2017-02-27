@@ -114,18 +114,18 @@ BOOL D3D9Render::InitRender(const RENDERCONFIG &config)
 			if (!mVppFactory || !mVpp){
 				goto done;
 			}
-			vppParams.srcWidth = config.width;
-			vppParams.srcHeight = config.height;
-			vppParams.srcPixelInFormatFourCC = config.pixelFormat;
-			vppParams.dstWidth = config.width;
-			vppParams.dstHeight = config.height;
-			vppParams.dstPixelInFormatFourCC = GetFourCCByD3D9PixelFmt(mode.Format);
+			vppParams.inDesc.width = config.width;
+			vppParams.inDesc.height = config.height;
+			vppParams.inDesc.pixelFormat = config.pixelFormat;
+			vppParams.outDesc.width = config.width;
+			vppParams.outDesc.height = config.height;
+			vppParams.outDesc.pixelFormat = GetFourCCByD3D9PixelFmt(mode.Format);
 			vppParams.flags = 0x10;
 			if (!mVpp->InitContext(vppParams)){
 				hr = E_FAIL;
 				goto done;
 			}
-			mVppTransSampleBuffer = AllocSampleBuffer(config.width, config.height, (CPPixelFormat)vppParams.dstPixelInFormatFourCC);
+			mVppTransSampleBuffer = AllocSampleBuffer(config.width, config.height, (CPPixelFormat)vppParams.outDesc.pixelFormat);
 			if (mVppTransSampleBuffer){
 				mbNeedVpp = TRUE;
 			}

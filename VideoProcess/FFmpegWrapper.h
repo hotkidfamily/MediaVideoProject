@@ -10,6 +10,7 @@ extern "C" {
 
 namespace FFmpegWrapper
 {
+	FUNCTION_DECLARE(const int *, sws_getCoefficients, (int colorspace));
 	FUNCTION_DECLARE(int, sws_isSupportedInput, (enum AVPixelFormat pix_fmt));
 	FUNCTION_DECLARE(int, sws_isSupportedOutput, (enum AVPixelFormat pix_fmt));
 	FUNCTION_DECLARE(int, sws_isSupportedEndiannessConversion, (enum AVPixelFormat pix_fmt));

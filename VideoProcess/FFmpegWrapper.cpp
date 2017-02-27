@@ -23,6 +23,19 @@ namespace FFmpegWrapper{
 		}
 	}
 
+	const int *sws_getCoefficients(int colorspace)
+	{
+		const int *ret = NULL;
+		BOOL bRet = FALSE;
+		Psws_getCoefficients func = NULL;
+		bRet = pFFmpegWrapper->DwGetProcAddr((FARPROC *)&func, "sws_getCoefficients");
+		if (bRet) {
+			ret = func(colorspace);
+		}
+
+		return ret;
+	}
+
 	int sws_isSupportedInput(enum AVPixelFormat pix_fmt)
 	{
 		int ret = -1;

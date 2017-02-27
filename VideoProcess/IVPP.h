@@ -7,16 +7,40 @@
 #endif
 
 #include <stdint.h>
+#include <math.h>
 #include "SampleBuffer.h"
 
+typedef struct tagframedesc{
+	int width;
+	int height;
+	DWORD pixelFormat;
+	int colorSpace;
+	int colorRange;
+
+	tagframedesc(){
+		width = 0;
+		height = 0;
+		pixelFormat = 0;
+		colorSpace = 0;
+		colorRange = 1; /*0~255*/
+	}
+
+	inline int Width() { return abs(width); }
+	inline int Height() { return abs(height); }
+
+	bool operator == (struct tagframedesc &in_desc){
+		return ((width == in_desc.width)
+			&& (height == in_desc.height)
+			&& (pixelFormat == in_desc.pixelFormat)
+			&& (colorSpace == in_desc.colorSpace)
+			&& (colorRange == in_desc.colorRange));
+	}
+}FRAMECOLORDESC;
+
 typedef struct IVPPContext{
-	int32_t srcWidth;
-	int32_t srcHeight;
-	DWORD srcPixelInFormatFourCC;
-	int32_t dstWidth;
-	int32_t dstHeight;
-	DWORD dstPixelInFormatFourCC;
-	uint32_t flags;
+	FRAMECOLORDESC inDesc;
+	FRAMECOLORDESC outDesc;
+	int32_t flags;
 }IVPPPARAMETER, *PIVPPPARAMETER;
 
 class IVPP {

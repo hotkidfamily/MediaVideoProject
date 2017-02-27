@@ -79,7 +79,7 @@ bool CLibx264::setConfig(const ENCODECCFG &config)
 	mCodecParams.rc.i_bitrate = config.avgBitrateInKb;
 	mCodecParams.rc.i_rc_method = X264_RC_ABR;
 
-	switch (config.pixelFormatInFourCC){
+	switch (config.pixelFormat){
 	case PIXEL_FORMAT_RGB24:
 		mCodecParams.i_csp = X264_CSP_BGR | X264_CSP_VFLIP;
 		break;
@@ -96,12 +96,12 @@ bool CLibx264::setConfig(const ENCODECCFG &config)
 	}
 
 	if (mbNeedVpp){
-		vppParams.srcWidth = config.width;
-		vppParams.srcHeight = config.height;
-		vppParams.srcPixelInFormatFourCC = config.pixelFormatInFourCC;
-		vppParams.dstWidth = config.width;
-		vppParams.dstHeight = config.height;
-		vppParams.dstPixelInFormatFourCC = config.pixelFormatInFourCC;
+		vppParams.inDesc.width = config.width;
+		vppParams.inDesc.height = config.height;
+		vppParams.inDesc.pixelFormat = config.pixelFormat;
+		vppParams.outDesc.width = config.width;
+		vppParams.outDesc.height = config.height;
+		vppParams.outDesc.pixelFormat = config.pixelFormat;
 		vppParams.flags = 0x10/*SWS_POINT*/;
 	}
 
