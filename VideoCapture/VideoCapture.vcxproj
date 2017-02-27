@@ -106,7 +106,6 @@
     <ClCompile Include="dshowVideoCapture.cpp" />
     <ClCompile Include="filesVideoCapture.cpp" />
     <ClCompile Include="ISampleGrabberCBImpl.cpp" />
-    <ClCompile Include="mediafoundationVideoCapture.cpp" />
     <ClCompile Include="mtype.cpp" />
     <ClCompile Include="SampleBufferManager.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -114,6 +113,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="VideoCapture.cpp" />
+    <ClCompile Include="WMFVideoCapture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dshowutil.h" />
@@ -122,12 +122,12 @@
     <ClInclude Include="ISampleGrabber.h" />
     <ClInclude Include="ISampleGrabberCBImpl.h" />
     <ClInclude Include="IVideoCapture.h" />
-    <ClInclude Include="mediafoundationVideoCapture.h" />
     <ClInclude Include="mtype.h" />
     <ClInclude Include="SampleBufferManager.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="VideoCapture.h" />
+    <ClInclude Include="WMFVideoCapture.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />

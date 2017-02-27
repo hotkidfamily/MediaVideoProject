@@ -69,7 +69,7 @@
     <ClCompile Include="filesVideoCapture.cpp">
       <Filter>Source Files\filesinterface</Filter>
     </ClCompile>
-    <ClCompile Include="mediafoundationVideoCapture.cpp">
+    <ClCompile Include="WMFVideoCapture.cpp">
       <Filter>Source Files\mediafoundationinterface</Filter>
     </ClCompile>
   </ItemGroup>
@@ -82,9 +82,6 @@
     </ClInclude>
     <ClInclude Include="ISampleGrabberCBImpl.h">
       <Filter>Header Files\dshowinterface</Filter>
-    </ClInclude>
-    <ClInclude Include="mediafoundationVideoCapture.h">
-      <Filter>Header Files\mediafoundationinterface</Filter>
     </ClInclude>
     <ClInclude Include="stdafx.h">
       <Filter>Header Files\utils</Filter>
@@ -109,6 +106,9 @@
     </ClInclude>
     <ClInclude Include="filesVideoCapture.h">
       <Filter>Header Files\filesinterface</Filter>
+    </ClInclude>
+    <ClInclude Include="WMFVideoCapture.h">
+      <Filter>Header Files\mediafoundationinterface</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -3,7 +3,7 @@
 
 #include "IVideoCapture.h"
 #include "dshowVideoCapture.h"
-#include "mediafoundationVideoCapture.h"
+#include "WMFVideoCapture.h"
 #include "filesVideoCapture.h"
 
 typedef struct tagFrameBility{
@@ -54,7 +54,7 @@ protected:
 
 private:
 	DShowVideoCapture *mDShowCapture;
-	MediaFoundationVideoCapture *mMFCapture;
+	WMFVideoCapture *mMFCapture;
 	FilesVideoCapture *mFilesCapture;
 };
 

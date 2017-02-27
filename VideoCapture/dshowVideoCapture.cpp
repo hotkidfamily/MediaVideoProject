@@ -194,9 +194,11 @@ HRESULT DShowVideoCapture::Stop()
 	}
 
 	while(FAILED(mMediaControl->Stop()));
+
 	if (mGraphRegisterHandler)
 		RemoveGraphFromRot(mGraphRegisterHandler);
 	mGraphRegisterHandler = 0;
+
 	RemoveFiltersFromGraph();
 
 	return S_OK;

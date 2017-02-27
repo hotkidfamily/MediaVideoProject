@@ -11,7 +11,6 @@ IVideoCaptureDelegate::~IVideoCaptureDelegate()
 bool IVideoCaptureDelegate::InitContext()
 {
 	mDShowCapture = new DShowVideoCapture;
-	mMFCapture = new MediaFoundationVideoCapture; 
 	mDShowCapture->GetDShowInterfaces();
 	
 	return (!mDShowCapture && !mMFCapture);
@@ -24,12 +23,7 @@ bool IVideoCaptureDelegate::UnInitContext()
 		mDShowCapture = nullptr;
 	}
 
-	if (mMFCapture){
-		delete mMFCapture;
-		mMFCapture = nullptr;
-	}
-
-	return (!mDShowCapture && !mMFCapture);
+	return (!mDShowCapture);
 }
 
 void IVideoCaptureDelegate::RegisterCallback(VideoCaptureCallback *cb)
