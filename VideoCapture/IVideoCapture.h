@@ -28,11 +28,17 @@ struct CAPTURECONFIG
 	HWND parentWindow;
 	HWND attachWindow;
 	DWORD pixelFormat;
-	STRING *filePath;
+	STRING filePath;
 
 	CAPTURECONFIG()
 	{
-		ZeroMemory(this, sizeof(struct CAPTURECONFIG));
+		index = 0;
+		width = height = 0;
+		fps = 0.0;
+		parentWindow = NULL;
+		attachWindow = NULL;
+		pixelFormat = PIXEL_FORMAT_NONE;
+		filePath.clear();
 	}
 };
 

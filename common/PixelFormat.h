@@ -6,6 +6,7 @@
 #undef FMT
 #define FMT(X,Y) PIXEL_FORMAT_##X=Y
 enum CPPixelFormat{
+	FMT(NONE, '0000'),
 	FMT(I420, '024I'), 
 	FMT(RGB565, 0xe436eb7c),
 	FMT(RGB555, 0xe436eb7b),

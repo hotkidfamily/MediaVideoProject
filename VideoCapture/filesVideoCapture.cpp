@@ -189,6 +189,15 @@ int32_t FilesVideoCapture::DecodeLoop()
 }
 
 FilesVideoCapture::FilesVideoCapture()
+	: mDecodeThreadHandle(nullptr)
+	, mDecodeThreadID(0)
+	, mDecodeThreadQuit(0)
+	, mFileCtx(NULL)
+	, mDecDestCopiedBuffer(NULL)
+	, mDecDestCopiedBufferSize(0)
+	, mDecDestFrame(NULL)
+	, mFrameIndex(0)
+	, mVideoDecodeCtx(NULL)
 {
 	av_register_all();
 }
@@ -222,7 +231,7 @@ HRESULT FilesVideoCapture::StartCaptureWithParam(CAPTURECONFIG& params)
 {
 	BOOL bRet = FALSE;
 	std::string filename;
-	filename.append(params.filePath->begin(), params.filePath->end());
+	filename.append(params.filePath.begin(), params.filePath.end());
 
 	bRet = initVideoContext(filename.c_str());
 

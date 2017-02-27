@@ -57,7 +57,7 @@ HRESULT IVideoCaptureDelegate::GetDeviceList(VECT &camNames)
 HRESULT IVideoCaptureDelegate::StartCaptureWithParam(CAPTURECONFIG &param)
 {
 	HRESULT hr = S_OK;
-	if (!param.filePath->empty()){
+	if (!param.filePath.empty()){
 		mDevice = CAP_DEV_FILE;
 		hr = mFilesCapture->StartCaptureWithParam(param);
 	} else{
