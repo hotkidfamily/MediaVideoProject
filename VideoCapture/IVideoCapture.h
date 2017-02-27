@@ -28,6 +28,7 @@ struct CAPTURECONFIG
 	HWND parentWindow;
 	HWND attachWindow;
 	DWORD pixelFormat;
+	STRING *filePath;
 
 	CAPTURECONFIG()
 	{
