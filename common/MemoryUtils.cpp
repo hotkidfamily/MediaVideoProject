@@ -12,6 +12,24 @@ uint8_t* AllocMemory(uint32_t sizeInByte)
 #endif
 }
 
+bool ReallocMemory(uint8_t** buffer, uint32_t sizeInByte)
+{
+	uint8_t *temp = NULL;
+#ifdef DEBUG
+	temp = (uint8_t*)_aligned_malloc_dbg(sizeInByte, 32);
+#else
+	temp = (uint8_t*)_aligned_malloc(sizeInByte, 32);
+#endif
+
+	DeallocMemory(*buffer);
+	*buffer = NULL;
+
+	*buffer = temp;
+
+	return *buffer == NULL;
+}
+
+
 void DeallocMemory(uint8_t * ptr)
 {
 #ifdef DEBUG

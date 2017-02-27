@@ -1,5 +1,5 @@
-#ifndef __VCUTILS_H__
-#define __VCUTILS_H__
+#ifndef __COMMONUTILS_H__
+#define __COMMONUTILS_H__
 
 #include <string>
 #include <stdint.h>
@@ -36,6 +36,7 @@ extern "C" {
 
 	void DeallocMemory(uint8_t * pointerOfMemory);
 	uint8_t * AllocMemory(uint32_t sizeInByte);
+	bool ReallocMemory(uint8_t** buffer, uint32_t sizeInByte);
 
 	BOOL DeallocSampleBuffer(CSampleBuffer *);
 	CSampleBuffer *AllocSampleBuffer(int32_t, int32_t, CPPixelFormat);
@@ -44,11 +45,4 @@ extern "C" {
 }
 #endif
 
-typedef struct tagCOMError{
-	HRESULT hr;
-	const TCHAR* desc;
-}COMERROR;
-
-#define COMERROR2STR(x) {x, TEXT(#x)}
-
-#endif //__VCUTILS_H__
+#endif //__COMMONUTILS_H__
