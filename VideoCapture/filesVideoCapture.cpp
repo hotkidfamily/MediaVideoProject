@@ -33,16 +33,12 @@ BOOL FilesVideoCapture::initVideoContext(const char *filename)
 	}
 
 	vs = mFileCtx->streams[ret];
+	mVideoStreamIndex = ret;
 
+	mVideoDecodeCtx = vs->codec;
 	videoDec = avcodec_find_decoder(vs->codec->codec_id);
-	mVideoDecodeCtx = avcodec_alloc_context3(videoDec);
-	if (!mVideoDecodeCtx){
-		logger(Error, "could not open decoder for file.\n");
-		goto fail;
-	}
 
-	avcodec_copy_context(mVideoDecodeCtx, vs->codec);
-
+	/* Init the decoders, with or without reference counting */
 	if ((ret = avcodec_open2(mVideoDecodeCtx, videoDec, NULL)) < 0) {
 		logger(Error, "Failed to open %s codec\n");
 		goto fail;
@@ -52,7 +48,7 @@ BOOL FilesVideoCapture::initVideoContext(const char *filename)
 
 	mDecDestFrame = av_frame_alloc();
 	if (!mDecDestFrame) {
-		logger(Error, "Could not allocate avframe\n");
+		logger(Error, "Could not allocate AVFrame.\n");
 		goto fail;
 	}
 
@@ -79,33 +75,34 @@ void FilesVideoCapture::cleanUp()
 		mDecodeThreadQuit = TRUE;
 		if (WAIT_OBJECT_0 != WaitForSingleObject(mDecodeThreadHandle, 1000)) {
 			TerminateThread(mDecodeThreadHandle, -1);
+			logger(Error, "Can not stop decode thread running.\n");
 		}
 		mDecodeThreadHandle = NULL;
 	}
-
+	
 	if (mVideoDecodeCtx){
-		avcodec_free_context(&mVideoDecodeCtx);
+		avcodec_close(mVideoDecodeCtx);
+		mVideoDecodeCtx = NULL;
 	}
-	mVideoDecodeCtx = NULL;
 
 	if (mFileCtx){
 		avformat_close_input(&mFileCtx);
+		mFileCtx = NULL;
 	}
-	mFileCtx = NULL;
-	
+
 	if (mDecDestCopiedBuffer) {
 		DeallocMemory(mDecDestCopiedBuffer);
+		mDecDestCopiedBuffer = NULL;
+		mDecDestCopiedBufferSize = 0;
 	}
-	mDecDestCopiedBuffer = NULL;
-	mDecDestCopiedBufferSize = 0;
-
-	if (mDecDestFrame)
+	
+	if (mDecDestFrame){
 		av_frame_free(&mDecDestFrame);
-	mDecDestFrame = NULL;
-
+		mDecDestFrame = NULL;
+	}
 }
 
-int32_t FilesVideoCapture::decodePacket(int *got_frame, int cached, AVPacket &pkt)
+int32_t FilesVideoCapture::decodePacket(int *got_frame, AVPacket &pkt)
 {
 	int ret = 0;
 	int decoded = pkt.size;
@@ -116,7 +113,7 @@ int32_t FilesVideoCapture::decodePacket(int *got_frame, int cached, AVPacket &pk
 	/* decode video frame */
 	ret = avcodec_decode_video2(mVideoDecodeCtx, mDecDestFrame, got_frame, &pkt);
 	if (ret < 0) {
-		logger(Error, "decode video error.");
+		logger(Error, "decode video error.\n");
 		goto fail;
 	}
 
@@ -150,13 +147,15 @@ int32_t FilesVideoCapture::decodePacket(int *got_frame, int cached, AVPacket &pk
 		}
 		// push frame to queue
 		while ((q_ret = mBufferManager.FillFrame(desc)) != Q_SUCCESS){
+			if (mDecodeThreadQuit){
+				logger(Error, "End decode for exit thread.\n");
+				break;
+			}
+
 			if (q_ret == Q_FULL){
 				continue;
-			} else if (mDecodeThreadQuit) {
-				logger(Error, "End decode for exit thread.");
-				break;
 			} else {
-				logger(Error, "Queue is %d", q_ret);
+				logger(Error, "Can not push frame as: Queue is %d\n", q_ret);
 				break;
 			}
 		}
@@ -182,9 +181,16 @@ int32_t FilesVideoCapture::DecodeLoop()
 		}
 
 		if (av_read_frame(mFileCtx, &pkt) >=0 ){
+			if (pkt.stream_index != mVideoStreamIndex){
+				continue;
+			}
 			AVPacket orig_pkt = pkt;
 			do {
-				ret = decodePacket(&got_frame, 0, pkt);
+				if (mDecodeThreadQuit){
+					logger(Error, "thread end by exit.\n");
+					break;
+				}
+				ret = decodePacket(&got_frame, pkt);
 				if (ret < 0)
 					break;
 				pkt.data += ret;
@@ -194,12 +200,9 @@ int32_t FilesVideoCapture::DecodeLoop()
 		}
 	}
 
-	/* flush cached frames */
-	pkt.data = NULL;
-	pkt.size = 0;
-	do {
-		decodePacket(&got_frame, 1, pkt);
-	} while (got_frame);
+	/*
+		remember flush decoder.
+	*/
 
 	return 0;
 }
@@ -214,6 +217,7 @@ FilesVideoCapture::FilesVideoCapture()
 	, mDecDestFrame(NULL)
 	, mFrameIndex(0)
 	, mVideoDecodeCtx(NULL)
+	, mVideoStreamIndex(0)
 {
 	av_register_all();
 }

@@ -44,7 +44,7 @@ public:
 
 protected:
 	BOOL initVideoContext(const char *filename);
-	int32_t decodePacket(int *got_frame, int cached, AVPacket &);
+	int32_t decodePacket(int *got_frame, AVPacket &);
 	void cleanUp();
 
 
@@ -55,6 +55,7 @@ private:
 	uint8_t* mDecDestCopiedBuffer;
 	int32_t mDecDestCopiedBufferSize;
 	int64_t mFrameIndex;
+	int32_t mVideoStreamIndex;
 
 	HANDLE mDecodeThreadHandle;
 	DWORD mDecodeThreadID;

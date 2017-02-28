@@ -26,7 +26,7 @@ bool ReallocMemory(uint8_t** buffer, uint32_t sizeInByte)
 
 	*buffer = temp;
 
-	return *buffer == NULL;
+	return *buffer != NULL;
 }
 
 

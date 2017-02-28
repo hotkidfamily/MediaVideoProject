@@ -33,6 +33,7 @@ int32_t GetPixFmtByFourCC(DWORD pfFourCC)
 	for (int i = 0; i < ARRAYSIZE(PFTable); i++){
 		if (PFTable[i].pfFourCC == pfFourCC){
 			fp = PFTable[i].fpFFmpeg;
+			break;
 		}
 	}
 	return (int32_t)fp;
@@ -44,6 +45,7 @@ DWORD GetFourCCByPixFmt(int32_t format)
 	for (int i = 0; i < ARRAYSIZE(PFTable); i++){
 		if (PFTable[i].fpFFmpeg == (AVPixelFormat)format){
 			fourCC = PFTable[i].pfFourCC;
+			break;
 		}
 	}
 	return fourCC;

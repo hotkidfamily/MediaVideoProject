@@ -70,8 +70,13 @@ HRESULT IVideoCaptureDelegate::StartCaptureWithParam(CAPTURECONFIG &param)
 HRESULT IVideoCaptureDelegate::StopCapture()
 {
 	HRESULT hr = S_OK;
-	mFilesCapture->StopCapture();
-	mDShowCapture->Stop();
+
+	if (mDevice == CAP_DEV_DSHOW){
+		hr = mDShowCapture->Stop();
+	} else{
+		hr = mFilesCapture->StopCapture();
+	}
+
 	return hr;
 }
 
