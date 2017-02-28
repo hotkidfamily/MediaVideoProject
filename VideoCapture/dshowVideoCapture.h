@@ -1,8 +1,6 @@
 #ifndef __DSHOWVIDEOCAPTURE_H__
 #define __DSHOWVIDEOCAPTURE_H__
 
-#include <comdef.h>
-
 #include "dshowutil.h"
 #include "mtype.h"
 #include "ISampleGrabber.h"

@@ -1,6 +1,4 @@
 #include "stdafx.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "VideoRender.h"
 
 static long refCount = 1;

@@ -50,16 +50,16 @@ BOOL FilesVideoCapture::initVideoContext(const char *filename)
 
 	mBufferManager.Reset(RES1080P, 20);
 
+	mDecDestFrame = av_frame_alloc();
+	if (!mDecDestFrame) {
+		logger(Error, "Could not allocate avframe\n");
+		goto fail;
+	}
+
 	mDecodeThreadQuit = FALSE;
 	mDecodeThreadHandle = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)decodeThread, this, 0, &mDecodeThreadID);
 	if (mDecodeThreadHandle == NULL){
 		logger(Error, "Failed to create thread to decode file.\n");
-		goto fail;
-	}
-
-	mDecDestFrame = av_frame_alloc();
-	if (!mDecDestFrame) {
-		logger(Error, "Could not allocate avframe\n");
 		goto fail;
 	}
 
@@ -253,7 +253,7 @@ HRESULT FilesVideoCapture::StartCaptureWithParam(CAPTURECONFIG& params)
 
 	params.width = mVideoDecodeCtx->width;
 	params.height = mVideoDecodeCtx->height;
-	params.pixelFormat = mVideoDecodeCtx->pix_fmt;
+	params.pixelFormat = GetFourCCByPixFmt(mVideoDecodeCtx->pix_fmt);
 	params.fps = mVideoDecodeCtx->framerate.num / mVideoDecodeCtx->framerate.den;
 
 	return bRet?S_OK:E_FAIL;

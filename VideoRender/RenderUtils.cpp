@@ -1,8 +1,6 @@
 #include "stdafx.h"
 #include "RenderUtils.h"
 #include "iRenderCommon.h"
-#include <d3d9.h>
-#include <ddraw.h>
 
 typedef struct tagPixelFormatD3DXAndFourCC
 {

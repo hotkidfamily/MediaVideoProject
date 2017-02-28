@@ -21,6 +21,7 @@
 #include <dvdmedia.h>
 
 #include <atlbase.h>
+#include <comdef.h>
 
 #include "common/common.h"
 
