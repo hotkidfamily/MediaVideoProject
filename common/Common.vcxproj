@@ -52,6 +52,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\VideoCodec\ReadMe.txt" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{0CE91C5F-A6EE-4A73-BAF7-92736850D563}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
