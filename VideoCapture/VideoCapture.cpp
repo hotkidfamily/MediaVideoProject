@@ -15,9 +15,9 @@ IVideoCaptureDelegate::~IVideoCaptureDelegate()
 
 bool IVideoCaptureDelegate::InitContext()
 {
-	mDShowCapture = new DShowVideoCapture;
+	mDShowCapture = new DShowVideoCapture(mBaseClock);
 	mDShowCapture->GetDShowInterfaces();
-	mFilesCapture = new FilesVideoCapture;
+	mFilesCapture = new FilesVideoCapture(mBaseClock);
 	
 	return (!mDShowCapture && !mFilesCapture);
 }
@@ -57,6 +57,7 @@ HRESULT IVideoCaptureDelegate::GetDeviceList(VECT &camNames)
 HRESULT IVideoCaptureDelegate::StartCaptureWithParam(CAPTURECONFIG &param)
 {
 	HRESULT hr = S_OK;
+
 	if (!param.filePath.empty()){
 		mDevice = CAP_DEV_FILE;
 		hr = mFilesCapture->StartCaptureWithParam(param);
@@ -83,6 +84,7 @@ HRESULT IVideoCaptureDelegate::StopCapture()
 BOOL IVideoCaptureDelegate::GetFrame(CSampleBuffer *&pSample)
 {
 	BOOL bRet = FALSE;
+
 	if (mDevice == CAP_DEV_DSHOW){
 		bRet = mDShowCapture->GetFrame(pSample);
 	} else{
@@ -95,6 +97,7 @@ BOOL IVideoCaptureDelegate::GetFrame(CSampleBuffer *&pSample)
 BOOL IVideoCaptureDelegate::ReleaseFrame(CSampleBuffer *&pSample)
 {
 	BOOL bRet = FALSE;
+
 	if (mDevice == CAP_DEV_DSHOW){
 		bRet = mDShowCapture->ReleaseFrame(pSample);
 	} else{
@@ -119,8 +122,8 @@ HRESULT IVideoCaptureDelegate::ShowPropertyWindow(HWND parentWindowHandle)
 
 HRESULT IVideoCaptureDelegate::UnRegisterCallback()
 {
-
 	HRESULT hr = S_OK;
+
 	if (mDevice == CAP_DEV_DSHOW){
 		hr = mDShowCapture->UnregisterCallback();
 	} else{
