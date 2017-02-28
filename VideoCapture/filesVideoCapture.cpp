@@ -13,6 +13,7 @@ BOOL FilesVideoCapture::initVideoContext(const char *filename)
 	AVCodec *videoDec = NULL;
 	BOOL bRet = FALSE;
 	int ret = -1;
+	AVRational time_base;
 
 	mFrameIndex = 0;
 
@@ -58,6 +59,9 @@ BOOL FilesVideoCapture::initVideoContext(const char *filename)
 		logger(Error, "Failed to create thread to decode file.\n");
 		goto fail;
 	}
+
+	time_base = av_codec_get_pkt_timebase(mVideoDecodeCtx);
+	time_base_step = time_base.num / time_base.den;
 
 	bRet = TRUE;
 
@@ -120,15 +124,16 @@ int32_t FilesVideoCapture::decodePacket(int *got_frame, AVPacket &pkt)
 	if (*got_frame) {
 		FRAME_DESC desc;
 
-		desc.width = mVideoDecodeCtx->width;
-		desc.height = mVideoDecodeCtx->height;
-		desc.pixelFormatInFourCC = GetFourCCByPixFmt((int)mVideoDecodeCtx->pix_fmt);
-		desc.ptsStart = av_frame_get_best_effort_timestamp(mDecDestFrame);
-		desc.ptsEnd = av_frame_get_best_effort_timestamp(mDecDestFrame);
+		desc.width = mDecDestFrame->width;
+		desc.height = mDecDestFrame->height;
+		desc.pixelFormatInFourCC = GetFourCCByPixFmt(mDecDestFrame->format);
+		desc.ptsStart = mBaseClock->GetBaseTime() + av_frame_get_best_effort_timestamp(mDecDestFrame)*10000;
+		desc.ptsEnd = desc.ptsStart + av_frame_get_pkt_duration(mDecDestFrame);
+		//logger(Info, "pts %lld dts %lld, best %lld\n", mDecDestFrame->pkt_pts, mDecDestFrame->pkt_dts, desc.ptsStart);
 		desc.frameStartIdx = mFrameIndex++;
 		desc.frameEndIdx = mFrameIndex;
 
-		desc.colorRange = (ColorRange)mDecDestFrame->color_range;
+		desc.colorRange = (ColorRange)av_frame_get_color_range(mDecDestFrame);
 		desc.colorPrimaries = (ColorPrimaries)mDecDestFrame->color_primaries;
 		desc.colorTransfer = (ColorTransfer)mDecDestFrame->color_trc;
 
@@ -208,7 +213,7 @@ int32_t FilesVideoCapture::DecodeLoop()
 	return 0;
 }
 
-FilesVideoCapture::FilesVideoCapture()
+FilesVideoCapture::FilesVideoCapture(CClock &clock)
 	: mDecodeThreadHandle(nullptr)
 	, mDecodeThreadID(0)
 	, mDecodeThreadQuit(0)
@@ -219,6 +224,7 @@ FilesVideoCapture::FilesVideoCapture()
 	, mFrameIndex(0)
 	, mVideoDecodeCtx(NULL)
 	, mVideoStreamIndex(0)
+	, mBaseClock(&clock)
 {
 	av_register_all();
 }
