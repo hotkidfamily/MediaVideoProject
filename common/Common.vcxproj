@@ -23,6 +23,7 @@
     <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="characterConvert.cpp" />
     <ClCompile Include="Clock.cpp" />
     <ClCompile Include="logger.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>

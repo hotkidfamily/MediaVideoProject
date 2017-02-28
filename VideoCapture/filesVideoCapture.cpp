@@ -59,6 +59,12 @@ BOOL FilesVideoCapture::initVideoContext(const char *filename)
 		goto fail;
 	}
 
+	mDecDestFrame = av_frame_alloc();
+	if (!mDecDestFrame) {
+		logger(Error, "Could not allocate avframe\n");
+		goto fail;
+	}
+
 	bRet = TRUE;
 
 fail:
@@ -73,6 +79,10 @@ void FilesVideoCapture::cleanUp()
 {
 	if (mDecodeThreadHandle){
 		mDecodeThreadQuit = TRUE;
+		if (WAIT_OBJECT_0 != WaitForSingleObject(mDecodeThreadHandle, 1000)) {
+			TerminateThread(mDecodeThreadHandle, -1);
+		}
+		mDecodeThreadHandle = NULL;
 	}
 
 	if (mVideoDecodeCtx){
@@ -85,11 +95,16 @@ void FilesVideoCapture::cleanUp()
 	}
 	mFileCtx = NULL;
 	
-	if (mDecDestCopiedBuffer)
+	if (mDecDestCopiedBuffer) {
 		DeallocMemory(mDecDestCopiedBuffer);
-
+	}
 	mDecDestCopiedBuffer = NULL;
 	mDecDestCopiedBufferSize = 0;
+
+	if (mDecDestFrame)
+		av_frame_free(&mDecDestFrame);
+	mDecDestFrame = NULL;
+
 }
 
 int32_t FilesVideoCapture::decodePacket(int *got_frame, int cached, AVPacket &pkt)
@@ -112,7 +127,7 @@ int32_t FilesVideoCapture::decodePacket(int *got_frame, int cached, AVPacket &pk
 
 		desc.width = mVideoDecodeCtx->width;
 		desc.height = mVideoDecodeCtx->height;
-		desc.pixelFormatInFourCC = mVideoDecodeCtx->pix_fmt;
+		desc.pixelFormatInFourCC = GetFourCCByPixFmt(mVideoDecodeCtx->pix_fmt);
 		desc.ptsStart = av_frame_get_best_effort_timestamp(mDecDestFrame);
 		desc.ptsEnd = av_frame_get_best_effort_timestamp(mDecDestFrame);
 		desc.frameStartIdx = mFrameIndex++;
@@ -139,8 +154,11 @@ int32_t FilesVideoCapture::decodePacket(int *got_frame, int cached, AVPacket &pk
 		while ((q_ret = mBufferManager.FillFrame(desc)) != Q_SUCCESS){
 			if (q_ret == Q_FULL){
 				continue;
-			} else{
-				logger(Error, "queue is %d", q_ret);
+			} else if (mDecodeThreadQuit) {
+				logger(Error, "End decode for exit thread.");
+				break;
+			} else {
+				logger(Error, "Queue is %d", q_ret);
 				break;
 			}
 		}
@@ -165,7 +183,7 @@ int32_t FilesVideoCapture::DecodeLoop()
 			break;
 		}
 
-		if (av_read_frame(mFileCtx, &pkt)){
+		if (av_read_frame(mFileCtx, &pkt) >=0 ){
 			AVPacket orig_pkt = pkt;
 			do {
 				ret = decodePacket(&got_frame, 0, pkt);
@@ -230,8 +248,8 @@ BOOL FilesVideoCapture::ReleaseFrame(CSampleBuffer *&pSample)
 HRESULT FilesVideoCapture::StartCaptureWithParam(CAPTURECONFIG& params)
 {
 	BOOL bRet = FALSE;
-	std::string filename;
-	filename.append(params.filePath.begin(), params.filePath.end());
+	W2S wchar2char;
+	std::string filename = wchar2char.to_bytes(params.filePath.c_str());
 
 	bRet = initVideoContext(filename.c_str());
 

@@ -6,6 +6,14 @@
 #include "PixelFormat.h"
 #include "SampleBuffer.h"
 
+#include <locale>
+#include <codecvt>
+#include <string>
+
+//copy from http://stackoverflow.com/questions/2573834/c-convert-string-or-char-to-wstring-or-wchar-t
+
+typedef std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> W2S, S2W;
+
 #ifndef SAFE_DELETE
 #define SAFE_DELETE(x)  {if(x) delete (x); (x)= nullptr;}
 #endif
