@@ -7,12 +7,15 @@ public:
 	~CSyncRender();
 
 	// placeholder
-	BOOL PushFrame();
+	BOOL PushFrame(CSampleBuffer *&frame);
 	BOOL GetFrame();
+protected:
+	bool timeToRender(int64_t ptsIn100ns);
 
 private:
 	//render 
-	int64_t mLastRenderedFramePts;
+	CClock mRenderBaseClock;
+	int64_t mLastRenderedPts;
 	int64_t mRenderInterval;
 };
 
