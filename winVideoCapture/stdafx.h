@@ -17,4 +17,10 @@
 #include <memory.h>
 #include <tchar.h>
 
-#include "utils.h"
+#include <list>
+
+#include "common\common.h"
+#include "videocapture\IVideoCapture.h"
+#include "VideoProcess\IVPP.h"
+#include "videocodec\IVideoCodec.h"
+#include "videorender\IRender.h"

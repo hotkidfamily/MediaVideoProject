@@ -1,12 +1,7 @@
 #pragma once
 
 #include "resource.h"
-#include <list>
-#include "IVideoCapture.h"
 #include "VideoCallback.h"
-#include "IVPP.h"
-#include "IVideoCodec.h"
-#include "IRender.h"
 
 #define MAX_LOADSTRING 100
 

@@ -1,15 +1,7 @@
 #pragma once
 
-#include <stdint.h>
-#include <list>
-#include "PixelFormat.h"
-#include "samplebuffer.h"
-#include "PackageBuffer.h"
 #include "PackageManager.h"
-#include "utils.h"
-
 #include "IVideoCodec.h"
-#include "IVPP.h"
 
 extern "C" {
 	#include "x264.h"

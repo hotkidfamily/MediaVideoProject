@@ -1,6 +1,6 @@
 ﻿#pragma once
-#include "PackageBuffer.h"
-#include "AutoLock.h"
+#include "common\PackageBuffer.h"
+#include "common\AutoLock.h"
 #include <list>
 #include <stdint.h>
 

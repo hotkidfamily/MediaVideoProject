@@ -1,7 +1,5 @@
 #pragma once
 
-#include "SampleBuffer.h"
-
 typedef enum tagsRES{
 	RES320P,
 	RES480P,

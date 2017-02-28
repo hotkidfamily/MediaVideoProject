@@ -17,7 +17,6 @@
 #include <mmreg.h>
 #include <dvdmedia.h>
 #include "mtype.h"
-#include "logger.h"
 #include <assert.h>
 
 typedef struct tagGuidPair{

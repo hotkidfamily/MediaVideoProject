@@ -22,8 +22,7 @@
 
 #include <atlbase.h>
 
-#include "utils.h"
-#include "AutoLock.h"
+#include "common/common.h"
 
 #ifdef UNICODE
 #define STRING std::wstring

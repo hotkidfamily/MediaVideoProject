@@ -1,5 +1,4 @@
 #include "stdafx.h"
-#include "logger.h"
 #include "SlidingWindowCalc.h"
 
 #define SAMPLE_COUNT_FPS (30)

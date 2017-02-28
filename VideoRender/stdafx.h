@@ -20,12 +20,9 @@
 #include <d3dx9.h>
 #include <DxErr.h>
 
-#include "PixelFormat.h"
-#include "utils.h"
-#include "logger.h"
-#include "SlidingWindowCalc.h"
+#include "common\common.h"
 
-#include "IVPP.h"
+#include "videoprocess\IVPP.h"
 
 #include "RenderUtils.h"
 

@@ -1,6 +1,5 @@
 #include "stdafx.h"
 
-#include "logger.h"
 #include "dshowVideoCapture.h"
 #include "dshowutil.h"
 #include "VideoCapture.h"

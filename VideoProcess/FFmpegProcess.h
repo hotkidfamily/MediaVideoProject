@@ -2,7 +2,8 @@
 
 #include "IVPP.h"
 #include "FFmpegWrapper.h"
-#include "PixelFormat.h"
+#include "common\PixelFormat.h"
+#include "common\utils.h"
 #include "VppUtils.h"
 
 typedef struct tagFrameDescInFFmpeg : public FRAMECOLORDESC{
@@ -15,7 +16,7 @@ typedef struct tagFrameDescInFFmpeg : public FRAMECOLORDESC{
 		colorSpace = desc.colorSpace;
 		colorRange = desc.colorRange;
 		pixelFormat = desc.pixelFormat;
-		PixelFormatInFFmpeg = GetPixFmtByFourCC(desc.pixelFormat);
+		PixelFormatInFFmpeg = (AVPixelFormat)GetPixFmtByFourCC(desc.pixelFormat);
 		return *this;
 	}
 

@@ -1,11 +1,5 @@
 #pragma once
 
-#include <stdint.h>
-#include <stdlib.h>
-#include <SampleBuffer.h>
-#include <PackageBuffer.h>
-#include "utils.h"
-
 #ifdef VIDEOCODEC_EXPORTS
 #define VIDEOCODEC_API __declspec(dllexport)
 #else

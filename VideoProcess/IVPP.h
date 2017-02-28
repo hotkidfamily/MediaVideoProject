@@ -6,10 +6,6 @@
 #define VIDEOPROCESS_API __declspec(dllimport)
 #endif
 
-#include <stdint.h>
-#include <math.h>
-#include "SampleBuffer.h"
-
 typedef struct tagframedesc{
 	int width;
 	int height;

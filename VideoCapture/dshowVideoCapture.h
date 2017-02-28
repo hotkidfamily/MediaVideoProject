@@ -7,10 +7,8 @@
 #include "mtype.h"
 #include "ISampleGrabber.h"
 #include "ISampleGrabberCBImpl.h"
-#include "SlidingWindowCalc.h"
 #include "IVideoCapture.h"
 #include "SampleBufferManager.h"
-#include "Clock.h"
 
 typedef struct tagCameraDevDesc{
 	int32_t index;

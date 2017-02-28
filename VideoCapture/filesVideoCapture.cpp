@@ -1,7 +1,5 @@
 #include "stdafx.h"
 #include "filesVideoCapture.h"
-#include "logger.h"
-
 
 DWORD WINAPI decodeThread(void *args)
 {
@@ -127,7 +125,7 @@ int32_t FilesVideoCapture::decodePacket(int *got_frame, int cached, AVPacket &pk
 
 		desc.width = mVideoDecodeCtx->width;
 		desc.height = mVideoDecodeCtx->height;
-		desc.pixelFormatInFourCC = GetFourCCByPixFmt(mVideoDecodeCtx->pix_fmt);
+		desc.pixelFormatInFourCC = GetFourCCByPixFmt((int)mVideoDecodeCtx->pix_fmt);
 		desc.ptsStart = av_frame_get_best_effort_timestamp(mDecDestFrame);
 		desc.ptsEnd = av_frame_get_best_effort_timestamp(mDecDestFrame);
 		desc.frameStartIdx = mFrameIndex++;

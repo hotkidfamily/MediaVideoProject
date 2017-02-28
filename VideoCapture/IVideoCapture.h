@@ -9,8 +9,8 @@
 
 #include <stdint.h>
 #include <vector>
-#include "SampleBuffer.h"
-#include "PixelFormat.h"
+#include "common\SampleBuffer.h"
+#include "common\PixelFormat.h"
 typedef void(*PVIDEO_CAPTURE_LOG_CALLBACK_FUNC)(int, const char* format, va_list);
 
 //---------------------------------------------------------

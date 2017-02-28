@@ -6,8 +6,6 @@
 #define VIDEORENDER_API __declspec(dllimport)
 #endif
 
-#include "SampleBuffer.h"
-
 struct RENDERCONFIG
 {
 	RENDERCONFIG(){
