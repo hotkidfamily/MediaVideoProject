@@ -44,7 +44,7 @@ class DShowVideoCapture :
 	public ISampleGrabberCBImpl
 {
 public:
-	DShowVideoCapture();
+	DShowVideoCapture(CClock &clock);
 	~DShowVideoCapture();
 	HRESULT Stop();
 	HRESULT Start(CAPTURECONFIG&);
@@ -72,7 +72,6 @@ private:
 private:
 
 	BOOL mbMapTimeToLocal;
-	CClock mBaseClock;
 
 	DWORD mGraphRegisterHandler;
 	IGraphBuilder *mGraph;
@@ -96,6 +95,7 @@ private:
 	CAMERALIST mCameraList;
 	CSlidingWindowCalc mFpsStats;
 	CSampleBufferManager mBufferManager;
+	CClock *mBaseClock;
 };
 
 #endif //__DSHOWVIDEOCAPTURE_H__

@@ -15,6 +15,7 @@ public:
 	CClock();
 	~CClock();
 
+	LONGLONG GetBaseTime();
 	BOOL ResetBaseTime(LONGLONG);
 	LONGLONG GetCurrentTimeInMs();
 	LONGLONG GetCurrentTimeIn100ns();

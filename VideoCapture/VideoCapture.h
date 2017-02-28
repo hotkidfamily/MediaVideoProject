@@ -63,8 +63,9 @@ protected:
 private:
 	CAPSUPPORTDEV mDevice;
 	DShowVideoCapture *mDShowCapture;
-	WMFVideoCapture *mMFCapture;
 	FilesVideoCapture *mFilesCapture;
+
+	CClock mBaseClock;
 };
 
 #endif //__VIDEOCAPTURE_H__

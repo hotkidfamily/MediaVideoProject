@@ -6,10 +6,16 @@ CClock::CClock()
 	, m_baseRefTimeDiff(0)
 {
 	QueryPerformanceFrequency((LARGE_INTEGER*)&m_llPerfFrequency);
+	m_baseRefTimeIn100ns = GetCurrentTimeIn100ns();
 }
 
 CClock::~CClock()
 {
+}
+
+LONGLONG CClock::GetBaseTime()
+{
+	return m_baseRefTimeIn100ns;
 }
 
 BOOL CClock::ResetBaseTime(LONGLONG baseRefTimeIn100ns)

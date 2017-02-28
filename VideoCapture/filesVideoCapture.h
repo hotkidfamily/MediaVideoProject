@@ -21,7 +21,7 @@ extern "C" {
 class FilesVideoCapture: public IVideoCapture
 {
 public:
-	FilesVideoCapture();
+	FilesVideoCapture(CClock &);
 	~FilesVideoCapture();
 
 	int32_t DecodeLoop();
@@ -57,9 +57,12 @@ private:
 	int64_t mFrameIndex;
 	int32_t mVideoStreamIndex;
 
+	int64_t time_base_step;
+
 	HANDLE mDecodeThreadHandle;
 	DWORD mDecodeThreadID;
 	BOOL mDecodeThreadQuit;
 
 	CSampleBufferManager mBufferManager;
+	CClock *mBaseClock;
 };

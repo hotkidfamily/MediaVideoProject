@@ -73,7 +73,7 @@ BOOL IsFormatSupport(const GUID *guid, FRAMEABILITY & bility)
 	return bRet;
 }
 
-DShowVideoCapture::DShowVideoCapture()
+DShowVideoCapture::DShowVideoCapture(CClock &clock)
 	: mGraph(nullptr)
 	, mMediaControl(nullptr)
 	, mMediaEventEx(nullptr)
@@ -84,6 +84,7 @@ DShowVideoCapture::DShowVideoCapture()
 	, mcb(nullptr)
 	, mGraphRegisterHandler(0)
 	, mbMapTimeToLocal(FALSE)
+	, mBaseClock(&clock)
 {
 	
 }
@@ -216,15 +217,15 @@ HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 
 	hr = pSample->GetTime(&desc.ptsStart, &desc.ptsEnd);
 	if (FAILED(hr)){
-		desc.ptsStart = mBaseClock.GetCurrentTimeIn100ns(); 
+		desc.ptsStart = mBaseClock->GetCurrentTimeIn100ns(); 
 		desc.ptsEnd = desc.ptsStart + FramesPerSecToRefTime(mWorkParams.fps);
 	}else{
 		if (!mbMapTimeToLocal){
 			// map pts to system clock, so that can easy map to millisecond
-			mBaseClock.ResetBaseTime(desc.ptsStart);
+			mBaseClock->ResetBaseTime(desc.ptsStart);
 			mbMapTimeToLocal = TRUE;
 		}
-		desc.ptsStart = mBaseClock.GetCurrentTimeIn100ns(); 
+		desc.ptsStart = mBaseClock->GetCurrentTimeIn100ns(); 
 		if (hr == VFW_S_NO_STOP_TIME)
 			desc.ptsEnd = desc.ptsStart + FramesPerSecToRefTime(mWorkParams.fps);
 	}
