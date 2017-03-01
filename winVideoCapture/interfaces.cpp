@@ -3,11 +3,25 @@
 #include "winVideoCapture.h"
 #include <assert.h>
 #include <fstream>
+#include <stdio.h>
+#include <stdarg.h>
 
+void log(const char *format, ...)
+{
+	char str[256];
+	va_list vl;
+	va_start(vl, format);
+
+	_vsnprintf_s(str, 255, format, vl);
+
+	va_end(vl);
+
+	OutputDebugStringA(str);
+}
 
 std::list<CSampleBuffer*> captureList;
 
-BOOL StartCaptureWork(THIS_CONTEXT *ctx)
+BOOL StartCamCaptureWork(THIS_CONTEXT *ctx)
 {
 	HRESULT hr = E_FAIL;
 
@@ -29,6 +43,20 @@ BOOL StartCaptureWork(THIS_CONTEXT *ctx)
 		if (hr == S_OK){
 			ctx->bRuning = TRUE;
 		}
+	}
+
+	return hr == S_OK;
+}
+
+BOOL StartFileCaptureWork(THIS_CONTEXT *ctx)
+{
+	HRESULT hr = E_FAIL;
+
+	if (!ctx->bRuning){
+		captureList.clear();
+		ctx->captureCfg.parentWindow = ctx->hMainWnd;
+		hr = ctx->capture->StartCaptureWithParam(ctx->captureCfg);
+		ctx->bRuning = TRUE;
 	}
 
 	return hr == S_OK;
@@ -109,11 +137,9 @@ DWORD WINAPI CaptureThread(LPVOID args)
 	while (ctx->bRuning){
 		CSampleBuffer *frame = nullptr;
 		if (ctx->capture->GetFrame(frame)){
-			//ctx->render->PushFrame(frame);
 			EnterCriticalSection(&ctx->listLock);
 			captureList.push_back(frame);
 			LeaveCriticalSection(&ctx->listLock);
-			//ctx->capture->ReleaseFrame(frame);
 		}
 
 		Sleep(20);
@@ -128,16 +154,17 @@ DWORD WINAPI RenderThread(LPVOID args)
 
 	while (ctx->bRuning){
 		CSampleBuffer *frame = nullptr;
+
 		if (!captureList.empty()){
 			EnterCriticalSection(&ctx->listLock);
 			frame = captureList.front();
 			ctx->render->PushFrame(frame);
 			captureList.pop_front();
 			LeaveCriticalSection(&ctx->listLock);
-			
+
 			ctx->capture->ReleaseFrame(frame);
 		}
-		
+
 		Sleep(10);
 	}
 
