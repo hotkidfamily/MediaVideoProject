@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "VideoRender.h"
+#include "syncrender.h"
 #include "DdrawRender.h"
 #include "D3D9Render.h"
 

@@ -11,15 +11,33 @@ CSyncRender::~CSyncRender()
 {
 }
 
+BOOL CSyncRender::Reset()
+{
+	mRenderBaseClock.ResetBaseTime(0);
+
+	return TRUE;
+}
+
 BOOL CSyncRender::PushFrame(CSampleBuffer *&frame)
 {
+	BOOL ret = FALSE;
 	int64_t ptss, ptse;
+	FRAMEACTION action;
+
 	frame->GetPts(ptss, ptse);
 
-	if (timeToRender(ptss)){
-		// push frame
-	} else{
-		return FALSE;;
+
+	while ((action = timeToRender(ptss)) != FA_PUSH){
+		switch (action){
+		case FA_PUSH:
+			//PUSH
+			mLastRenderedPts = ptss;
+		case FA_DROP:
+			break;
+		case FA_WAIT:
+			Sleep(1);
+			continue;
+		}
 	}
 
 	return TRUE;
@@ -30,16 +48,21 @@ BOOL CSyncRender::GetFrame()
 	return TRUE;
 }
 
-bool CSyncRender::timeToRender(int64_t ptsIn100ns)
+FRAMEACTION CSyncRender::timeToRender(int64_t ptsIn100ns)
 {
+	int64_t mRenderInterval = mRenderBaseClock.GetCurrentTimeIn100ns() - mLastRenderedClock;
+	int64_t deltapts = ptsIn100ns - mLastRenderedPts;
+	int64_t deltaClock = mRenderInterval - deltapts;
+
 	if (ptsIn100ns < mLastRenderedPts){
 		// drop
-		return true;
+		return FA_DROP;
 	}
 
-	if ((ptsIn100ns - mLastRenderedPts) >= mRenderInterval){
-		return true;
+	if (deltapts >= mRenderInterval){
+		mLastRenderedClock = mRenderBaseClock.GetCurrentTimeIn100ns();
+		return FA_PUSH;
 	}
 
-	return false;
+	return FA_WAIT;
 }

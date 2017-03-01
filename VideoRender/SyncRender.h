@@ -1,5 +1,11 @@
 #pragma once
 
+typedef enum tagFrameAction{
+	FA_DROP = 0,
+	FA_WAIT,
+	FA_PUSH,
+}FRAMEACTION;
+
 class CSyncRender
 {
 public:
@@ -9,13 +15,17 @@ public:
 	// placeholder
 	BOOL PushFrame(CSampleBuffer *&frame);
 	BOOL GetFrame();
+
+	// new render object, reset base time
+	BOOL Reset();
+
 protected:
-	bool timeToRender(int64_t ptsIn100ns);
+	FRAMEACTION timeToRender(int64_t ptsIn100ns);
 
 private:
 	//render 
 	CClock mRenderBaseClock;
 	int64_t mLastRenderedPts;
-	int64_t mRenderInterval;
+	int64_t mLastRenderedClock;
 };
 
