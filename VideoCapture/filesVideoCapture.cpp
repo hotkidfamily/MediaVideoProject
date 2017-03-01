@@ -265,7 +265,7 @@ HRESULT FilesVideoCapture::StartCaptureWithParam(CAPTURECONFIG& params)
 		params.width = mVideoDecodeCtx->width;
 		params.height = mVideoDecodeCtx->height;
 		params.pixelFormat = GetFourCCByPixFmt(mVideoDecodeCtx->pix_fmt);
-		params.fps = mVideoDecodeCtx->framerate.num / mVideoDecodeCtx->framerate.den;
+		params.fps = mVideoDecodeCtx->framerate.num*1.0 / mVideoDecodeCtx->framerate.den;
 	}
 
 	return bRet?S_OK:E_FAIL;
