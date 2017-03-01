@@ -31,6 +31,8 @@ D3D9Render::D3D9Render()
 
 	, m_mainModeDesc(NULL)
 	, m_backModeDesc(NULL)
+
+	, mFirstRender(TRUE)
 {
 	ZeroMemory(mpD3D9Texture, sizeof(mpD3D9Texture));
 	ZeroMemory(mpD3D9Surface, sizeof(mpD3D9Surface));
@@ -291,8 +293,6 @@ DWORD D3D9Render::RenderLoop()
 {
 	HRESULT hr = S_OK;
 	DWORD dwRet = WAIT_OBJECT_0;
-	int32_t step = 0;
-	int32_t lastSurface = 0;
 	LPDIRECT3DSURFACE9 pCurSurface = NULL;
 	LPDIRECT3DTEXTURE9 pCurTexture = NULL;
 
@@ -326,7 +326,7 @@ DWORD D3D9Render::RenderLoop()
 
 				UpdateRenderStatis();
 				DrawStatus();
-				hr = mpD3D9Device->WaitForVBlank(0);
+
 				if ((hr = mpD3D9Device->Present(nullptr, nullptr, nullptr, nullptr)) != D3D_OK){
 					logger(Error, "%s", DXGetErrorStringA(hr));
 				}
@@ -492,11 +492,18 @@ BOOL D3D9Render::PushFrame(CSampleBuffer *inframe)
 		frame = mVppTransSampleBuffer;
 	}
 
-	hr = UpdateRenderSurface(frame);
+	if (mFirstRender){
+		mRenderClock.Reset();
+		mFirstRender = FALSE;
+	}
 
-	UpdatePushStatis(frame);
+	if (mRenderClock.PushFrame(frame)){
+		hr = UpdateRenderSurface(frame);
 
-	SetEvent(mRenderEvent);
+		UpdatePushStatis(frame);
+
+		SetEvent(mRenderEvent);
+	}
 
 	if (FAILED(hr))
 		logger(Error, "%s", DXGetErrorStringA(hr));

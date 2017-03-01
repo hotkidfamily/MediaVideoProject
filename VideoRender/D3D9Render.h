@@ -72,5 +72,6 @@ private:
 	CSlidingWindowCalc mRenderStatis;
 
 	CSyncRender mRenderClock;
+	BOOL mFirstRender;
 };
 

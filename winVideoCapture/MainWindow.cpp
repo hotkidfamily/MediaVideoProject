@@ -272,7 +272,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					}
 					else{
 						gContext->captureCfg.index = idx;
-						gContext->captureCfg.filePath = TEXT("e:\\resources\\a.mkv");
+						gContext->captureCfg.filePath = TEXT("e:\\resources\\sango.mkv");
 						if (StartCaptureWork(gContext)){
 							CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_CHECKED);
 							RECT rect = { 0 };
