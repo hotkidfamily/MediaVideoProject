@@ -50,7 +50,6 @@ private:
 	LPDIRECT3DSURFACE9 mpD3D9Surface[MAX_RENDER_OBJ];
 
 	LPD3DXFONT mPFont;
-	ID3DXSprite *mSprite;
 
 	HANDLE mRenderEvent;
 	HANDLE mRenderThreadHandle;
@@ -71,5 +70,8 @@ private:
 	int64_t mCurPtsInterval;
 	CSlidingWindowCalc mInputStatis;
 	CSlidingWindowCalc mRenderStatis;
+
+	CSyncRender mRenderClock;
+	BOOL mFirstRender;
 };
 

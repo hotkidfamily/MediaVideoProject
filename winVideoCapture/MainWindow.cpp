@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "assert.h"
 #include "winVideoCapture.h"
+#include "OpenFile.h"
 #include <windowsx.h>
 
 // Global Variables:
@@ -237,6 +238,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				break;
 			case ID_WINDOW_STATIS:
 				status = GetMenuState(hMenu, idx, MF_BYPOSITION);
+#if 0
 				if (status & MF_CHECKED){
 					CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_UNCHECKED);
 					ShowWindow(gContext->hDashboardWnd, SW_HIDE);
@@ -244,11 +246,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_CHECKED);
 					if (!gContext->hDashboardWnd)
 						gContext->hDashboardWnd = CreateDialog(gContext->hInstance, MAKEINTRESOURCE(IDD_DIALOG_STATUS), hWnd, (DLGPROC)StatusDlgProc);
-					//ShowWindow(gContext->hDashboardWnd, SW_SHOW);
+					ShowWindow(gContext->hDashboardWnd, SW_SHOW);
 				}
+#endif
 				break;
 			case ID_WINDOW_VIDEO:
 				status = GetMenuState(hMenu, idx, MF_BYPOSITION);
+#if 0
 				if (status & MF_CHECKED){
 					CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_UNCHECKED);
 					ShowWindow(gContext->hMediaInfoWnd, SW_HIDE);
@@ -256,10 +260,27 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_CHECKED);
 					if (!gContext->hMediaInfoWnd)
 						gContext->hMediaInfoWnd = CreateDialog(gContext->hInstance, MAKEINTRESOURCE(IDD_DIALOG_MEDIA), hWnd, (DLGPROC)MediaDlgProc);
-					//ShowWindow(gContext->hMediaInfoWnd, SW_SHOW);
+					ShowWindow(gContext->hMediaInfoWnd, SW_SHOW);
 				}
+#endif
 				break;
 			case ID_TOOLS_RANDOMRENDER:
+				break;
+			case ID_FILE_OPEN:
+			{
+				OpenFileDialog *dlg = new OpenFileDialog;
+				if (dlg->ShowDialog()){
+					gContext->captureCfg.filePath = dlg->FileName;
+					if (StartFileCaptureWork(gContext)){
+						CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_CHECKED);
+						RECT rect = { 0 };
+						GetWindowRect(gContext->hMainWnd, &rect);
+						MoveWindow(gContext->hMainWnd, rect.left, rect.top, gContext->captureCfg.width, gContext->captureCfg.height + 16, TRUE);
+						StartRenderWork(gContext);
+						CreateWorkThread(gContext);
+					}
+				}
+			}
 				break;
 			default:
 				if (wmId >= ID_DEVICE_DEVICE3 && wmId < ID_DEVICE_DEVICE3 + gContext->totalCaptureDevices)
@@ -272,8 +293,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					}
 					else{
 						gContext->captureCfg.index = idx;
-						gContext->captureCfg.filePath = TEXT("e:\\resources\\a.mkv");
-						if (StartCaptureWork(gContext)){
+						if (StartCamCaptureWork(gContext)){
 							CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_CHECKED);
 							RECT rect = { 0 };
 							GetWindowRect(gContext->hMainWnd, &rect);

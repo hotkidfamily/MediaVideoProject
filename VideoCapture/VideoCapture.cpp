@@ -39,11 +39,7 @@ bool IVideoCaptureDelegate::UnInitContext()
 
 void IVideoCaptureDelegate::RegisterCallback(VideoCaptureCallback *cb)
 {
-	if (mDevice == CAP_DEV_DSHOW){
 		mDShowCapture->RegisterCallback(cb);
-	} else{
-		mFilesCapture->RegisterCallback(cb);
-	}	
 }
 
 HRESULT IVideoCaptureDelegate::GetDeviceList(VECT &camNames)

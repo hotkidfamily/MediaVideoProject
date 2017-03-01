@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "SyncRender.h"
 #include "D3D9Render.h"
 
 #define FONT_HEIGHT 30
@@ -30,6 +31,8 @@ D3D9Render::D3D9Render()
 
 	, m_mainModeDesc(NULL)
 	, m_backModeDesc(NULL)
+
+	, mFirstRender(TRUE)
 {
 	ZeroMemory(mpD3D9Texture, sizeof(mpD3D9Texture));
 	ZeroMemory(mpD3D9Surface, sizeof(mpD3D9Surface));
@@ -171,10 +174,8 @@ BOOL D3D9Render::InitRender(const RENDERCONFIG &config)
 
 	CHECK_HR(hr = D3DXCreateFont(mpD3D9Device, FONT_HEIGHT, 0, FW_LIGHT, 1, TRUE,
 		DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, TEXT("Arial"), &mPFont));
-
-	CHECK_HR(hr = D3DXCreateSprite(mpD3D9Device, &mSprite));
 	
-	mRenderEvent = CreateEvent(nullptr, FALSE, FALSE, TEXT("sprite Render Event"));
+	mRenderEvent = CreateEvent(nullptr, FALSE, FALSE, TEXT("Render Event"));
 	if (mRenderEvent == INVALID_HANDLE_VALUE){
 		hr = E_FAIL;
 		goto done;
@@ -231,7 +232,6 @@ BOOL D3D9Render::DeinitRender()
 	}
 
 	SAFE_RELEASE(mPFont);
-	SAFE_RELEASE(mSprite);
 	SAFE_RELEASE(mpD3D9Device);
 	SAFE_RELEASE(mpD3D9OBj);
 
@@ -288,6 +288,62 @@ BOOL D3D9Render::UpdateRenderStatis()
 	return FALSE;
 }
 
+
+DWORD D3D9Render::RenderLoop()
+{
+	HRESULT hr = S_OK;
+	DWORD dwRet = WAIT_OBJECT_0;
+	LPDIRECT3DSURFACE9 pCurSurface = NULL;
+	LPDIRECT3DTEXTURE9 pCurTexture = NULL;
+
+	while (mRenderThreadRuning){
+		dwRet = WaitForSingleObject(mRenderEvent, 2);
+		switch (dwRet){
+		case WAIT_OBJECT_0:
+			if (!mRenderThreadRuning){
+				logger(Info, "Render thread exit\n");
+				break;
+			} else{
+				mCurRenderObjIndex = (mCurPushObjIndex + MAX_RENDER_OBJ - 1) % MAX_RENDER_OBJ;
+
+				if (mSupportSurfaceType == SUPPORT_TEXTURE){
+					pCurTexture = mpD3D9Texture[mCurRenderObjIndex];
+					if (!SUCCEEDED(pCurTexture->GetSurfaceLevel(0, &pCurSurface))) {
+						continue;
+					}
+				} else{
+					pCurSurface = mpD3D9Surface[mCurRenderObjIndex];
+				}
+
+				IDirect3DSurface9 *pBackBuffer = nullptr;
+				if (SUCCEEDED(mpD3D9Device->BeginScene())) {
+					if (SUCCEEDED(mpD3D9Device->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer))) {
+						mpD3D9Device->StretchRect(pCurSurface, NULL, pBackBuffer, NULL, D3DTEXF_NONE);
+						pBackBuffer->Release();
+					}
+					mpD3D9Device->EndScene();
+				}
+
+				UpdateRenderStatis();
+				DrawStatus();
+
+				if ((hr = mpD3D9Device->Present(nullptr, nullptr, nullptr, nullptr)) != D3D_OK){
+					logger(Error, "%s", DXGetErrorStringA(hr));
+				}
+			}
+			break;
+		case WAIT_TIMEOUT:
+			continue;
+		default:
+			logger(Info, "Render thread exit, error Code %x\n", GetLastError());
+			break;
+		}
+	}
+
+	return 0;
+}
+
+#if 0
 DWORD D3D9Render::RenderLoop()
 {
 	HRESULT hr = S_OK;
@@ -353,6 +409,7 @@ DWORD D3D9Render::RenderLoop()
 
 	return 0;
 }
+#endif
 
 HRESULT D3D9Render::UpdateRenderSurface(CSampleBuffer *&frame)
 {
@@ -402,7 +459,6 @@ HRESULT D3D9Render::UpdateRenderSurface(CSampleBuffer *&frame)
 	}
 
 	//logger(Info, "push %d\n", mCurPushObjIndex);
-
 	mCurPushObjIndex = (mCurPushObjIndex + 1) % MAX_RENDER_OBJ;
 
 	return hr;
@@ -436,11 +492,18 @@ BOOL D3D9Render::PushFrame(CSampleBuffer *inframe)
 		frame = mVppTransSampleBuffer;
 	}
 
-	hr = UpdateRenderSurface(frame);
+	if (mFirstRender){
+		mRenderClock.Reset();
+		mFirstRender = FALSE;
+	}
 
-	UpdatePushStatis(frame);
+	if (mRenderClock.PushFrame(frame)){
+		hr = UpdateRenderSurface(frame);
 
-	SetEvent(mRenderEvent);
+		UpdatePushStatis(frame);
+
+		SetEvent(mRenderEvent);
+	}
 
 	if (FAILED(hr))
 		logger(Error, "%s", DXGetErrorStringA(hr));

@@ -2,6 +2,7 @@
 
 enum LogLevel
 {
+	System = -1,
 	Debug = 0,
 	Info,
 	Notice,
@@ -12,4 +13,4 @@ enum LogLevel
 
 typedef void(*PLOG_CALLBACK_FUNC)(int, const char* format, va_list);
 
-void logger( int level, const char *fmt, ... );
+void logger( int lvel, const char *fmt, ... );

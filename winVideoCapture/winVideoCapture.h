@@ -43,7 +43,8 @@ typedef struct tagProgramContext{
 	}
 }THIS_CONTEXT, *PTHIS_CONTEXT;
 
-BOOL StartCaptureWork(THIS_CONTEXT *ctx);
+BOOL StartCamCaptureWork(THIS_CONTEXT *ctx);
+BOOL StartFileCaptureWork(THIS_CONTEXT *ctx);
 BOOL StopCaptureWork(THIS_CONTEXT *ctx);
 BOOL SetupEncodeWork(THIS_CONTEXT *ctx);
 BOOL StopEncodeWork(THIS_CONTEXT *ctx);

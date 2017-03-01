@@ -261,11 +261,12 @@ HRESULT FilesVideoCapture::StartCaptureWithParam(CAPTURECONFIG& params)
 	std::string filename = wchar2char.to_bytes(params.filePath.c_str());
 
 	bRet = initVideoContext(filename.c_str());
-
-	params.width = mVideoDecodeCtx->width;
-	params.height = mVideoDecodeCtx->height;
-	params.pixelFormat = GetFourCCByPixFmt(mVideoDecodeCtx->pix_fmt);
-	params.fps = mVideoDecodeCtx->framerate.num / mVideoDecodeCtx->framerate.den;
+	if (bRet){
+		params.width = mVideoDecodeCtx->width;
+		params.height = mVideoDecodeCtx->height;
+		params.pixelFormat = GetFourCCByPixFmt(mVideoDecodeCtx->pix_fmt);
+		params.fps = mVideoDecodeCtx->framerate.num*1.0 / mVideoDecodeCtx->framerate.den;
+	}
 
 	return bRet?S_OK:E_FAIL;
 }
