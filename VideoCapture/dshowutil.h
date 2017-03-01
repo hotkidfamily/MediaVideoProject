@@ -1977,7 +1977,7 @@ inline LONG RectHeight(const RECT& rc) { return rc.bottom - rc.top; }
 
 inline REFERENCE_TIME FramesPerSecToRefTime(double fps) 
 { 
-    return (REFERENCE_TIME)((double)ONE_SECOND / fps);
+    return (REFERENCE_TIME)(ONE_SECOND / (int32_t)fps);
 }
 
 ///////////////////////////////////////////////////////////////////////
