@@ -4,6 +4,7 @@ typedef enum tagFrameAction{
 	FA_DROP = 0,
 	FA_WAIT,
 	FA_PUSH,
+	FA_FAST_PUSH,
 }FRAMEACTION;
 
 class CSyncRender
@@ -25,7 +26,7 @@ protected:
 private:
 	//render 
 	CClock mRenderBaseClock;
-	int64_t mLastRenderedPts;
-	int64_t mLastRenderedClock;
+	int64_t mFirstClockBackup;
+	int64_t mFirstFramePtsBackup;
 };
 
