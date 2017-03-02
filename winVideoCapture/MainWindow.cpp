@@ -268,7 +268,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				break;
 			case ID_FILE_OPEN:
 			{
-				OpenFileDialog *dlg = new OpenFileDialog;
+				OpenFileDialog *dlg = new OpenFileDialog(gContext->hMainWnd);
 				status = GetMenuState(hMenu, idx, MF_BYPOSITION);
 				if (status & MF_CHECKED){
 					gContext->captureCfg.filePath.clear();

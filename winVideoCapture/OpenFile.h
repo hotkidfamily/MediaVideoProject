@@ -8,7 +8,7 @@
 class OpenFileDialog
 {
 public:
-	OpenFileDialog(void);
+	OpenFileDialog(HWND owner);
 
 	TCHAR*DefaultExtension;
 	TCHAR*FileName;
