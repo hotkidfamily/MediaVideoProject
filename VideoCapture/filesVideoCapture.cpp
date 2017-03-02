@@ -13,6 +13,7 @@ BOOL FilesVideoCapture::initVideoContext(const char *filename)
 	BOOL bRet = FALSE;
 	int ret = -1;
 	AVRational time_base;
+	E_RES res;
 
 	mFrameIndex = 0;
 
@@ -44,7 +45,8 @@ BOOL FilesVideoCapture::initVideoContext(const char *filename)
 		goto fail;
 	}
 
-	mBufferManager.Reset(RES1080P, 10);
+	res = GetResByResolution(mVideoDecodeCtx->width, mVideoDecodeCtx->height);
+	mBufferManager.Reset(res, 10);
 
 	mDecDestFrame = av_frame_alloc();
 	if (!mDecDestFrame) {

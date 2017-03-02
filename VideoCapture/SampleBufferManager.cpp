@@ -15,7 +15,8 @@ CSampleBufferManager::CSampleBufferManager()
 CSampleBufferManager::~CSampleBufferManager()
 {
 	ClearWorkStatus();
-	ReleaseMemory();
+	DeallocMemory(mBufferPtr);
+	mBufferPtr = nullptr;
 	DeleteCriticalSection(&mCs);
 }
 
@@ -24,17 +25,21 @@ BOOL CSampleBufferManager::Reset(int32_t res, int32_t nbFrames)
 	BOOL bRet = FALSE;
 	int32_t index = 0;
 	int32_t buffSizePreFrame = GetFrameSizeByRes(res);
+	int32_t buffSize = buffSizePreFrame * nbFrames;
 	BUFFLIST::iterator it;
 
 	ClearWorkStatus();
 
 	// low than current buffer
 	if (buffSizePreFrame * nbFrames > mBufferSize){
-		ReleaseMemory();
-		bRet = AllocMemoryBySizeInByte(buffSizePreFrame * nbFrames);
+
+		bRet = ReallocMemory(&mBufferPtr, buffSize);
+
 		if (!bRet){
 			// out of memory
 			goto errRet;
+		} else{
+			mBufferSize = buffSize;
 		}
 	}
 
@@ -99,18 +104,6 @@ BOOL CSampleBufferManager::UnlockFrame(CSampleBuffer *&sample)
 	return bRet;
 }
 
-BOOL CSampleBufferManager::ReleaseMemory()
-{
-	if (mBufferPtr){
-		DeallocMemory(mBufferPtr);
-		mBufferPtr = nullptr;
-	}
-
-	mBufferSize = 0;
-
-	return TRUE;
-}
-
 BOOL CSampleBufferManager::ClearWorkStatus()
 {
 	if (!readyList.empty()){
@@ -141,53 +134,11 @@ BOOL CSampleBufferManager::ClearWorkStatus()
 	return TRUE;
 }
 
-BOOL CSampleBufferManager::AllocMemoryBySizeInByte(int32_t sizeInBytes)
-{
-	mBufferPtr = (uint8_t*)AllocMemory(sizeInBytes);
-	if (mBufferPtr){
-		mBufferSize = sizeInBytes;
-	}
-
-	return !!mBufferPtr;
-}
-
 int32_t CSampleBufferManager::GetFrameSizeByRes(int32_t res)
 {
 	int32_t sizePrePlanner = 0;
 	
-	sizePrePlanner = GetFrameSizePrePlannerByRes(res);
+	sizePrePlanner = GetFrameSizePrePlannerByRes((E_RES)res);
 
 	return sizePrePlanner * 3;
-}
-
-int32_t CSampleBufferManager::GetFrameSizePrePlannerByRes(int32_t res)
-{
-	int32_t sizePrePlanner = 0;
-	int32_t width = 0;
-	int32_t height = 0;
-
-	switch (res){
-	case RES1080P:
-		width = WIDTHALIGN(1920);
-		height = HEIGHTALIGN(1080);
-		break;
-	case RES720P:
-		width = WIDTHALIGN(1280);
-		height = HEIGHTALIGN(720);
-		break;
-	case RES4K:
-		width = WIDTHALIGN(3840);
-		height = HEIGHTALIGN(2160);
-		break;
-	case RES8K:
-		width = WIDTHALIGN(7680);
-		height = HEIGHTALIGN(4320);
-		break;
-	default:
-		break;
-	}
-
-	sizePrePlanner = width * height;
-
-	return sizePrePlanner;
 }
