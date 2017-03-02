@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "OpenFile.h"
 
-OpenFileDialog::OpenFileDialog(void)
+OpenFileDialog::OpenFileDialog(HWND owner)
 {
 	this->DefaultExtension = 0;
 	this->FileName = new TCHAR[MAX_PATH];
@@ -9,7 +9,7 @@ OpenFileDialog::OpenFileDialog(void)
 	this->FilterIndex = 0;
 	this->Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 	this->InitialDir = 0;
-	this->Owner = 0;
+	this->Owner = owner;
 	this->Title = 0;
 }
 

@@ -141,14 +141,14 @@ int32_t FilesVideoCapture::decodePacket(int *got_frame, AVPacket &pkt)
 		desc.colorPrimaries = (ColorPrimaries)mDecDestFrame->color_primaries;
 		desc.colorTransfer = (ColorTransfer)mDecDestFrame->color_trc;
 
-		int buf_len = av_image_get_buffer_size((AVPixelFormat)mDecDestFrame->format, mDecDestFrame->width, mDecDestFrame->height, 32);
+		int buf_len = av_image_get_buffer_size((AVPixelFormat)mDecDestFrame->format, mDecDestFrame->width, mDecDestFrame->height, 1);
 		if (mDecDestCopiedBufferSize < buf_len){
 			if(ReallocMemory(&mDecDestCopiedBuffer, buf_len))
 				mDecDestCopiedBufferSize = buf_len;
 		}
 
 		ret = av_image_copy_to_buffer(mDecDestCopiedBuffer, buf_len, mDecDestFrame->data, 
-			mDecDestFrame->linesize, (AVPixelFormat)mDecDestFrame->format, mDecDestFrame->width, mDecDestFrame->height, 32);
+			mDecDestFrame->linesize, (AVPixelFormat)mDecDestFrame->format, mDecDestFrame->width, mDecDestFrame->height, 1);
 
 		if (ret > 0){
 			desc.dataPtr = mDecDestCopiedBuffer;
