@@ -14,6 +14,7 @@ CSampleBufferManager::CSampleBufferManager()
 
 CSampleBufferManager::~CSampleBufferManager()
 {
+	ClearWorkStatus();
 	ReleaseMemory();
 	DeleteCriticalSection(&mCs);
 }
@@ -100,8 +101,6 @@ BOOL CSampleBufferManager::UnlockFrame(CSampleBuffer *&sample)
 
 BOOL CSampleBufferManager::ReleaseMemory()
 {
-	ClearWorkStatus();
-
 	if (mBufferPtr){
 		DeallocMemory(mBufferPtr);
 		mBufferPtr = nullptr;

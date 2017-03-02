@@ -63,7 +63,7 @@ CSampleBuffer *AllocSampleBuffer(int32_t width, int32_t height, CPPixelFormat pi
 
 	const PIXELFORAMTDESC *bpp = GetPxielFormatDescByFourCC(pixelFormat);
 
-	/* calc buffer size */
+	/* calculate buffer size */
 	int32_t rWidth = WIDTHALIGN(width);
 	int32_t rHeight = WIDTHALIGN(height);
 	int32_t capability = rWidth * rHeight * bpp->pixdesc.bpp >> 3;

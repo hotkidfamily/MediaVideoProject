@@ -1,9 +1,6 @@
 ﻿#pragma once
 
-#include "AutoLock.h"
-
-#include <stdint.h>
-#include <stdlib.h>
+#include "utils.h"
 
 /*
 step 1: lock
@@ -58,6 +55,11 @@ public:
 		Reset(size, mainSize);
 	}
 
+	~CPackageBuffer(){
+		DeallocMemory(mBufferPtr);
+		mBufferPtr = 0;
+	}
+
 	inline bool isIDRFrame() const { return frameType == IDR_FRAME; }
 	inline bool isIFrame() const{ return frameType == I_FRAME; }
 	inline bool isBFrame() const { return frameType == B_FRAME; }
@@ -84,8 +86,7 @@ public:
 
 		if (mCapbility < totalSize){
 			// realloc
-			ReleaseMemory();
-			if (!AllocMemoryBySizeInByte(totalSize)){
+			if (!ReallocMemory(&mBufferPtr, totalSize)){
 				goto done;
 			}
 		}
@@ -117,30 +118,6 @@ protected:
 	// reserved for future
 	void *extraParam;
 
-protected:
-	inline BOOL AllocMemoryBySizeInByte(int32_t sizeInBytes)
-	{
-		mBufferPtr = (uint8_t*)_aligned_malloc(sizeInBytes, 32);
-		if (mBufferPtr){
-			mCapbility = sizeInBytes;
-		}
-
-		return !!mBufferPtr;
-	}
-
-	inline BOOL ReleaseMemory()
-	{
-		if (mBufferPtr)
-			_aligned_free(mBufferPtr);
-
-		mCapbility = 0;
-		data = nullptr;
-		extraData = nullptr;
-		dataSize = 0;
-		extraDataSize = 0;
-
-		return TRUE;
-	}
 private:
 	uint32_t mCapbility;
 	uint8_t *mBufferPtr;

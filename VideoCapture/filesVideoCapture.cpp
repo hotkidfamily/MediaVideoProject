@@ -44,7 +44,7 @@ BOOL FilesVideoCapture::initVideoContext(const char *filename)
 		goto fail;
 	}
 
-	mBufferManager.Reset(RES1080P, 20);
+	mBufferManager.Reset(RES1080P, 10);
 
 	mDecDestFrame = av_frame_alloc();
 	if (!mDecDestFrame) {
@@ -151,7 +151,7 @@ int32_t FilesVideoCapture::decodePacket(int *got_frame, AVPacket &pkt)
 				mDecDestCopiedBufferSize = buf_len;
 		}
 
-		ret = av_image_copy_to_buffer(mDecDestCopiedBuffer, buf_len, mDecDestFrame->data, 
+		ret = av_image_copy_to_buffer(mDecDestCopiedBuffer, buf_len, mDecDestFrame->data,
 			mDecDestFrame->linesize, (AVPixelFormat)mDecDestFrame->format, mDecDestFrame->width, mDecDestFrame->height, 1);
 
 		if (ret > 0){
@@ -196,6 +196,7 @@ int32_t FilesVideoCapture::DecodeLoop()
 
 		if (av_read_frame(mFileCtx, &pkt) >=0 ){
 			if (pkt.stream_index != mVideoStreamIndex){
+				av_packet_unref(&pkt);
 				continue;
 			}
 			AVPacket orig_pkt = pkt;
