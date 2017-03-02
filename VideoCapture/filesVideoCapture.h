@@ -52,12 +52,14 @@ private:
 	AVFormatContext *mFileCtx;
 	AVCodecContext *mVideoDecodeCtx;
 	AVFrame* mDecDestFrame;
+	AVStream *mVideoStream;
 	uint8_t* mDecDestCopiedBuffer;
 	int32_t mDecDestCopiedBufferSize;
 	int64_t mFrameIndex;
 	int32_t mVideoStreamIndex;
 
-	int64_t time_base_step;
+	double mFrameRate;
+	int64_t mVideStreamPtsStep;
 
 	HANDLE mDecodeThreadHandle;
 	DWORD mDecodeThreadID;

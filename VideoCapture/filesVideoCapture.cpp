@@ -9,7 +9,6 @@ DWORD WINAPI decodeThread(void *args)
 
 BOOL FilesVideoCapture::initVideoContext(const char *filename)
 {
-	AVStream *vs = NULL;
 	AVCodec *videoDec = NULL;
 	BOOL bRet = FALSE;
 	int ret = -1;
@@ -33,11 +32,11 @@ BOOL FilesVideoCapture::initVideoContext(const char *filename)
 		goto fail;
 	}
 
-	vs = mFileCtx->streams[ret];
+	mVideoStream = mFileCtx->streams[ret];
 	mVideoStreamIndex = ret;
 
-	mVideoDecodeCtx = vs->codec;
-	videoDec = avcodec_find_decoder(vs->codec->codec_id);
+	mVideoDecodeCtx = mVideoStream->codec;
+	videoDec = avcodec_find_decoder(mVideoStream->codec->codec_id);
 
 	/* Init the decoders, with or without reference counting */
 	if ((ret = avcodec_open2(mVideoDecodeCtx, videoDec, NULL)) < 0) {
@@ -60,8 +59,9 @@ BOOL FilesVideoCapture::initVideoContext(const char *filename)
 		goto fail;
 	}
 
-	time_base = av_codec_get_pkt_timebase(mVideoDecodeCtx);
-	time_base_step = time_base.num / time_base.den;
+	time_base = av_guess_frame_rate(mFileCtx, mVideoStream, NULL);
+	mFrameRate = av_q2d(time_base);
+	mVideStreamPtsStep = (int64_t)(av_q2d(mVideoStream->time_base) * 10000000);
 
 	bRet = TRUE;
 
@@ -104,6 +104,8 @@ void FilesVideoCapture::cleanUp()
 		av_frame_free(&mDecDestFrame);
 		mDecDestFrame = NULL;
 	}
+
+	mVideoStream = NULL;
 }
 
 int32_t FilesVideoCapture::decodePacket(int *got_frame, AVPacket &pkt)
@@ -111,6 +113,7 @@ int32_t FilesVideoCapture::decodePacket(int *got_frame, AVPacket &pkt)
 	int ret = 0;
 	int decoded = pkt.size;
 	QUEUE_RET q_ret = Q_SUCCESS;
+	int64_t framePts = 0;
 
 	*got_frame = 0;
 
@@ -127,7 +130,8 @@ int32_t FilesVideoCapture::decodePacket(int *got_frame, AVPacket &pkt)
 		desc.width = mDecDestFrame->width;
 		desc.height = mDecDestFrame->height;
 		desc.pixelFormatInFourCC = GetFourCCByPixFmt(mDecDestFrame->format);
-		desc.ptsStart = mBaseClock->GetBaseTime() + av_frame_get_best_effort_timestamp(mDecDestFrame)*10000;
+		framePts = av_frame_get_best_effort_timestamp(mDecDestFrame) * mVideStreamPtsStep;
+		desc.ptsStart = mBaseClock->GetBaseTime() + framePts;
 		desc.ptsEnd = desc.ptsStart + av_frame_get_pkt_duration(mDecDestFrame);
 		//logger(Info, "pts %lld dts %lld, best %lld\n", mDecDestFrame->pkt_pts, mDecDestFrame->pkt_dts, desc.ptsStart);
 		desc.frameStartIdx = mFrameIndex++;
@@ -225,6 +229,7 @@ FilesVideoCapture::FilesVideoCapture(CClock &clock)
 	, mVideoDecodeCtx(NULL)
 	, mVideoStreamIndex(0)
 	, mBaseClock(&clock)
+	, mVideoStream(NULL)
 {
 	av_register_all();
 }
@@ -265,7 +270,7 @@ HRESULT FilesVideoCapture::StartCaptureWithParam(CAPTURECONFIG& params)
 		params.width = mVideoDecodeCtx->width;
 		params.height = mVideoDecodeCtx->height;
 		params.pixelFormat = GetFourCCByPixFmt(mVideoDecodeCtx->pix_fmt);
-		params.fps = mVideoDecodeCtx->framerate.num*1.0 / mVideoDecodeCtx->framerate.den;
+		params.fps = mFrameRate;
 	}
 
 	return bRet?S_OK:E_FAIL;

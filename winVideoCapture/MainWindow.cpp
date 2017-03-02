@@ -269,15 +269,23 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			case ID_FILE_OPEN:
 			{
 				OpenFileDialog *dlg = new OpenFileDialog;
-				if (dlg->ShowDialog()){
-					gContext->captureCfg.filePath = dlg->FileName;
-					if (StartFileCaptureWork(gContext)){
-						CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_CHECKED);
-						RECT rect = { 0 };
-						GetWindowRect(gContext->hMainWnd, &rect);
-						MoveWindow(gContext->hMainWnd, rect.left, rect.top, gContext->captureCfg.width, gContext->captureCfg.height + 16, TRUE);
-						StartRenderWork(gContext);
-						CreateWorkThread(gContext);
+				status = GetMenuState(hMenu, idx, MF_BYPOSITION);
+				if (status & MF_CHECKED){
+					gContext->captureCfg.filePath.clear();
+					CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_UNCHECKED);
+					StopCaptureWork(gContext);
+					StopRenderWork(gContext);
+				} else{
+					if (dlg->ShowDialog()){
+						gContext->captureCfg.filePath = dlg->FileName;
+						if (StartFileCaptureWork(gContext)){
+							CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_CHECKED);
+							RECT rect = { 0 };
+							GetWindowRect(gContext->hMainWnd, &rect);
+							MoveWindow(gContext->hMainWnd, rect.left, rect.top, gContext->captureCfg.width, gContext->captureCfg.height + 16, TRUE);
+							StartRenderWork(gContext);
+							CreateWorkThread(gContext);
+						}
 					}
 				}
 			}
@@ -301,7 +309,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 							StartRenderWork(gContext);
 							CreateWorkThread(gContext);
 						}
-
 					}
 				}else{
 					return DefWindowProc(hWnd, message, wParam, lParam);
