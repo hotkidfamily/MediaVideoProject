@@ -304,26 +304,6 @@ DWORD D3D9Render::RenderLoop()
 				logger(Info, "Render thread exit\n");
 				break;
 			} else{
-				mCurRenderObjIndex = (mCurPushObjIndex + MAX_RENDER_OBJ - 1) % MAX_RENDER_OBJ;
-
-				if (mSupportSurfaceType == SUPPORT_TEXTURE){
-					pCurTexture = mpD3D9Texture[mCurRenderObjIndex];
-					if (!SUCCEEDED(pCurTexture->GetSurfaceLevel(0, &pCurSurface))) {
-						continue;
-					}
-				} else{
-					pCurSurface = mpD3D9Surface[mCurRenderObjIndex];
-				}
-
-				IDirect3DSurface9 *pBackBuffer = nullptr;
-				if (SUCCEEDED(mpD3D9Device->BeginScene())) {
-					if (SUCCEEDED(mpD3D9Device->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer))) {
-						mpD3D9Device->StretchRect(pCurSurface, NULL, pBackBuffer, NULL, D3DTEXF_NONE);
-						pBackBuffer->Release();
-					}
-					mpD3D9Device->EndScene();
-				}
-
 				UpdateRenderStatis();
 				DrawStatus();
 
@@ -458,9 +438,32 @@ HRESULT D3D9Render::UpdateRenderSurface(CSampleBuffer *&frame)
 		}
 	}
 
+	mCurRenderObjIndex = mCurPushObjIndex;
+
 	//logger(Info, "push %d\n", mCurPushObjIndex);
 	mCurPushObjIndex = (mCurPushObjIndex + 1) % MAX_RENDER_OBJ;
 
+	//mCurRenderObjIndex = (mCurPushObjIndex + MAX_RENDER_OBJ - 1) % MAX_RENDER_OBJ;
+
+	if (mSupportSurfaceType == SUPPORT_TEXTURE){
+		pCurTexture = mpD3D9Texture[mCurRenderObjIndex];
+		if (!SUCCEEDED(pCurTexture->GetSurfaceLevel(0, &pCurSurface))) {
+			//continue;
+			logger(Error, "%s", DXGetErrorStringA(hr));
+			return hr;
+		}
+	} else{
+		pCurSurface = mpD3D9Surface[mCurRenderObjIndex];
+	}
+
+	IDirect3DSurface9 *pBackBuffer = nullptr;
+	if (SUCCEEDED(mpD3D9Device->BeginScene())) {
+		if (SUCCEEDED(mpD3D9Device->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer))) {
+			mpD3D9Device->StretchRect(pCurSurface, NULL, pBackBuffer, NULL, D3DTEXF_NONE);
+			pBackBuffer->Release();
+		}
+		mpD3D9Device->EndScene();
+	}
 	return hr;
 };
 
