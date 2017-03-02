@@ -64,6 +64,8 @@ private:
 	HANDLE mDecodeThreadHandle;
 	DWORD mDecodeThreadID;
 	BOOL mDecodeThreadQuit;
+	int64_t mLastVideoFramePts;
+	BOOL mbDecodeLoop;
 
 	CSampleBufferManager mBufferManager;
 	CClock *mBaseClock;

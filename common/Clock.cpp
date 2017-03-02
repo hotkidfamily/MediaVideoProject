@@ -15,7 +15,7 @@ CClock::~CClock()
 
 LONGLONG CClock::GetBaseTime()
 {
-	return m_baseRefTimeIn100ns;
+	return m_baseRefTimeIn100ns + m_baseRefTimeDiff;
 }
 
 BOOL CClock::ResetBaseTime(LONGLONG baseRefTimeIn100ns)

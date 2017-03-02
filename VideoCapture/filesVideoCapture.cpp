@@ -126,16 +126,20 @@ int32_t FilesVideoCapture::decodePacket(int *got_frame, AVPacket &pkt)
 
 	if (*got_frame) {
 		FRAME_DESC desc;
-
+		if (mbDecodeLoop){
+			mBaseClock->ResetBaseTime(mLastVideoFramePts);
+			mbDecodeLoop = FALSE;
+		}
 		desc.width = mDecDestFrame->width;
 		desc.height = mDecDestFrame->height;
 		desc.pixelFormatInFourCC = GetFourCCByPixFmt(mDecDestFrame->format);
 		framePts = av_frame_get_best_effort_timestamp(mDecDestFrame) * mVideStreamPtsStep;
 		desc.ptsStart = mBaseClock->GetBaseTime() + framePts;
 		desc.ptsEnd = desc.ptsStart + av_frame_get_pkt_duration(mDecDestFrame);
-		//logger(Info, "pts %lld dts %lld, best %lld\n", mDecDestFrame->pkt_pts, mDecDestFrame->pkt_dts, desc.ptsStart);
+		logger(Info, "pts %lld, diff %lld \n", desc.ptsStart, desc.ptsStart - mLastVideoFramePts);
 		desc.frameStartIdx = mFrameIndex++;
 		desc.frameEndIdx = mFrameIndex;
+		mLastVideoFramePts = desc.ptsStart;
 
 		desc.colorRange = (ColorRange)av_frame_get_color_range(mDecDestFrame);
 		desc.colorPrimaries = (ColorPrimaries)mDecDestFrame->color_primaries;
@@ -207,6 +211,16 @@ int32_t FilesVideoCapture::DecodeLoop()
 				pkt.size -= ret;
 			} while (pkt.size > 0);
 			av_packet_unref(&orig_pkt);
+		} else{
+			/* flush cached frames */
+			pkt.data = NULL;
+			pkt.size = 0;
+			do {
+				decodePacket(&got_frame, pkt);
+			} while (got_frame);
+
+			av_seek_frame(mFileCtx, mVideoStreamIndex, 0, AVSEEK_FLAG_BACKWARD);
+			mbDecodeLoop = TRUE;
 		}
 	}
 
@@ -230,6 +244,8 @@ FilesVideoCapture::FilesVideoCapture(CClock &clock)
 	, mVideoStreamIndex(0)
 	, mBaseClock(&clock)
 	, mVideoStream(NULL)
+	, mLastVideoFramePts(0)
+	, mbDecodeLoop(FALSE)
 {
 	av_register_all();
 }
