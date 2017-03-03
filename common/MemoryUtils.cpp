@@ -126,11 +126,12 @@ CSampleBuffer *AllocSampleBuffer(int32_t width, int32_t height, CPPixelFormat pi
 	int32_t capability = rWidth * rHeight * bpp->pixdesc.bpp >> 3;
 	uint8_t *bufferPtr = AllocMemory(capability);
 
-	if (!sample || !bufferPtr){
+	if (!bufferPtr){
+		//logger(Error, "Can not alloc sample buffer.\n");
 		goto fail;
 	}
 	sample = new CSampleBuffer(bufferPtr, capability);
-	assert(!sample);
+	assert(sample);
 	sample->Reset(bufferPtr, capability, width, height, pixelFormat);
 
 	bRet = TRUE;

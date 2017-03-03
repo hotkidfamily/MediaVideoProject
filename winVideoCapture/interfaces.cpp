@@ -64,6 +64,7 @@ BOOL StartFileCaptureWork(THIS_CONTEXT *ctx)
 
 BOOL StopCaptureWork(THIS_CONTEXT *ctx)
 {
+	captureList.clear();
 	if (ctx->capture){
 		ctx->capture->StopCapture();
 		ctx->capture->UnRegisterCallback();
@@ -176,15 +177,21 @@ BOOL CreateWorkThread(THIS_CONTEXT *ctx)
 BOOL DestoryWorkThread(THIS_CONTEXT *ctx)
 {
 	ctx->bRuning = 0;
-	if (WAIT_OBJECT_0 != WaitForSingleObject(ctx->hCaptureThread, INFINITE)){
-		TerminateThread(ctx->hCaptureThread, -1);
-		ctx->hCaptureThread = NULL;
+	if (ctx->hCaptureThread){
+		if (WAIT_OBJECT_0 != WaitForSingleObject(ctx->hCaptureThread, INFINITE)){
+			TerminateThread(ctx->hCaptureThread, -1);
+			ctx->hCaptureThread = NULL;
+		}
 	}
+	log("capture thread end.\n");
 
-	if (WAIT_OBJECT_0 != WaitForSingleObject(ctx->hRenderThread, INFINITE)){
-		TerminateThread(ctx->hRenderThread, -1);
-		ctx->hRenderThread = NULL;
+	if (ctx->hRenderThread){
+		if (WAIT_OBJECT_0 != WaitForSingleObject(ctx->hRenderThread, INFINITE)){
+			TerminateThread(ctx->hRenderThread, -1);
+			ctx->hRenderThread = NULL;
+		}
 	}
+	log("render thread end.\n");
 
 	return TRUE;
 }
