@@ -196,6 +196,17 @@ LRESULT CALLBACK MediaDlgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 	return  DefWindowProc(hWnd, message, wParam, lParam);
 }
 
+void ResizeWindow()
+{
+	RECT rect = { 0 };
+	RECT rectClient = { 0 };
+	GetWindowRect(gContext->hMainWnd, &rect);
+	GetClientRect(gContext->hMainWnd, &rectClient);
+	int32_t width = rect.right - rect.left - rectClient.right;
+	int32_t height = rect.bottom - rect.top - rectClient.bottom;
+
+	MoveWindow(gContext->hMainWnd, rect.left, rect.top, gContext->captureCfg.width + width, gContext->captureCfg.height + height, TRUE);
+}
 //
 //  FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
 //
@@ -283,9 +294,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 						if (StartFileCaptureWork(gContext)){
 							SetWindowText(gContext->hMainWnd, gContext->captureCfg.filePath.c_str());
 							CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_CHECKED);
-							RECT rect = { 0 };
-							GetWindowRect(gContext->hMainWnd, &rect);
-							MoveWindow(gContext->hMainWnd, rect.left, rect.top, gContext->captureCfg.width, gContext->captureCfg.height + 16, TRUE);
+							ResizeWindow();
 							StartRenderWork(gContext);
 							CreateWorkThread(gContext);
 						}
@@ -308,9 +317,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 						if (StartCamCaptureWork(gContext)){
 							SetWindowText(gContext->hMainWnd, gContext->captureCfg.deviceName.c_str());
 							CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_CHECKED);
-							RECT rect = { 0 };
-							GetWindowRect(gContext->hMainWnd, &rect);
-							MoveWindow(gContext->hMainWnd, rect.left, rect.top, gContext->captureCfg.width, gContext->captureCfg.height + 16, TRUE);
+							ResizeWindow();
 							StartRenderWork(gContext);
 							CreateWorkThread(gContext);
 						}
