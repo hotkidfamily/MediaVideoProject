@@ -168,7 +168,7 @@ int32_t FilesVideoCapture::decodePacket(int *got_frame, AVPacket &pkt)
 			}
 
 			if (q_ret == Q_FULL){
-				Sleep(2);
+				Sleep(1);
 				continue;
 			} else {
 				logger(Error, "Can not push frame as: Queue is %d\n", q_ret);

@@ -153,6 +153,7 @@ HRESULT DShowVideoCapture::Start(CAPTURECONFIG &params)
 	mWorkParams.fps = RefTimeToFramesPerSec(mWorkMediaType.AvgReferenceTime());
 	mWorkParams.pixelFormat = mWorkMediaType.subtype.Data1;
 	params = mWorkParams;
+	params.deviceName = mCameraList[mWorkParams.index].name;
 
 	E_RES R = GetResByResolution(params.width, params.height);
 	if (!mBufferManager.Reset(R, 10)) {
@@ -460,12 +461,14 @@ HRESULT DShowVideoCapture::BuildGraph()
 	CHECK_HR(hr = AddGraphToRot(mGraph, &mGraphRegisterHandler));
 
 done:
+#ifdef _DEBUG
 	TCHAR Buffer[MAX_PATH];
 	if (GetCurrentDirectory(MAX_PATH, Buffer) != 0){
 		STRING path(Buffer);
 		path.append(TEXT("\\my.grf"));
 		SaveGraphFile(mGraph, (TCHAR*)path.c_str());
 	}
+#endif
 	ShowDShowError(hr);
 	return hr;
 }
@@ -617,6 +620,9 @@ HRESULT DShowVideoCapture::FindCaptureFilterByIndex(int index, IBaseFilter * &fi
 
 			if (mCameraList[index] == dev){
 				hr = pM->BindToObject(nullptr, nullptr, IID_IBaseFilter, (void**)&filter);
+				if (SUCCEEDED(hr)){
+
+				}
 				filter->QueryInterface(IID_IAMDroppedFrames, (void**)&mDropFrameStatus);
 				break;
 			}

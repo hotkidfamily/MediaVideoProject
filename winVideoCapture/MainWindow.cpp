@@ -280,6 +280,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					if (dlg->ShowDialog()){
 						gContext->captureCfg.filePath = dlg->FileName;
 						if (StartFileCaptureWork(gContext)){
+							SetWindowText(gContext->hMainWnd, gContext->captureCfg.filePath.c_str());
 							CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_CHECKED);
 							RECT rect = { 0 };
 							GetWindowRect(gContext->hMainWnd, &rect);
@@ -304,6 +305,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					else{
 						gContext->captureCfg.index = idx;
 						if (StartCamCaptureWork(gContext)){
+							SetWindowText(gContext->hMainWnd, gContext->captureCfg.deviceName.c_str());
 							CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_CHECKED);
 							RECT rect = { 0 };
 							GetWindowRect(gContext->hMainWnd, &rect);

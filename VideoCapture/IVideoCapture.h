@@ -28,6 +28,7 @@ struct CAPTURECONFIG
 	HWND parentWindow;
 	HWND attachWindow;
 	DWORD pixelFormat;
+	STRING deviceName;
 	STRING filePath;
 
 	CAPTURECONFIG()
@@ -39,6 +40,7 @@ struct CAPTURECONFIG
 		attachWindow = NULL;
 		pixelFormat = PIXEL_FORMAT_NONE;
 		filePath.clear();
+		deviceName.clear();
 	}
 };
 

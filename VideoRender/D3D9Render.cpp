@@ -429,6 +429,7 @@ HRESULT D3D9Render::UpdateRenderSurface(CSampleBuffer *&frame)
 				memcpy(dstDataPtr, framePlanarPtr[0], frame->validDataSize);
 			} else{
 				int32_t dstj = 0;
+				int32_t totalCopied = 0;
 				for (int i = 0; i < frame->planarCnt; i++) {
 					int32_t copiedSize = 0;
 					int32_t j = 0;
@@ -439,6 +440,7 @@ HRESULT D3D9Render::UpdateRenderSurface(CSampleBuffer *&frame)
 						copiedSize += frameStride[i];
 						dstj++;
 					}
+					totalCopied += copiedSize;
 				}
 			}
 			pCurSurface->UnlockRect();
