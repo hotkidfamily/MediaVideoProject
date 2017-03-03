@@ -48,6 +48,7 @@ typedef struct tagFrameFormatInfo{
 	int32_t strideW;
 	int32_t strideH;
 	PIXFMTINFO pixdesc;
+	const char* desc;
 }PIXELFORAMTDESC;
 
 extern "C" {
