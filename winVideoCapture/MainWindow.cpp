@@ -92,6 +92,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		}
 	}
 
+	DestoryWorkThread(gContext);
 	StopCaptureWork(gContext);
 	StopRenderWork(gContext);	
 	ReleaseVideoCaptureObj(gContext->capture);
