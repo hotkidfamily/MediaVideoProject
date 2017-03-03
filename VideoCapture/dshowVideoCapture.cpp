@@ -139,10 +139,6 @@ HRESULT DShowVideoCapture::Start(CAPTURECONFIG &params)
 	ASSERT(mMediaControl);
 
 	mWorkParams = params;
-	if (!mBufferManager.Reset(RES1080P, 10)){
-		hr = E_OUTOFMEMORY;
-		goto done;
-	}
 
 	CHECK_HR(hr = BuildGraph());
 
@@ -157,6 +153,12 @@ HRESULT DShowVideoCapture::Start(CAPTURECONFIG &params)
 	mWorkParams.fps = RefTimeToFramesPerSec(mWorkMediaType.AvgReferenceTime());
 	mWorkParams.pixelFormat = mWorkMediaType.subtype.Data1;
 	params = mWorkParams;
+
+	E_RES R = GetResByResolution(params.width, params.height);
+	if (!mBufferManager.Reset(R, 10)) {
+		hr = E_OUTOFMEMORY;
+		goto done;
+	}
 	
 	do{
 		Sleep(100);

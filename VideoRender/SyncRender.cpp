@@ -24,13 +24,10 @@ BOOL CSyncRender::Reset()
 BOOL CSyncRender::PushFrame(CSampleBuffer *&frame)
 {
 	BOOL ret = FALSE;
-	int64_t ptss, ptse;
 	FRAMEACTION action = FA_WAIT;
 
-	frame->GetPts(ptss, ptse);
-
 	while (1){
-		action = timeToRender(ptss);
+		action = timeToRender(frame->ptsStart);
 		switch (action){
 		case FA_PUSH:
 			ret = TRUE;

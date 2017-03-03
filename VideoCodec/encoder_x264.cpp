@@ -136,29 +136,29 @@ bool CLibx264::addFrame(const CSampleBuffer &inputFrame)
 	x264_picture_t inpic;
 	x264_picture_init(&inpic);
 
-	switch (inputFrame.GetPixelFormat())
+	switch (inputFrame.pixelFormatInFourCC)
 	{
 	case PIXEL_FORMAT_RGB24:
 		inpic.img.i_csp = X264_CSP_BGR | X264_CSP_VFLIP;
 		inpic.img.i_plane = 1;
-		inpic.img.plane[0] = inputFrame.GetDataPtr();
-		inpic.img.i_stride[0] = inputFrame.GetLineSize();
+		inpic.img.plane[0] = inputFrame.planarPtr[0];
+		inpic.img.i_stride[0] = inputFrame.planarStride[0];
 		break;
 	case PIXEL_FORMAT_I420:
 		inpic.img.i_csp = X264_CSP_I420;
 		inpic.img.i_plane = 3;
-		inpic.img.plane[0] = inputFrame.GetDataPtr();
-		inpic.img.plane[1] = inpic.img.plane[0] + inputFrame.GetWidth() *inputFrame.GetHeight();
-		inpic.img.plane[2] = inpic.img.plane[1] + inputFrame.GetWidth() *inputFrame.GetHeight() / 4;
-		inpic.img.i_stride[0] = inputFrame.GetWidth();
-		inpic.img.i_stride[1] = inputFrame.GetWidth()/2;
-		inpic.img.i_stride[2] = inputFrame.GetWidth()/2;
+		inpic.img.plane[0] = inputFrame.planarPtr[0];
+		inpic.img.plane[1] = inpic.img.plane[0] + inputFrame.width *inputFrame.height;
+		inpic.img.plane[2] = inpic.img.plane[1] + inputFrame.width *inputFrame.height / 4;
+		inpic.img.i_stride[0] = inputFrame.width;
+		inpic.img.i_stride[1] = inputFrame.width/2;
+		inpic.img.i_stride[2] = inputFrame.width/2;
 		break;
 	case PIXEL_FORMAT_RGB32:
 		inpic.img.i_csp = X264_CSP_BGRA;
 		inpic.img.i_plane = 1;
-		inpic.img.plane[0] = inputFrame.GetDataPtr();
-		inpic.img.i_stride[0] = inputFrame.GetLineSize();
+		inpic.img.plane[0] = inputFrame.planarPtr[0];
+		inpic.img.i_stride[0] = inputFrame.planarStride[0];
 		break;
 	case PIXEL_FORMAT_YUY2:
 		//mVpp->convertYUY2toNV16(mInPic, &inputFrame);
@@ -167,17 +167,15 @@ bool CLibx264::addFrame(const CSampleBuffer &inputFrame)
 		return false;
 	}
 
-	if (inputFrame.GetPixelFormat() == PIXEL_FORMAT_YUY2){
+	if (inputFrame.pixelFormatInFourCC == PIXEL_FORMAT_YUY2){
 		int64_t ptss = 0, ptse = 0;
-		inputFrame.GetPts(ptss, ptse);
-		mInPic.i_pts = ptss;
+		mInPic.i_pts = inputFrame.ptsStart;
 		
 		mInPic.i_type = X264_TYPE_AUTO;
 		encodeFrame(&mInPic);
 	} else {
 		int64_t ptss = 0, ptse = 0;
-		inputFrame.GetPts(ptss, ptse);
-		inpic.i_pts = ptss;
+		inpic.i_pts = inputFrame.ptsStart;;
 		inpic.i_type = X264_TYPE_AUTO;
 		encodeFrame(&inpic);
 	}

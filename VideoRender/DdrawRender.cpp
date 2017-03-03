@@ -261,13 +261,16 @@ BOOL DDrawRender::PushFrame(CSampleBuffer *frame)
 	DDSURFACEDESC2 desc;
 	uint32_t ptsInterval = 0;
 	int64_t ptss = 0, ptse = 0;
+	int32_t *lineSize = 0;
 
 	if (!frame){
 		return FALSE;
 	}
 
-	frame->GetPts(ptss, ptse);
-	ptsInterval = (uint32_t)(ptss - mLastPts);
+
+	lineSize = frame->planarStride;
+
+	ptsInterval = (uint32_t)(frame->ptsStart - mLastPts);
 	if (mLastPts)
 		mInputStatis.AppendSample(ptsInterval);
 
@@ -279,20 +282,20 @@ BOOL DDrawRender::PushFrame(CSampleBuffer *frame)
 	}
 	CHECK_HR(hr = mCanvasSurface->Lock(nullptr, &desc, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, nullptr));
 
-	if (!((uint32_t)frame->GetWidth() > desc.dwWidth || (uint32_t)frame->GetHeight() > desc.dwHeight)){
+	if (!((uint32_t)frame->width > desc.dwWidth || (uint32_t)frame->height > desc.dwHeight)){
 		uint8_t *surfaceBuffer = (uint8_t*)desc.lpSurface;
-		if (frame->GetPixelFormat() == PIXEL_FORMAT_RGB24){
-			for (int i = 0; i < frame->GetHeight(); i++){
+		if (frame->pixelFormatInFourCC == PIXEL_FORMAT_RGB24){
+			for (int i = 0; i < frame->height; i++){
 				DWORD *rgb32Buffer = rgb32Buffer = (DWORD*)(surfaceBuffer + i*desc.lPitch);
-				uint8_t* rgb24Buffer = frame->GetDataPtr() + frame->GetLineSize()*(frame->GetHeight()-i);
-				for (int j = 0; j < frame->GetWidth(); j++){
+				uint8_t* rgb24Buffer = frame->GetDataPtr() + lineSize[0]*(frame->height - i);
+				for (int j = 0; j < frame->width; j++){
 					rgb32Buffer[j] = RGB(rgb24Buffer[0], rgb24Buffer[1], rgb24Buffer[2]);
 					rgb24Buffer += 3;
 				}
 			}
 		}
 		else{
-			memcpy(surfaceBuffer, frame->GetDataPtr(), frame->GetDataSize());
+			memcpy(surfaceBuffer, frame->planarPtr[0], frame->validDataSize);
 		}
 	}
 

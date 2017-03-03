@@ -51,23 +51,26 @@ BOOL FFmpegProcess::ProcessFrame(const CSampleBuffer *srcPic, CSampleBuffer *out
 	int32_t *sStride = nullptr;
 	uint8_t **dBuf = nullptr;
 	int32_t *dStride = nullptr;
+	int32_t *lineSize = nullptr;
+
 	int64_t ptss = 0 ;
 	int64_t ptse = 0 ;
 
-	sBuf = srcPic->GetPlanarPtr();
-	sStride = srcPic->GetStride();
-	dBuf = outPic->GetPlanarPtr();
-	dStride = outPic->GetStride();
+	sBuf = (uint8_t **)srcPic->planarPtr;
+	sStride = (int32_t*)srcPic->planarStride;
+	dBuf = outPic->planarPtr;
+	dStride = outPic->planarStride;
+	lineSize = (int32_t*)srcPic->planarStride;
 
-	if (srcPic->GetPixelFormat() == PIXEL_FORMAT_RGB24 || srcPic->GetPixelFormat() == PIXEL_FORMAT_RGB32){
-		sBuf[0] = sBuf[0] + sStride[0] + srcPic->GetLineSize() * (srcPic->GetHeight() - 1);
+	if (srcPic->pixelFormatInFourCC == PIXEL_FORMAT_RGB24 || srcPic->pixelFormatInFourCC == PIXEL_FORMAT_RGB32){
+		sBuf[0] = sBuf[0] + sStride[0] + lineSize[0] * (srcPic->height - 1);
 		sStride[0] = -sStride[0];
 	}
 
 	int oheight = FFmpegWrapper::sws_scale(mScaleCtx, sBuf, sStride, 0, mParams.inFrame.Height(), dBuf, dStride);
 
-	srcPic->GetPts(ptss, ptse);
-	outPic->SetPts(ptss, ptse);
+	outPic->ptsStart = srcPic->ptsStart;
+	outPic->ptsEnd = srcPic->ptsEnd;
 
 	return true;
 }

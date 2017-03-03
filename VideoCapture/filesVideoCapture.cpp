@@ -138,7 +138,7 @@ int32_t FilesVideoCapture::decodePacket(int *got_frame, AVPacket &pkt)
 		framePts = av_frame_get_best_effort_timestamp(mDecDestFrame) * mVideStreamPtsStep;
 		desc.ptsStart = mBaseClock->GetBaseTime() + framePts;
 		desc.ptsEnd = desc.ptsStart + av_frame_get_pkt_duration(mDecDestFrame);
-		logger(Info, "pts %lld, diff %lld \n", desc.ptsStart, desc.ptsStart - mLastVideoFramePts);
+		logger(Debug, "pts %lld, diff %lld \n", desc.ptsStart, desc.ptsStart - mLastVideoFramePts);
 		desc.frameStartIdx = mFrameIndex++;
 		desc.frameEndIdx = mFrameIndex;
 		mLastVideoFramePts = desc.ptsStart;
@@ -153,12 +153,12 @@ int32_t FilesVideoCapture::decodePacket(int *got_frame, AVPacket &pkt)
 				mDecDestCopiedBufferSize = buf_len;
 		}
 
-		ret = av_image_copy_to_buffer(mDecDestCopiedBuffer, buf_len, mDecDestFrame->data,
+		ret = av_image_copy_to_buffer(mDecDestCopiedBuffer, mDecDestCopiedBufferSize, mDecDestFrame->data,
 			mDecDestFrame->linesize, (AVPixelFormat)mDecDestFrame->format, mDecDestFrame->width, mDecDestFrame->height, 1);
 
 		if (ret > 0){
 			desc.dataPtr = mDecDestCopiedBuffer;
-			desc.validDataSize = mDecDestCopiedBufferSize;
+			desc.validDataSize = ret;
 		}
 		// push frame to queue
 		while ((q_ret = mBufferManager.FillFrame(desc)) != Q_SUCCESS){

@@ -115,7 +115,7 @@ done:
 
 CSampleBuffer *AllocSampleBuffer(int32_t width, int32_t height, CPPixelFormat pixelFormat)
 {
-	CSampleBuffer *sample = new CSampleBuffer;
+	CSampleBuffer *sample = nullptr;
 	BOOL bRet = FALSE;
 
 	const PIXELFORAMTDESC *bpp = GetPxielFormatDescByFourCC(pixelFormat);
@@ -129,7 +129,8 @@ CSampleBuffer *AllocSampleBuffer(int32_t width, int32_t height, CPPixelFormat pi
 	if (!sample || !bufferPtr){
 		goto fail;
 	}
-
+	sample = new CSampleBuffer(bufferPtr, capability);
+	assert(!sample);
 	sample->Reset(bufferPtr, capability, width, height, pixelFormat);
 
 	bRet = TRUE;
