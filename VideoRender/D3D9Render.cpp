@@ -441,7 +441,7 @@ HRESULT D3D9Render::UpdateRenderSurface(CSampleBuffer *&frame)
 						uint8_t* srcLineBuffer = frame->planarPtr[i] + frame->planarStride[i] * j;
 						memcpy_s(dstlineBuffer, dstPitch, srcLineBuffer, frame->planarStride[i]);
 					}
-					dstPlannerPtr = dstDataPtr + dstPitch * dstHeight;
+					dstPlannerPtr = dstPlannerPtr + dstPitch * dstHeight;
 				}
 			}
 			pCurSurface->UnlockRect();
