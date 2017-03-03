@@ -51,5 +51,6 @@ BOOL StopEncodeWork(THIS_CONTEXT *ctx);
 DWORD WINAPI CaptureThread(LPVOID args);
 DWORD WINAPI RenderThread(LPVOID args);
 BOOL CreateWorkThread(THIS_CONTEXT *ctx);
+BOOL DestoryWorkThread(THIS_CONTEXT *ctx);
 BOOL StartRenderWork(THIS_CONTEXT *ctx);
 BOOL StopRenderWork(THIS_CONTEXT *ctx);

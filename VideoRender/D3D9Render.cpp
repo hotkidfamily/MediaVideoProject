@@ -395,28 +395,28 @@ HRESULT D3D9Render::UpdateRenderSurface(CSampleBuffer *&frame)
 {
 	HRESULT hr = E_FAIL;
 	uint8_t *dstDataPtr = nullptr;
-	uint8_t **srcDataptr = nullptr;
-	int32_t *srcLineSize = 0;
-	int32_t *planarSize = NULL;
+	uint8_t **framePlanarPtr = nullptr;
+	int32_t *frameStride = 0;
+	int32_t *framePlanarSize = NULL;
 	D3DLOCKED_RECT dstRect = { 0 };
 	IDirect3DSurface9 *pCurSurface = NULL;
 	IDirect3DTexture9 *pCurTexture = NULL;
 
-	srcDataptr = frame->planarPtr;
-	srcLineSize = frame->planarStride;
-	planarSize = frame->planarSize;
+	framePlanarPtr = frame->planarPtr;
+	frameStride = frame->planarStride;
+	framePlanarSize = frame->planarSize;
 
 	if (mSupportSurfaceType == SUPPORT_TEXTURE){
 		pCurTexture = mpD3D9Texture[mCurPushObjIndex];
 		if (SUCCEEDED(hr = pCurTexture->LockRect(0, &dstRect, NULL, 0))){
 			dstDataPtr = (uint8_t*)dstRect.pBits;
-			if (dstRect.Pitch == srcLineSize[0]){
-				memcpy(dstDataPtr, srcDataptr[0], frame->validDataSize);
+			if (dstRect.Pitch == frameStride[0]){
+				memcpy(dstDataPtr, framePlanarPtr[0], frame->validDataSize);
 			} else{
 				for (int i = 0; i < frame->height; i++){
 					uint8_t *dstlineBuffer = (uint8_t*)(dstDataPtr + i*dstRect.Pitch);
-					uint8_t* srcLineBuffer = srcDataptr[0] + srcLineSize[0]*i;
-					memcpy_s(dstlineBuffer, dstRect.Pitch, srcLineBuffer, srcLineSize[0]);
+					uint8_t* srcLineBuffer = framePlanarPtr[0] + frameStride[0]*i;
+					memcpy_s(dstlineBuffer, dstRect.Pitch, srcLineBuffer, frameStride[0]);
 				}
 			}
 			pCurTexture->UnlockRect(0);
@@ -425,18 +425,18 @@ HRESULT D3D9Render::UpdateRenderSurface(CSampleBuffer *&frame)
 		pCurSurface = mpD3D9Surface[mCurPushObjIndex];
 		if (SUCCEEDED(hr = pCurSurface->LockRect(&dstRect, NULL, 0))){
 			dstDataPtr = (uint8_t*)dstRect.pBits;
-			if (dstRect.Pitch == srcLineSize[0]){
-				memcpy(dstDataPtr, srcDataptr[0], frame->validDataSize);
+			if (dstRect.Pitch == frameStride[0]){
+				memcpy(dstDataPtr, framePlanarPtr[0], frame->validDataSize);
 			} else{
 				int32_t dstj = 0;
 				for (int i = 0; i < frame->planarCnt; i++) {
 					int32_t copiedSize = 0;
 					int32_t j = 0;
-					while (copiedSize < planarSize[i]) {
+					while (copiedSize < framePlanarSize[i]) {
 						uint8_t *dstlineBuffer = (uint8_t*)(dstDataPtr + dstj*dstRect.Pitch);
-						uint8_t* srcLineBuffer = srcDataptr[i] + srcLineSize[i]*j;
-						memcpy_s(dstlineBuffer, dstRect.Pitch, srcLineBuffer, srcLineSize[i]);
-						copiedSize += srcLineSize[i];
+						uint8_t* srcLineBuffer = framePlanarPtr[i] + frameStride[i]*j;
+						memcpy_s(dstlineBuffer, dstRect.Pitch, srcLineBuffer, frameStride[i]);
+						copiedSize += frameStride[i];
 						dstj++;
 					}
 				}
@@ -504,9 +504,9 @@ BOOL D3D9Render::PushFrame(CSampleBuffer *inframe)
 		mFirstRender = FALSE;
 	}
 
-	if (mRenderClock.PushFrame(frame)){
-		hr = UpdateRenderSurface(frame);
+	hr = UpdateRenderSurface(frame);
 
+	if (mRenderClock.PushFrame(frame)){
 		UpdatePushStatis(frame);
 
 		SetEvent(mRenderEvent);

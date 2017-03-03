@@ -26,7 +26,7 @@ BOOL CSyncRender::PushFrame(CSampleBuffer *&frame)
 	BOOL ret = FALSE;
 	FRAMEACTION action = FA_WAIT;
 
-	while (1){
+	while (1){ /* time out */
 		action = timeToRender(frame->ptsStart);
 		switch (action){
 		case FA_PUSH:

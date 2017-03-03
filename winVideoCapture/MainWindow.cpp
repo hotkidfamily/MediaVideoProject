@@ -273,6 +273,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				if (status & MF_CHECKED){
 					gContext->captureCfg.filePath.clear();
 					CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_UNCHECKED);
+					DestoryWorkThread(gContext);
 					StopCaptureWork(gContext);
 					StopRenderWork(gContext);
 				} else{
@@ -296,6 +297,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					status = GetMenuState(hMenu, idx, MF_BYPOSITION);
 					if (status & MF_CHECKED){
 						CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_UNCHECKED);
+						DestoryWorkThread(gContext);
 						StopCaptureWork(gContext);
 						StopRenderWork(gContext);
 					}

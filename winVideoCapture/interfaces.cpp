@@ -64,12 +64,7 @@ BOOL StartFileCaptureWork(THIS_CONTEXT *ctx)
 
 BOOL StopCaptureWork(THIS_CONTEXT *ctx)
 {
-	if (ctx->bRuning){
-		ctx->bRuning = 0;
-		if (WAIT_OBJECT_0 != WaitForSingleObject(ctx->hCaptureThread, INFINITE)){
-			assert(nullptr);
-		}
-
+	if (ctx->capture){
 		ctx->capture->StopCapture();
 		ctx->capture->UnRegisterCallback();
 	}
@@ -175,6 +170,22 @@ BOOL CreateWorkThread(THIS_CONTEXT *ctx)
 {
 	ctx->hCaptureThread = CreateThread(nullptr, 0, CaptureThread, ctx, 0, &(ctx->dwCaptureThreadID));
 	ctx->hRenderThread = CreateThread(nullptr, 0, RenderThread, ctx, 0, &(ctx->dwRenderThreadID));
+	return TRUE;
+}
+
+BOOL DestoryWorkThread(THIS_CONTEXT *ctx)
+{
+	ctx->bRuning = 0;
+	if (WAIT_OBJECT_0 != WaitForSingleObject(ctx->hCaptureThread, INFINITE)){
+		TerminateThread(ctx->hCaptureThread, -1);
+		ctx->hCaptureThread = NULL;
+	}
+
+	if (WAIT_OBJECT_0 != WaitForSingleObject(ctx->hRenderThread, INFINITE)){
+		TerminateThread(ctx->hRenderThread, -1);
+		ctx->hRenderThread = NULL;
+	}
+
 	return TRUE;
 }
 
