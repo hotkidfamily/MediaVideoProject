@@ -49,6 +49,8 @@ BOOL CSampleBufferManager::Reset(int32_t res, int32_t nbFrames)
 	}
 
 	bRet = TRUE;
+	logger(Info, "Create %d frames queue.\n", nbFrames);
+	mNbBuffers = nbFrames;
 
 errRet:
 	return bRet;

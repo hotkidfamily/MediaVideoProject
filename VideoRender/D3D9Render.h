@@ -68,6 +68,7 @@ private:
 	DWORD mLastRender;
 	int32_t mCurRenderInterval;
 	int64_t mCurPtsInterval;
+	int64_t mDropFrameCount;
 	CSlidingWindowCalc mInputStatis;
 	CSlidingWindowCalc mRenderStatis;
 

@@ -33,6 +33,7 @@ D3D9Render::D3D9Render()
 	, m_backModeDesc(NULL)
 
 	, mFirstRender(TRUE)
+	, mDropFrameCount(0)
 {
 	ZeroMemory(mpD3D9Texture, sizeof(mpD3D9Texture));
 	ZeroMemory(mpD3D9Surface, sizeof(mpD3D9Surface));
@@ -264,8 +265,8 @@ BOOL D3D9Render::DrawStatus()
 				mCurPtsInterval, mInputStatis.AvgSampleSize(), minInputSample / 10000, maxInputSample / 10000);
 
 			OSDText(NULL, &FontPos,
-				TEXT("Output: %.2f, %2d Avg:%2llu(%2d~%2d)"), mRenderStatis.Frequency(),
-				mCurRenderInterval, mRenderStatis.AvgSampleSize(), minRenderSample, maxRenderSample);
+				TEXT("Output: %.2f, %2d Avg:%2llu(%2d~%2d), drop %lld"), mRenderStatis.Frequency(),
+				mCurRenderInterval, mRenderStatis.AvgSampleSize(), minRenderSample, maxRenderSample, mDropFrameCount);
 
 			mpD3D9Device->EndScene();
 		}
@@ -507,12 +508,14 @@ BOOL D3D9Render::PushFrame(CSampleBuffer *inframe)
 		mFirstRender = FALSE;
 	}
 
-	hr = UpdateRenderSurface(frame);
-
 	if (mRenderClock.PushFrame(frame)){
+		hr = UpdateRenderSurface(frame);
+
 		UpdatePushStatis(frame);
 
 		SetEvent(mRenderEvent);
+	} else{
+		mDropFrameCount++;
 	}
 
 	if (FAILED(hr))

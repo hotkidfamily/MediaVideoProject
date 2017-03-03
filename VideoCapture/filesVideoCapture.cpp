@@ -45,8 +45,12 @@ BOOL FilesVideoCapture::initVideoContext(const char *filename)
 		goto fail;
 	}
 
+	time_base = av_guess_frame_rate(mFileCtx, mVideoStream, NULL);
+	mFrameRate = av_q2d(time_base);
+	mVideStreamPtsStep = (int64_t)(av_q2d(mVideoStream->time_base) * 10000000);
+
 	res = GetResByResolution(mVideoDecodeCtx->width, mVideoDecodeCtx->height);
-	mBufferManager.Reset(res, 10);
+	mBufferManager.Reset(res, (int32_t(mFrameRate/2)));
 
 	mDecDestFrame = av_frame_alloc();
 	if (!mDecDestFrame) {
@@ -60,10 +64,6 @@ BOOL FilesVideoCapture::initVideoContext(const char *filename)
 		logger(Error, "Failed to create thread to decode file.\n");
 		goto fail;
 	}
-
-	time_base = av_guess_frame_rate(mFileCtx, mVideoStream, NULL);
-	mFrameRate = av_q2d(time_base);
-	mVideStreamPtsStep = (int64_t)(av_q2d(mVideoStream->time_base) * 10000000);
 
 	bRet = TRUE;
 
@@ -168,6 +168,7 @@ int32_t FilesVideoCapture::decodePacket(int *got_frame, AVPacket &pkt)
 			}
 
 			if (q_ret == Q_FULL){
+				logger(Debug, "Decode Queue full.\n");
 				Sleep(1);
 				continue;
 			} else {

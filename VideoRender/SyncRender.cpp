@@ -42,6 +42,7 @@ jump:
 		break;
 	}
 
+	mLastPushFramePtsBackup = frame->ptsStart;
 	return ret;
 }
 
@@ -55,8 +56,10 @@ FRAMEACTION CSyncRender::timeToRender(int64_t ptsIn100ns)
 	int64_t currenttime = mRenderBaseClock.GetCurrentTimeIn100ns();
 	int64_t ptsFlow = ptsIn100ns - mFirstFramePtsBackup;
 	int64_t timeFlow = currenttime - mFirstClockBackup;
+	int64_t ptsInterval = ptsIn100ns - mLastPushFramePtsBackup;
+	int64_t dropThreshold = ptsInterval * 3 / 2;
 
-	logger(Debug, "pts flow %lld, clock %lld\n", ptsFlow, timeFlow);
+	logger(Debug, "pts flow %lld, clock %lld, diff %lld\n", ptsFlow, timeFlow, timeFlow - ptsFlow);
 
 	/* 
 		step 1. update time base
@@ -73,7 +76,11 @@ FRAMEACTION CSyncRender::timeToRender(int64_t ptsIn100ns)
 		goto drop;
 	}
 
-	if (ptsFlow < timeFlow){
+	if (ptsFlow <= timeFlow){
+		if ((timeFlow - ptsFlow) > dropThreshold){
+			logger(Debug, "play slow , drop frame, threshold %lld.\n", dropThreshold);
+			goto drop;
+		}
 		logger(Debug, "pts delta <= render, push\n");
 		goto push;
 	}else{

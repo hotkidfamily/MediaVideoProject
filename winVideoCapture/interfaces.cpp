@@ -138,7 +138,7 @@ DWORD WINAPI CaptureThread(LPVOID args)
 			LeaveCriticalSection(&ctx->listLock);
 		}
 
-		Sleep(20);
+		Sleep(1);
 	}
 
 	return TRUE;
@@ -161,7 +161,7 @@ DWORD WINAPI RenderThread(LPVOID args)
 			ctx->capture->ReleaseFrame(frame);
 		}
 
-		Sleep(10);
+		Sleep(1);
 	}
 
 	return TRUE;

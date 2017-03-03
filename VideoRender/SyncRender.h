@@ -28,5 +28,6 @@ private:
 	CClock mRenderBaseClock;
 	int64_t mFirstClockBackup;
 	int64_t mFirstFramePtsBackup;
+	int64_t mLastPushFramePtsBackup;
 };
 

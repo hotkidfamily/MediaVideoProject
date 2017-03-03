@@ -28,6 +28,8 @@ private:
 	BUFFLIST emptyList;
 	BUFFLIST occupyList;
 
+	int32_t mNbBuffers;
+
 	uint8_t *mBufferPtr;
 	int64_t mBufferSize;
 
