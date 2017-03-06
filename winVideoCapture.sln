@@ -36,6 +36,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VideoCodec", "VideoCodec\Vi
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Common", "common\Common.vcxproj", "{0CE91C5F-A6EE-4A73-BAF7-92736850D563}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AudioRender", "AudioRender\AudioRender.vcxproj", "{3F11552B-AB18-44CA-B1A1-2963CDF1951B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
@@ -94,6 +96,14 @@ Global
 		{0CE91C5F-A6EE-4A73-BAF7-92736850D563}.Release|Win32.ActiveCfg = Release|Win32
 		{0CE91C5F-A6EE-4A73-BAF7-92736850D563}.Release|Win32.Build.0 = Release|Win32
 		{0CE91C5F-A6EE-4A73-BAF7-92736850D563}.Release|x64.ActiveCfg = Release|Win32
+		{3F11552B-AB18-44CA-B1A1-2963CDF1951B}.Debug|ARM.ActiveCfg = Debug|Win32
+		{3F11552B-AB18-44CA-B1A1-2963CDF1951B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3F11552B-AB18-44CA-B1A1-2963CDF1951B}.Debug|Win32.Build.0 = Debug|Win32
+		{3F11552B-AB18-44CA-B1A1-2963CDF1951B}.Debug|x64.ActiveCfg = Debug|Win32
+		{3F11552B-AB18-44CA-B1A1-2963CDF1951B}.Release|ARM.ActiveCfg = Release|Win32
+		{3F11552B-AB18-44CA-B1A1-2963CDF1951B}.Release|Win32.ActiveCfg = Release|Win32
+		{3F11552B-AB18-44CA-B1A1-2963CDF1951B}.Release|Win32.Build.0 = Release|Win32
+		{3F11552B-AB18-44CA-B1A1-2963CDF1951B}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
