@@ -1,6 +1,6 @@
 # MediaVideoProject
 
-A video capture, codec, process, render project base on windows.
+A video capture, codec, process, render project work on windows.
 
 Capture:
   Capture Video frome camera by diectshow.

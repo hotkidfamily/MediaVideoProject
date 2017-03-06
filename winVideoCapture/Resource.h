@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
-// Microsoft Visual C++ Éú³ÉµÄ°üº¬ÎÄ¼ş¡£
-// ¹© winVideoCapture.rc Ê¹ÓÃ
+// Microsoft Visual C++ ç”Ÿæˆçš„åŒ…å«æ–‡ä»¶ã€‚
+// ä¾› winVideoCapture.rc ä½¿ç”¨
 //
 #define IDC_MYICON                      2
 #define IDD_WINVIDEOCAPTURE_DIALOG      102
