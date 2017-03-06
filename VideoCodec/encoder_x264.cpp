@@ -21,7 +21,6 @@ bool CLibx264::open()
 {
 	BOOL bRet = FALSE;
 
-
 	if (mbNeedVpp){
 		if (!mVppFactory)
 			bRet = GetVPPFactoryObj(mVppFactory);
@@ -111,9 +110,14 @@ bool CLibx264::setConfig(const ENCODECCFG &config)
 
 	mCodecParams.i_fps_num = config.fps.num;
 	mCodecParams.i_fps_den = config.fps.den;
-	mCodecParams.i_timebase_den = 1 * 1000 * 1000 * 10; // 10MHz
-	mCodecParams.i_timebase_num = (uint32_t)(mCodecParams.i_timebase_den / (mCodecParams.i_fps_num*1.0/mCodecParams.i_fps_den));
+
+//  BUGS:
+// 	mCodecParams.i_timebase_den = 1 * 1000 * 1000 * 10; // 10MHz
+// 	mCodecParams.i_timebase_num = (uint32_t)(mCodecParams.i_timebase_den / (mCodecParams.i_fps_num*1.0/mCodecParams.i_fps_den));
 	
+ 	mCodecParams.i_timebase_den = 1000;
+ 	mCodecParams.i_timebase_num = (uint32_t)(mCodecParams.i_timebase_den / (mCodecParams.i_fps_num*1.0/mCodecParams.i_fps_den));
+
 	mCodecParams.b_vfr_input = 1;
 	mCodecParams.b_repeat_headers = 1;	
 
@@ -164,13 +168,13 @@ bool CLibx264::addFrame(const CSampleBuffer &inputFrame)
 
 	if (inputFrame.pixelFormatInFourCC == PIXEL_FORMAT_YUY2){
 		int64_t ptss = 0, ptse = 0;
-		mInPic.i_pts = inputFrame.ptsStart;
+		mInPic.i_pts = inputFrame.ptsStart / 10000;
 		
 		mInPic.i_type = X264_TYPE_AUTO;
 		encodeFrame(&mInPic);
 	} else {
 		int64_t ptss = 0, ptse = 0;
-		inpic.i_pts = inputFrame.ptsStart;
+		inpic.i_pts = inputFrame.ptsStart / 10000;
 		inpic.i_type = X264_TYPE_AUTO;
 		encodeFrame(&inpic);
 	}

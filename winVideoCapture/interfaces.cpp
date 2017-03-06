@@ -116,7 +116,7 @@ BOOL SetupEncodeWork(THIS_CONTEXT *ctx)
 		ctx->encoderCfg.minBitrateInKb = 2000;
 		ctx->encoderCfg.maxBitrateInKb = 2000;
 		ctx->encoderCfg.pixelFormat = ctx->captureCfg.pixelFormat;
-		ctx->encoderCfg.cfgStr.append(TEXT("keyint=75:min-keyint=75:scenecut=0:bframes=2:b-adapt=0:b-pyramid=none:threads=1:sliced-threads=0:ref=2:subme=2:me=hex:analyse=i4x4,i8x8,p8x8,p4x4,b8x8:direct=spatial:weightp=1:weightb=1:8x8dct=1:cabac=1:deblock=0,0:psy=0:trellis=0:aq-mode=1:rc-lookahead=4:sync-lookahead=0:mbtree=0:"));
+		ctx->encoderCfg.cfgStr.append(TEXT("keyint=75:min-keyint=75:scenecut=0:bframes=2:b-adapt=0:b-pyramid=none:threads=0:sliced-threads=0:ref=2:subme=2:me=hex:analyse=i4x4,i8x8,p8x8,p4x4,b8x8:direct=spatial:weightp=1:weightb=1:8x8dct=1:cabac=1:deblock=0,0:psy=0:trellis=0:aq-mode=1:rc-lookahead=4:sync-lookahead=0:mbtree=0:"));
 
 		ctx->codec->setConfig(ctx->encoderCfg);
 		bRet = ctx->codec->open();
