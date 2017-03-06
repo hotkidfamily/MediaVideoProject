@@ -253,7 +253,7 @@ BOOL D3D9Render::DrawStatus()
 		if ((hr = mpD3D9Device->BeginScene()) == D3D_OK ){
 			OSDText(NULL, &FontPos,
 				TEXT("Frame: %dx%d, %.3f"),
-				mConfig.width, mConfig.height, mConfig.fps.num/mConfig.fps.den);
+				mConfig.width, mConfig.height, RATE_DESC_TO_DOUBLE(mConfig.fps));
 
 			OSDText(NULL, &FontPos,
 				TEXT("%s(%s->%s->%s): %d"),

@@ -115,10 +115,11 @@ bool CLibx264::setConfig(const ENCODECCFG &config)
 	mCodecParams.i_timebase_den = config.fps.den; // ms
 	mCodecParams.b_open_gop = 0;
 	mCodecParams.b_cabac = 1;
-	mCodecParams.i_keyint_min = config.fps.num;
-	mCodecParams.i_keyint_max = config.fps.num* 5;
+	mCodecParams.i_keyint_min = config.fps.num/config.fps.den;
+	mCodecParams.i_keyint_max = mCodecParams.i_keyint_min* 5;
 	mCodecParams.i_frame_reference = 3;
 	mCodecParams.i_threads = 0;
+	mCodecParams.b_vfr_input = 0;
 
 	mCodecParams.b_repeat_headers = 1;	
 
