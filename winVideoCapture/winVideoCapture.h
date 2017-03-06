@@ -43,14 +43,6 @@ typedef struct tagProgramContext{
 	}
 }THIS_CONTEXT, *PTHIS_CONTEXT;
 
-BOOL StartCamCaptureWork(THIS_CONTEXT *ctx);
-BOOL StartFileCaptureWork(THIS_CONTEXT *ctx);
-BOOL StopCaptureWork(THIS_CONTEXT *ctx);
-BOOL SetupEncodeWork(THIS_CONTEXT *ctx);
-BOOL StopEncodeWork(THIS_CONTEXT *ctx);
-DWORD WINAPI CaptureThread(LPVOID args);
-DWORD WINAPI RenderThread(LPVOID args);
-BOOL CreateWorkThread(THIS_CONTEXT *ctx);
-BOOL DestoryWorkThread(THIS_CONTEXT *ctx);
-BOOL StartRenderWork(THIS_CONTEXT *ctx);
-BOOL StopRenderWork(THIS_CONTEXT *ctx);
+void ResizeWindow(THIS_CONTEXT *ctx);
+void StopStream(THIS_CONTEXT *ctx);
+BOOL SetupStream(THIS_CONTEXT *ctx, BOOL bCam);

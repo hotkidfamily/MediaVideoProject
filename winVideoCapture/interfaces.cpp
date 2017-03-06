@@ -54,6 +54,8 @@ BOOL StartFileCaptureWork(THIS_CONTEXT *ctx)
 
 	if (!ctx->bRuning){
 		captureList.clear();
+		ctx->capture = GetVideoCaptureObj();
+		assert(ctx->capture);
 		ctx->captureCfg.parentWindow = ctx->hMainWnd;
 		hr = ctx->capture->StartCaptureWithParam(ctx->captureCfg);
 		ctx->bRuning = TRUE;
@@ -71,6 +73,24 @@ BOOL StopCaptureWork(THIS_CONTEXT *ctx)
 	}
 
 	SAFE_DELETE(ctx->callBack);
+
+	return TRUE;
+}
+
+BOOL StopEncodeWork(THIS_CONTEXT *ctx)
+{
+	if (ctx->codec){
+		ctx->codec->close();
+	}
+
+	if (ctx->encFactory){
+		ctx->encFactory->DestoryCodecObj(ctx->codec);
+		ctx->codec = nullptr;
+		ReleaseCodecFactoryOBj(ctx->encFactory);
+		ctx->encFactory = nullptr;
+	}
+
+	ctx->encoderCfg.cfgStr.clear();
 
 	return TRUE;
 }
@@ -96,7 +116,7 @@ BOOL SetupEncodeWork(THIS_CONTEXT *ctx)
 		ctx->encoderCfg.minBitrateInKb = 2000;
 		ctx->encoderCfg.maxBitrateInKb = 2000;
 		ctx->encoderCfg.pixelFormat = ctx->captureCfg.pixelFormat;
-		ctx->encoderCfg.cfgStr.append(TEXT("keyint=75:min-keyint=75:scenecut=0:bframes=2:b-adapt=0:b-pyramid=none:threads=1:sliced-threads=0:ref=2:subme=2:me=hex:analyse=i4x4,i8x8,p8x8,p4x4,b8x8:direct=spatial:weightp=1:weightb=1:8x8dct=1:cabac=1:deblock=0,0:psy=0:trellis=0:aq-mode=1:rc-lookahead=0:sync-lookahead=0:mbtree=0:"));
+		ctx->encoderCfg.cfgStr.append(TEXT("keyint=75:min-keyint=75:scenecut=0:bframes=2:b-adapt=0:b-pyramid=none:threads=1:sliced-threads=0:ref=2:subme=2:me=hex:analyse=i4x4,i8x8,p8x8,p4x4,b8x8:direct=spatial:weightp=1:weightb=1:8x8dct=1:cabac=1:deblock=0,0:psy=0:trellis=0:aq-mode=1:rc-lookahead=4:sync-lookahead=0:mbtree=0:"));
 
 		ctx->codec->setConfig(ctx->encoderCfg);
 		bRet = ctx->codec->open();
@@ -106,24 +126,6 @@ BOOL SetupEncodeWork(THIS_CONTEXT *ctx)
 		StopEncodeWork(ctx);
 	}
 	return FALSE;
-}
-
-BOOL StopEncodeWork(THIS_CONTEXT *ctx)
-{
-	if (ctx->codec){
-		ctx->codec->close();
-	}
-	
-	if (ctx->encFactory){
-		ctx->encFactory->DestoryCodecObj(ctx->codec);
-		ctx->codec = nullptr;
-		ReleaseCodecFactoryOBj(ctx->encFactory);
-		ctx->encFactory = nullptr;
-	}
-
-	ctx->encoderCfg.cfgStr.clear();
-
-	return TRUE;
 }
 
 DWORD WINAPI CaptureThread(LPVOID args)
@@ -147,16 +149,26 @@ DWORD WINAPI CaptureThread(LPVOID args)
 DWORD WINAPI RenderThread(LPVOID args)
 {
 	THIS_CONTEXT * ctx = (THIS_CONTEXT *)args;
+	std::ofstream encodeFile;
+	encodeFile.open(TEXT("D:\\capture.h264"), std::ios::binary);
 
 	while (ctx->bRuning){
 		CSampleBuffer *frame = nullptr;
+		CPackageBuffer *packet = nullptr;
 
 		if (!captureList.empty()){
 			EnterCriticalSection(&ctx->listLock);
 			frame = captureList.front();
-			ctx->render->PushFrame(frame);
 			captureList.pop_front();
 			LeaveCriticalSection(&ctx->listLock);
+			ctx->render->PushFrame(frame);
+			ctx->codec->addFrame(*frame);
+			if (ctx->codec->getPackage(packet)){
+				if (packet->isIDRFrame())
+					encodeFile.write((const char*)(packet->ExtraData()), packet->ExtraDataSize());
+				encodeFile.write((const char*)packet->Data(), packet->DataSize());
+				ctx->codec->releasePackage(packet);
+			}
 
 			ctx->capture->ReleaseFrame(frame);
 		}
@@ -196,6 +208,22 @@ BOOL DestoryWorkThread(THIS_CONTEXT *ctx)
 	return TRUE;
 }
 
+BOOL StopRenderWork(THIS_CONTEXT *ctx)
+{
+	if (ctx){
+		if (ctx->render){
+			ctx->render->DeinitRender();
+			ctx->renderFactory->DestoryRenderObj(ctx->render);
+			ctx->render = NULL;
+		}
+
+		ReleaseRenderFactoryObj(ctx->renderFactory);
+		ctx->renderFactory = NULL;
+	}
+
+	return TRUE;
+}
+
 BOOL StartRenderWork(THIS_CONTEXT *ctx)
 {
 	BOOL bRet = TRUE;
@@ -223,18 +251,39 @@ BOOL StartRenderWork(THIS_CONTEXT *ctx)
 	return TRUE;
 }
 
-BOOL StopRenderWork(THIS_CONTEXT *ctx)
+void ResizeWindow(THIS_CONTEXT *ctx)
 {
-	if (ctx){
-		if (ctx->render){
-			ctx->render->DeinitRender();
-			ctx->renderFactory->DestoryRenderObj(ctx->render);
-			ctx->render = NULL;
-		}
+	RECT rect = { 0 };
+	RECT rectClient = { 0 };
+	GetWindowRect(ctx->hMainWnd, &rect);
+	GetClientRect(ctx->hMainWnd, &rectClient);
+	int32_t width = rect.right - rect.left - rectClient.right;
+	int32_t height = rect.bottom - rect.top - rectClient.bottom;
 
-		ReleaseRenderFactoryObj(ctx->renderFactory);
-		ctx->renderFactory = NULL;
+	MoveWindow(ctx->hMainWnd, rect.left, rect.top, ctx->captureCfg.width + width, ctx->captureCfg.height + height, TRUE);
+}
+
+void StopStream(THIS_CONTEXT *ctx) 
+{
+	DestoryWorkThread(ctx);
+	StopCaptureWork(ctx);
+	StopRenderWork(ctx);
+	StopEncodeWork(ctx);
+}
+
+BOOL SetupStream(THIS_CONTEXT *ctx, BOOL bCam)
+{
+	BOOL bSuccess = FALSE;
+	if (bCam){
+		bSuccess = StartCamCaptureWork(ctx);
+	} else{
+		bSuccess = StartFileCaptureWork(ctx);
 	}
-	
-	return TRUE;
+	if (bSuccess){
+		StartRenderWork(ctx);
+		SetupEncodeWork(ctx);
+		CreateWorkThread(ctx);
+	}
+
+	return bSuccess;
 }

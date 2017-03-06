@@ -117,7 +117,7 @@ bool CLibx264::setConfig(const ENCODECCFG &config)
 	mCodecParams.b_cabac = 1;
 	mCodecParams.i_keyint_min = config.fps;
 	mCodecParams.i_keyint_max = config.fps * 5;
-	mCodecParams.i_frame_reference = 6;
+	mCodecParams.i_frame_reference = 3;
 	mCodecParams.i_threads = 0;
 
 	mCodecParams.b_repeat_headers = 1;	
@@ -139,7 +139,7 @@ bool CLibx264::addFrame(const CSampleBuffer &inputFrame)
 	switch (inputFrame.pixelFormatInFourCC)
 	{
 	case PIXEL_FORMAT_RGB24:
-		inpic.img.i_csp = X264_CSP_BGR | X264_CSP_VFLIP;
+		inpic.img.i_csp = X264_CSP_BGR;
 		inpic.img.i_plane = 1;
 		inpic.img.plane[0] = inputFrame.planarPtr[0];
 		inpic.img.i_stride[0] = inputFrame.planarStride[0];

@@ -25,7 +25,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 BOOL GetCodecFactoryOBj(ICodecFactory* &factoryPtr)
 {
 	InterlockedAdd(&refCount, 1);
-	if (factory){
+	if (!factory){
 		factory = new ICodecFactoryImpl;
 	}
 

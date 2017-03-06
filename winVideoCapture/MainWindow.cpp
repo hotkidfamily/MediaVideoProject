@@ -93,9 +93,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		}
 	}
 
-	DestoryWorkThread(gContext);
-	StopCaptureWork(gContext);
-	StopRenderWork(gContext);	
+	StopStream(gContext);
 	ReleaseVideoCaptureObj(gContext->capture);
 	DeleteCriticalSection(&gContext->listLock);
 	delete gContext;
@@ -197,17 +195,6 @@ LRESULT CALLBACK MediaDlgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 	return  DefWindowProc(hWnd, message, wParam, lParam);
 }
 
-void ResizeWindow()
-{
-	RECT rect = { 0 };
-	RECT rectClient = { 0 };
-	GetWindowRect(gContext->hMainWnd, &rect);
-	GetClientRect(gContext->hMainWnd, &rectClient);
-	int32_t width = rect.right - rect.left - rectClient.right;
-	int32_t height = rect.bottom - rect.top - rectClient.bottom;
-
-	MoveWindow(gContext->hMainWnd, rect.left, rect.top, gContext->captureCfg.width + width, gContext->captureCfg.height + height, TRUE);
-}
 //
 //  FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
 //
@@ -286,18 +273,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				if (status & MF_CHECKED){
 					gContext->captureCfg.filePath.clear();
 					CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_UNCHECKED);
-					DestoryWorkThread(gContext);
-					StopCaptureWork(gContext);
-					StopRenderWork(gContext);
+					StopStream(gContext);
 				} else{
 					if (dlg->ShowDialog()){
 						gContext->captureCfg.filePath = dlg->FileName;
-						if (StartFileCaptureWork(gContext)){
+						if (SetupStream(gContext, FALSE)){
 							SetWindowText(gContext->hMainWnd, gContext->captureCfg.filePath.c_str());
 							CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_CHECKED);
-							ResizeWindow();
-							StartRenderWork(gContext);
-							CreateWorkThread(gContext);
 						}
 					}
 				}
@@ -310,18 +292,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				if (status & MF_CHECKED){
 					gContext->captureCfg.filePath.clear();
 					CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_UNCHECKED);
-					DestoryWorkThread(gContext);
-					StopCaptureWork(gContext);
-					StopRenderWork(gContext);
+					StopStream(gContext);
 				} else{
 					if (dlg->ShowDialog()){
 						gContext->captureCfg.filePath = dlg->Path();
-						if (StartFileCaptureWork(gContext)){
+						if (SetupStream(gContext, FALSE)){
 							SetWindowText(gContext->hMainWnd, gContext->captureCfg.filePath.c_str());
 							CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_CHECKED);
-							ResizeWindow();
-							StartRenderWork(gContext);
-							CreateWorkThread(gContext);
 						}
 					}
 				}
@@ -333,18 +310,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					status = GetMenuState(hMenu, idx, MF_BYPOSITION);
 					if (status & MF_CHECKED){
 						CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_UNCHECKED);
-						DestoryWorkThread(gContext);
-						StopCaptureWork(gContext);
-						StopRenderWork(gContext);
+						StopStream(gContext);
 					}
 					else{
 						gContext->captureCfg.index = idx;
-						if (StartCamCaptureWork(gContext)){
+						if (SetupStream(gContext, TRUE)){
 							SetWindowText(gContext->hMainWnd, gContext->captureCfg.deviceName.c_str());
 							CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_CHECKED);
-							ResizeWindow();
-							StartRenderWork(gContext);
-							CreateWorkThread(gContext);
 						}
 					}
 				}else{
