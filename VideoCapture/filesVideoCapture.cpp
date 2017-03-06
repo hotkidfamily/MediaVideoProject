@@ -50,7 +50,13 @@ BOOL FilesVideoCapture::initVideoContext(const char *filename)
 	mVideStreamPtsStep = (int64_t)(av_q2d(mVideoStream->time_base) * 10000000);
 
 	res = GetResByResolution(mVideoDecodeCtx->width, mVideoDecodeCtx->height);
-	mBufferManager.Reset(res, (int32_t(mFrameRate/2)));
+	if (mFrameRate <= 120){
+		mBufferManager.Reset(res, (int32_t(mFrameRate / 2)));
+	} else{
+		logger(Info, "frame rate(%dfps) is too high, guess fps %f\n", mFrameRate, 
+			av_q2d(av_stream_get_r_frame_rate(mVideoStream)));
+		mBufferManager.Reset(res, (10));
+	}
 
 	mDecDestFrame = av_frame_alloc();
 	if (!mDecDestFrame) {
