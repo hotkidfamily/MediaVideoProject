@@ -81,7 +81,7 @@ bool CLibx264::setConfig(const ENCODECCFG &config)
 
 	switch (config.pixelFormat){
 	case PIXEL_FORMAT_RGB24:
-		mCodecParams.i_csp = X264_CSP_BGR | X264_CSP_VFLIP;
+		mCodecParams.i_csp = X264_CSP_BGR;
 		break;
 	case PIXEL_FORMAT_I420:
 		mCodecParams.i_csp = X264_CSP_I420;
@@ -111,16 +111,10 @@ bool CLibx264::setConfig(const ENCODECCFG &config)
 
 	mCodecParams.i_fps_num = config.fps.num;
 	mCodecParams.i_fps_den = config.fps.den;
-	mCodecParams.i_timebase_num = config.fps.num;
-	mCodecParams.i_timebase_den = config.fps.den; // ms
-	mCodecParams.b_open_gop = 0;
-	mCodecParams.b_cabac = 1;
-	mCodecParams.i_keyint_min = config.fps.num/config.fps.den;
-	mCodecParams.i_keyint_max = mCodecParams.i_keyint_min* 5;
-	mCodecParams.i_frame_reference = 3;
-	mCodecParams.i_threads = 0;
-	mCodecParams.b_vfr_input = 0;
-
+	mCodecParams.i_timebase_den = 1 * 1000 * 1000 * 10; // 10MHz
+	mCodecParams.i_timebase_num = (uint32_t)(mCodecParams.i_timebase_den / (mCodecParams.i_fps_num*1.0/mCodecParams.i_fps_den));
+	
+	mCodecParams.b_vfr_input = 1;
 	mCodecParams.b_repeat_headers = 1;	
 
 	parseConfigString();
@@ -149,11 +143,11 @@ bool CLibx264::addFrame(const CSampleBuffer &inputFrame)
 		inpic.img.i_csp = X264_CSP_I420;
 		inpic.img.i_plane = 3;
 		inpic.img.plane[0] = inputFrame.planarPtr[0];
-		inpic.img.plane[1] = inpic.img.plane[0] + inputFrame.width *inputFrame.height;
-		inpic.img.plane[2] = inpic.img.plane[1] + inputFrame.width *inputFrame.height / 4;
-		inpic.img.i_stride[0] = inputFrame.width;
-		inpic.img.i_stride[1] = inputFrame.width/2;
-		inpic.img.i_stride[2] = inputFrame.width/2;
+		inpic.img.plane[1] = inputFrame.planarPtr[1];
+		inpic.img.plane[2] = inputFrame.planarPtr[2];
+		inpic.img.i_stride[0] = inputFrame.planarStride[0];
+		inpic.img.i_stride[1] = inputFrame.planarStride[1];
+		inpic.img.i_stride[2] = inputFrame.planarStride[2];
 		break;
 	case PIXEL_FORMAT_RGB32:
 		inpic.img.i_csp = X264_CSP_BGRA;
@@ -176,7 +170,7 @@ bool CLibx264::addFrame(const CSampleBuffer &inputFrame)
 		encodeFrame(&mInPic);
 	} else {
 		int64_t ptss = 0, ptse = 0;
-		inpic.i_pts = inputFrame.ptsStart;;
+		inpic.i_pts = inputFrame.ptsStart;
 		inpic.i_type = X264_TYPE_AUTO;
 		encodeFrame(&inpic);
 	}
