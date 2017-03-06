@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
-// Microsoft Visual C++ ÁîüÊàêÁöÑÂåÖÂê´Êñá‰ª∂„ÄÇ
-// ‰æõ winVideoCapture.rc ‰ΩøÁî®
+// Microsoft Visual C++ …˙≥…µƒ∞¸∫¨Œƒº˛°£
+// π© winVideoCapture.rc  π”√
 //
 #define IDC_MYICON                      2
 #define IDD_WINVIDEOCAPTURE_DIALOG      102
@@ -14,12 +14,17 @@
 #define IDR_MAINFRAME                   128
 #define IDD_DIALOG_STATUS               129
 #define IDD_DIALOG_MEDIA                130
+#define IDD_DIALOG1                     131
+#define IDD_DIALOG_STREAM               131
+#define IDC_EDIT1                       1000
 #define ID_DEVICE_DEVICE3               32771
 #define ID_TOOL_PREVIEW                 32784
 #define ID_TOOLS_RANDOMRENDER           32785
 #define ID_WINDOW_STATIS                32786
 #define ID_WINDOW_VIDEO                 32787
 #define ID_FILE_OPEN                    32788
+#define ID_FILE_STREAM                  32789
+#define IDM_OPEN_STREAM                 32790
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -27,9 +32,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        131
-#define _APS_NEXT_COMMAND_VALUE         32789
-#define _APS_NEXT_CONTROL_VALUE         1000
+#define _APS_NEXT_RESOURCE_VALUE        132
+#define _APS_NEXT_COMMAND_VALUE         32791
+#define _APS_NEXT_CONTROL_VALUE         1001
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif

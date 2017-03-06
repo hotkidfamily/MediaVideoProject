@@ -302,6 +302,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				}
 			}
 				break;
+			case IDM_OPEN_STREAM:
+			{
+				
+			}
+				break;
 			default:
 				if (wmId >= ID_DEVICE_DEVICE3 && wmId < ID_DEVICE_DEVICE3 + gContext->totalCaptureDevices)
 				{
