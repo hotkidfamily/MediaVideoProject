@@ -13,6 +13,13 @@ OpenFileDialog::OpenFileDialog(HWND owner)
 	this->Title = 0;
 }
 
+OpenFileDialog::~OpenFileDialog()
+{
+	if (this->FileName)
+		delete this->FileName;
+	this->FileName = NULL;
+}
+
 bool OpenFileDialog::ShowDialog()
 {
 	OPENFILENAME ofn;
