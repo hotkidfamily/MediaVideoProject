@@ -44,3 +44,4 @@ bool OpenFileDialog::ShowDialog()
 
 	return true;
 }
+

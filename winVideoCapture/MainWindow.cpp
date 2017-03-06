@@ -5,6 +5,7 @@
 #include "assert.h"
 #include "winVideoCapture.h"
 #include "OpenFile.h"
+#include "OpenStream.h"
 #include <windowsx.h>
 
 // Global Variables:
@@ -302,9 +303,28 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				}
 			}
 				break;
-			case IDM_OPEN_STREAM:
+			case ID_FILE_STREAM:
 			{
-				
+				OpenStreamDialog *dlg = new OpenStreamDialog(gContext->hMainWnd);
+				status = GetMenuState(hMenu, idx, MF_BYPOSITION);
+				if (status & MF_CHECKED){
+					gContext->captureCfg.filePath.clear();
+					CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_UNCHECKED);
+					DestoryWorkThread(gContext);
+					StopCaptureWork(gContext);
+					StopRenderWork(gContext);
+				} else{
+					if (dlg->ShowDialog()){
+						gContext->captureCfg.filePath = dlg->Path();
+						if (StartFileCaptureWork(gContext)){
+							SetWindowText(gContext->hMainWnd, gContext->captureCfg.filePath.c_str());
+							CheckMenuItem(hMenu, idx, MF_BYPOSITION | MF_CHECKED);
+							ResizeWindow();
+							StartRenderWork(gContext);
+							CreateWorkThread(gContext);
+						}
+					}
+				}
 			}
 				break;
 			default:

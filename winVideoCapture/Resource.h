@@ -3,6 +3,7 @@
 // π© winVideoCapture.rc  π”√
 //
 #define IDC_MYICON                      2
+#define IDOK2                           2
 #define IDD_WINVIDEOCAPTURE_DIALOG      102
 #define IDS_APP_TITLE                   103
 #define IDD_ABOUTBOX                    103
@@ -14,9 +15,8 @@
 #define IDR_MAINFRAME                   128
 #define IDD_DIALOG_STATUS               129
 #define IDD_DIALOG_MEDIA                130
-#define IDD_DIALOG1                     131
 #define IDD_DIALOG_STREAM               131
-#define IDC_EDIT1                       1000
+#define IDC_EDIT_STREAM_PATH            1000
 #define ID_DEVICE_DEVICE3               32771
 #define ID_TOOL_PREVIEW                 32784
 #define ID_TOOLS_RANDOMRENDER           32785
