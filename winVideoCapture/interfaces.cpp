@@ -33,7 +33,7 @@ BOOL StartCamCaptureWork(THIS_CONTEXT *ctx)
 
 		ctx->capture->RegisterCallback(ctx->callBack);
 		ctx->captureCfg.parentWindow = ctx->hMainWnd;
-		ctx->captureCfg.fps = 30;
+		ctx->captureCfg.fps = { 30, 0 };
 		ctx->captureCfg.width = 1280;
 		ctx->captureCfg.height = 720;
 		hr = ctx->capture->StartCaptureWithParam(ctx->captureCfg);
@@ -109,7 +109,7 @@ BOOL SetupEncodeWork(THIS_CONTEXT *ctx)
 
 	if (bRet)
 	{
-		ctx->encoderCfg.fps = (uint32_t)(ctx->captureCfg.fps);
+		ctx->encoderCfg.fps = ctx->captureCfg.fps;
 		ctx->encoderCfg.width = ctx->captureCfg.width;
 		ctx->encoderCfg.height = ctx->captureCfg.height;
 		ctx->encoderCfg.avgBitrateInKb = 2000;
@@ -237,8 +237,8 @@ BOOL StartRenderWork(THIS_CONTEXT *ctx)
 	ctx->renderCfg.width = ctx->captureCfg.width;
 	ctx->renderCfg.height = ctx->captureCfg.height;
 	ctx->renderCfg.pixelFormat = ctx->captureCfg.pixelFormat;
-	ctx->renderCfg.fps.num = ctx->captureCfg.fps;
-	ctx->renderCfg.fps.den = 1;
+	ctx->renderCfg.fps.num = ctx->captureCfg.fps.num;
+	ctx->renderCfg.fps.den = ctx->captureCfg.fps.den;
 
 	if(bRet){
 		bRet = ctx->render->InitRender(ctx->renderCfg);

@@ -24,7 +24,7 @@ typedef struct tagEncodecConfig
 
 	uint32_t width;
 	uint32_t height;
-	uint32_t fps;
+	RATE_DESC fps;
 	uint32_t avgBitrateInKb;
 	uint32_t maxBitrateInKb;
 	uint32_t minBitrateInKb;

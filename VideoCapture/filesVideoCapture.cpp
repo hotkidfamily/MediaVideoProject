@@ -14,6 +14,7 @@ BOOL FilesVideoCapture::initVideoContext(const char *filename)
 	int ret = -1;
 	AVRational time_base;
 	E_RES res;
+	double rate = 0;
 
 	mFrameIndex = 0;
 
@@ -46,14 +47,16 @@ BOOL FilesVideoCapture::initVideoContext(const char *filename)
 	}
 
 	time_base = av_guess_frame_rate(mFileCtx, mVideoStream, NULL);
-	mFrameRate = av_q2d(time_base);
+	mFrameRate.num = time_base.num;
+	mFrameRate.den = time_base.den;
+	rate = av_q2d(time_base);
 	mVideStreamPtsStep = (int64_t)(av_q2d(mVideoStream->time_base) * 10000000);
 
 	res = GetResByResolution(mVideoDecodeCtx->width, mVideoDecodeCtx->height);
-	if (mFrameRate <= 120){
-		mBufferManager.Reset(res, (int32_t(mFrameRate / 2)));
+	if (rate <= 120){
+		mBufferManager.Reset(res, (int32_t(rate / 2)));
 	} else{
-		logger(Info, "frame rate(%dfps) is too high, guess fps %f\n", mFrameRate, 
+		logger(Info, "frame rate(%dfps) is too high, guess fps %f\n", rate, 
 			av_q2d(av_stream_get_r_frame_rate(mVideoStream)));
 		mBufferManager.Reset(res, (10));
 	}

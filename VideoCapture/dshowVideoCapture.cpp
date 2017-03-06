@@ -150,7 +150,7 @@ HRESULT DShowVideoCapture::Start(CAPTURECONFIG &params)
 	CHECK_HR(hr = mVideoGrabber->GetConnectedMediaType(&mWorkMediaType));
 	mWorkParams.width = mWorkMediaType.BitmapHeader()->biWidth;
 	mWorkParams.height = mWorkMediaType.BitmapHeader()->biHeight;
-	mWorkParams.fps = RefTimeToFramesPerSec(mWorkMediaType.AvgReferenceTime());
+	mWorkParams.fps = { ONE_SECOND, (int32_t)mWorkMediaType.AvgReferenceTime() };
 	mWorkParams.pixelFormat = mWorkMediaType.subtype.Data1;
 	params = mWorkParams;
 	params.deviceName = mCameraList[mWorkParams.index].name;
@@ -237,11 +237,11 @@ HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 		}
 		desc.ptsStart = mBaseClock->GetCurrentTimeIn100ns(); 
 		if (hr == VFW_S_NO_STOP_TIME)
-			desc.ptsEnd = desc.ptsStart + FramesPerSecToRefTime(mWorkParams.fps);
+			desc.ptsEnd = desc.ptsStart + FramesPerSecToRefTime(RATE_DESC_TO_DOUBLE(mWorkParams.fps));
 	}
 #else
 	desc.ptsStart = mBaseClock->GetCurrentTimeIn100ns();
-	desc.ptsEnd = desc.ptsStart + FramesPerSecToRefTime(mWorkParams.fps);
+	desc.ptsEnd = desc.ptsStart + FramesPerSecToRefTime(RATE_DESC_TO_DOUBLE(mWorkParams.fps));
 #endif
 
 	desc.width = mWorkParams.width;
@@ -538,7 +538,7 @@ HRESULT DShowVideoCapture::FindMediaTypeInPinOrStreamConfig(CComPtr<IPin> &pOutP
 						continue;
 					}
 
-					REFERENCE_TIME frameInterval = FramesPerSecToRefTime(mWorkParams.fps);
+					REFERENCE_TIME frameInterval = FramesPerSecToRefTime(RATE_DESC_TO_DOUBLE(mWorkParams.fps));
 					if (frameInterval >= bility.MinFrameInterval || frameInterval <= bility.MaxFrameInterval){
 						bility.Ability |= FRAMEABILITY::SU_FPS;
 					}
@@ -565,7 +565,7 @@ HRESULT DShowVideoCapture::FindMediaTypeInPinOrStreamConfig(CComPtr<IPin> &pOutP
 			}
 		}
 
-		REFERENCE_TIME frameInterval = FramesPerSecToRefTime(mWorkParams.fps);
+		REFERENCE_TIME frameInterval = FramesPerSecToRefTime(RATE_DESC_TO_DOUBLE(mWorkParams.fps));
 		requestMediaType = ability.MediaType;
 		if (frameInterval > ability.MaxFrameInterval){
 			frameInterval = ability.MaxFrameInterval;

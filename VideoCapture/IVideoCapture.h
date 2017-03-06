@@ -24,7 +24,7 @@ struct CAPTURECONFIG
 	int32_t index;
 	int32_t width;
 	int32_t height;
-	double fps; // number? 
+	RATE_DESC fps; // number? 
 	HWND parentWindow;
 	HWND attachWindow;
 	DWORD pixelFormat;
@@ -35,7 +35,8 @@ struct CAPTURECONFIG
 	{
 		index = 0;
 		width = height = 0;
-		fps = 0.0;
+		fps.num = 0;
+		fps.den = 1;
 		parentWindow = NULL;
 		attachWindow = NULL;
 		pixelFormat = PIXEL_FORMAT_NONE;

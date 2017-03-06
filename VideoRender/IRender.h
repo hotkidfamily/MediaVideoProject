@@ -17,11 +17,7 @@ struct RENDERCONFIG
 	int32_t height;
 	DWORD pixelFormat;
 	BOOL bWaitVSync;
-	struct 
-	{
-		double num;
-		int32_t den;
-	}fps;
+	RATE_DESC fps;
 };
 
 class IRender{

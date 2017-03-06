@@ -58,7 +58,7 @@ private:
 	int64_t mFrameIndex;
 	int32_t mVideoStreamIndex;
 
-	double mFrameRate;
+	RATE_DESC mFrameRate;
 	int64_t mVideStreamPtsStep;
 
 	HANDLE mDecodeThreadHandle;

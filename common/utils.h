@@ -56,4 +56,11 @@ int32_t GetPixFmtByFourCC(DWORD pfFourCC);
 int32_t GetFrameSizePrePlannerByRes(E_RES);
 E_RES GetResByResolution(int32_t, int32_t);
 
+typedef struct tagRatio{
+	int32_t num;
+	int32_t den;
+}RATE_DESC;
+
+#define RATE_DESC_TO_DOUBLE(x) ((x.num*1.0)/x.den)
+
 #endif //__COMMONUTILS_H__
