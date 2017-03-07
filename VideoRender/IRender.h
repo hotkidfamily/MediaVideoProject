@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #ifdef VIDEORENDER_EXPORTS
 #define VIDEORENDER_API __declspec(dllexport)
@@ -12,7 +12,7 @@ struct RENDERCONFIG
 		ZeroMemory(this, sizeof(struct RENDERCONFIG));
 	}
 
-	HWND hWnd; /* NULL£º full screen, else windowed */
+	HWND hWnd; /* NULLï¼š full screen, else windowed */
 	int32_t width;
 	int32_t height;
 	DWORD pixelFormat;
