@@ -56,10 +56,15 @@ void CLibx264::close()
 		mCodecHandle = nullptr;
 	}
 
-	if (mVppFactory || mVpp){
+	if (mVpp) {
 		mVpp->DeinitContext();
+	}
+
+	if (mVppFactory){
 		mVppFactory->DestoryVPPObj(mVpp);
 		ReleaseVPPFactoryObj(mVppFactory);
+		mVpp = nullptr;
+		mVppFactory = nullptr;
 	}
 
 	x264_picture_clean(&mInPic);
