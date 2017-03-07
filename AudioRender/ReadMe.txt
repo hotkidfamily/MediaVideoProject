@@ -1,5 +1,5 @@
-﻿VideoRender
+﻿AudioRender
 
 ========================================================================
 Descriptor
-	Video render through DirectDraw or D3D9.
+	Audio render through DirectSound.

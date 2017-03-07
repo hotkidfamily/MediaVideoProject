@@ -148,7 +148,7 @@ DWORD D3DSoundRender::RenderLoop()
 	DWORD dwRet = WAIT_OBJECT_0;
 
 	while (mRenderThreadRuning){
-		dwRet = WaitForMultipleObjects(MAX_AUDIO_BUF, m_event, FALSE, INFINITE);
+		dwRet = WaitForMultipleObjects(MAX_AUDIO_BUF, m_event, FALSE, 5);
 		if ((dwRet >= WAIT_OBJECT_0) && (dwRet <= WAIT_OBJECT_0 + 3)){
 			if (!mRenderThreadRuning){
 				logger(Info, "Render thread exit\n");

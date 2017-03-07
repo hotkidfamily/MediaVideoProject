@@ -17,11 +17,6 @@ struct AudioRenderConfig
 	int32_t sampleRate;
 	int32_t bitsPerSample;
 	DWORD wavFormat;
-	struct 
-	{
-		double num;
-		int32_t den;
-	}fps;
 };
 
 class IAudioRender{
