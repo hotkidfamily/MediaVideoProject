@@ -90,7 +90,6 @@
     <ClInclude Include="D3DSoundRender.h" />
     <ClInclude Include="IAduioRender.h" />
     <ClInclude Include="iRenderCommon.h" />
-    <ClInclude Include="OSDInfo.h" />
     <ClInclude Include="RenderUtils.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="SyncRender.h" />
@@ -106,7 +105,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="OSDInfo.cpp" />
     <ClCompile Include="RenderUtils.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

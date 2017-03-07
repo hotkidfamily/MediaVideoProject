@@ -33,9 +33,6 @@
     <ClInclude Include="SyncRender.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="OSDInfo.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="AudioRender.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -57,9 +54,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="SyncRender.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="OSDInfo.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="AudioRender.cpp">
