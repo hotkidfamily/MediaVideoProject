@@ -2,13 +2,13 @@
 
 #define MAX_RENDER_OBJ (5)
 
-class D3DSoundRender : public IAudioRender, public IRenderThread
+class D3DSoundRender : public IAudioRender
 {
 public:
 	D3DSoundRender();
 	~D3DSoundRender();
 
-	virtual BOOL InitRender(const RENDERCONFIG &);
+	virtual BOOL InitRender(const AudioRenderConfig &);
 	virtual BOOL DeinitRender();
 
 	virtual BOOL PushFrame(CSampleBuffer *);
@@ -17,9 +17,6 @@ public:
 	virtual DWORD RenderLoop();
 
 protected:
-	HRESULT GetDeviceType(D3DDISPLAYMODE);
-	HRESULT IfSupportedFormat(D3DDISPLAYMODE , D3DFORMAT );
-	BOOL IfSupportedConversionFormat(D3DDISPLAYMODE , D3DFORMAT);
 	HRESULT UpdateRenderSurface(CSampleBuffer *&);
 	BOOL OSDText(HDC, RECT *, TCHAR *format, ...);
 	BOOL DrawStatus();

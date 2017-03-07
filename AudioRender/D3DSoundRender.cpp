@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "IAduioRender.h"
 #include "SyncRender.h"
 #include "D3DSoundRender.h"
 
@@ -22,51 +23,12 @@ D3DSoundRender::~D3DSoundRender()
 {
 }
 
-HRESULT D3DSoundRender::GetDeviceType(D3DDISPLAYMODE mode)
+
+BOOL D3DSoundRender::InitRender(const AudioRenderConfig &config)
 {
 	HRESULT hr = S_OK;
-
 
 	return hr;
-}
-
-BOOL D3DSoundRender::IfSupportedConversionFormat(D3DDISPLAYMODE mode, D3DFORMAT pixelFormat)
-{
-	HRESULT hr = E_FAIL;
-
-	return hr == S_OK;
-}
-
-HRESULT D3DSoundRender::IfSupportedFormat(D3DDISPLAYMODE mode, D3DFORMAT pixelFormat)
-{
-	HRESULT hr = S_OK;
-
-
-	return hr == S_OK;
-}
-
-BOOL D3DSoundRender::InitRender(const RENDERCONFIG &config)
-{
-	HRESULT hr = S_OK;
-	
-	mRenderEvent = CreateEvent(nullptr, FALSE, FALSE, TEXT("Render Event"));
-	if (mRenderEvent == INVALID_HANDLE_VALUE){
-		hr = E_FAIL;
-		goto done;
-	}
-
-
-
-	mRenderThreadRuning = TRUE;
-	mRenderThreadHandle = CreateThread(NULL, 0, CreateRenderThread, (IRenderThread*)this, NULL, &mRenderThreadId);
-
-done:
-	if (FAILED(hr)){
-		DeinitRender();
-		logger(Error, "%s", DXGetErrorStringA(hr));
-	}
-
-	return hr == S_OK;
 }
 
 BOOL D3DSoundRender::DeinitRender()
@@ -120,8 +82,6 @@ DWORD D3DSoundRender::RenderLoop()
 {
 	HRESULT hr = S_OK;
 	DWORD dwRet = WAIT_OBJECT_0;
-	LPDIRECT3DSURFACE9 pCurSurface = NULL;
-	LPDIRECT3DTEXTURE9 pCurTexture = NULL;
 
 	while (mRenderThreadRuning){
 		dwRet = WaitForSingleObject(mRenderEvent, 2);
@@ -188,7 +148,7 @@ BOOL D3DSoundRender::PushFrame(CSampleBuffer *inframe)
 		mDropFrameCount++;
 	}
 
-	return hr != D3D_OK;
+	return hr != S_OK;
 }
 
 BOOL D3DSoundRender::OSDText(HDC, RECT *rc, TCHAR *format, ...)
@@ -202,11 +162,6 @@ BOOL D3DSoundRender::OSDText(HDC, RECT *rc, TCHAR *format, ...)
 	va_end(va_alist);
 
 	OffsetRect(rc, 0, 2);
-// 
-// 	hr = mPFont->DrawText(nullptr, buf, -1, rc, DT_LEFT | DT_TOP, D3DCOLOR_ARGB(255, 0, 255, 0));
-
-	if (FAILED(hr))
-		logger(Error, "%s", DXGetErrorStringA(hr));
 
 	rc->top += 20;
 

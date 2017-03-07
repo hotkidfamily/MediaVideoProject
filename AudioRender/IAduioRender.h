@@ -6,10 +6,10 @@
 #define AUDIORENDER_API __declspec(dllimport)
 #endif
 
-struct RENDERCONFIG
+struct AudioRenderConfig
 {
-	RENDERCONFIG(){
-		ZeroMemory(this, sizeof(struct RENDERCONFIG));
+	AudioRenderConfig(){
+		ZeroMemory(this, sizeof(struct AudioRenderConfig));
 	}
 
 	HWND hWnd; /* NULL£º full screen, else windowed */
@@ -28,7 +28,7 @@ protected:
 	~IAudioRender(){};
 
 public:
-	virtual BOOL InitRender(const RENDERCONFIG &) = 0;
+	virtual BOOL InitRender(const AudioRenderConfig &) = 0;
 	virtual BOOL DeinitRender() = 0;
 
 	virtual BOOL PushFrame(CSampleBuffer *) = 0;

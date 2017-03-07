@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "AudioRender.h"
 #include "syncrender.h"
-#include "DdrawRender.h"
 #include "D3DSoundRender.h"
 
 IAduioRenderFactoryImpl::IAduioRenderFactoryImpl()
