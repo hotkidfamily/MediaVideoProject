@@ -13,9 +13,10 @@ struct AudioRenderConfig
 	}
 
 	HWND hWnd; /* NULL£º full screen, else windowed */
-	int32_t width;
-	int32_t height;
-	DWORD pixelFormat;
+	int32_t channels;
+	int32_t sampleRate;
+	int32_t bitsPerSample;
+	DWORD wavFormat;
 	struct 
 	{
 		double num;

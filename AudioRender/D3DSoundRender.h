@@ -1,6 +1,7 @@
 #pragma once
 
-#define MAX_RENDER_OBJ (5)
+#define MAX_AUDIO_BUF (5)
+#define BUFFERNOTIFYSIZE (2048)
 
 class D3DSoundRender : public IAudioRender
 {
@@ -18,12 +19,19 @@ public:
 
 protected:
 	HRESULT UpdateRenderSurface(CSampleBuffer *&);
-	BOOL OSDText(HDC, RECT *, TCHAR *format, ...);
 	BOOL DrawStatus();
 	BOOL UpdatePushStatis(CSampleBuffer *&);
 	BOOL UpdateRenderStatis();
 
 private:
+
+	IDirectSound8 *m_pDS = NULL;
+	IDirectSoundBuffer8 *m_pDSBuffer8 = NULL;	//used to manage sound buffers.
+	IDirectSoundBuffer *m_pDSBuffer = NULL;
+	IDirectSoundNotify8 *m_pDSNotify = NULL;
+	DSBPOSITIONNOTIFY m_pDSPosNotify[MAX_AUDIO_BUF];
+	HANDLE m_event[MAX_AUDIO_BUF];
+
 	HANDLE mRenderEvent;
 	HANDLE mRenderThreadHandle;
 	DWORD mRenderThreadId;

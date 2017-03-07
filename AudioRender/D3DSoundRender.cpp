@@ -28,6 +28,62 @@ BOOL D3DSoundRender::InitRender(const AudioRenderConfig &config)
 {
 	HRESULT hr = S_OK;
 
+	//Init DirectSound
+	if (FAILED(DirectSoundCreate8(NULL, &m_pDS, NULL))){
+		goto fail;
+	}
+
+	if (FAILED(m_pDS->SetCooperativeLevel(config.hWnd, DSSCL_NORMAL))){
+		goto fail;
+	}
+
+
+	DSBUFFERDESC dsbd;
+	ZeroMemory(&dsbd, sizeof(dsbd));
+	dsbd.dwSize = sizeof(dsbd);
+	dsbd.dwFlags = DSBCAPS_GLOBALFOCUS | DSBCAPS_CTRLPOSITIONNOTIFY | DSBCAPS_GETCURRENTPOSITION2;
+	dsbd.dwBufferBytes = MAX_AUDIO_BUF*BUFFERNOTIFYSIZE;
+	//WAVE Header
+	dsbd.lpwfxFormat = (WAVEFORMATEX*)malloc(sizeof(WAVEFORMATEX));
+	dsbd.lpwfxFormat->wFormatTag = WAVE_FORMAT_PCM;
+	/* format type */
+	(dsbd.lpwfxFormat)->nChannels = config.channels;
+	/* number of channels (i.e. mono, stereo...) */
+	(dsbd.lpwfxFormat)->nSamplesPerSec = config.sampleRate;
+	/* sample rate */
+	(dsbd.lpwfxFormat)->nAvgBytesPerSec = config.sampleRate*(config.bitsPerSample>>3)*config.channels;
+	/* for buffer estimation */
+	(dsbd.lpwfxFormat)->nBlockAlign = (config.bitsPerSample>>3)*config.channels;
+	/* block size of data */
+	(dsbd.lpwfxFormat)->wBitsPerSample = config.bitsPerSample;
+	/* number of bits per sample of mono data */
+	(dsbd.lpwfxFormat)->cbSize = 0;
+
+
+	if (FAILED(hr = m_pDS->CreateSoundBuffer(&dsbd, &m_pDSBuffer, NULL))){
+		goto fail;
+	}
+
+	if (FAILED(hr = m_pDSBuffer->QueryInterface(IID_IDirectSoundBuffer8, (LPVOID*)&m_pDSBuffer8))){
+		goto fail;
+	}
+
+	if (FAILED(m_pDSBuffer8->QueryInterface(IID_IDirectSoundNotify, (LPVOID*)&m_pDSNotify))){
+		return FALSE;
+	}
+
+	for (int32_t i = 0; i < MAX_AUDIO_BUF; i++){
+		m_pDSPosNotify[i].dwOffset = i*BUFFERNOTIFYSIZE;
+		m_event[i] = ::CreateEvent(NULL, false, false, NULL);
+		m_pDSPosNotify[i].hEventNotify = m_event[i];
+	}
+	m_pDSNotify->SetNotificationPositions(MAX_AUDIO_BUF, m_pDSPosNotify);
+	m_pDSNotify->Release();
+
+	m_pDSBuffer8->SetCurrentPosition(0);
+	m_pDSBuffer8->Play(0, 0, DSBPLAY_LOOPING);
+
+fail:
 	return hr;
 }
 
@@ -40,10 +96,18 @@ BOOL D3DSoundRender::DeinitRender()
 		mRenderThreadHandle = INVALID_HANDLE_VALUE;
 	}
 
+	for (int32_t i = 0; i < MAX_AUDIO_BUF; i++){
+		CloseHandle(m_event[i]);
+		m_event[i] = nullptr;
+	}
+
 	if (mRenderEvent){
 		CloseHandle(mRenderEvent);
 		mRenderEvent = nullptr;
 	}
+	// Release DirectSound interfaces
+	SAFE_RELEASE(m_pDSBuffer8);
+	SAFE_RELEASE(m_pDSBuffer);
 
 	return TRUE;
 }
@@ -84,20 +148,19 @@ DWORD D3DSoundRender::RenderLoop()
 	DWORD dwRet = WAIT_OBJECT_0;
 
 	while (mRenderThreadRuning){
-		dwRet = WaitForSingleObject(mRenderEvent, 2);
-		switch (dwRet){
-		case WAIT_OBJECT_0:
+		dwRet = WaitForMultipleObjects(MAX_AUDIO_BUF, m_event, FALSE, INFINITE);
+		if ((dwRet >= WAIT_OBJECT_0) && (dwRet <= WAIT_OBJECT_0 + 3)){
 			if (!mRenderThreadRuning){
 				logger(Info, "Render thread exit\n");
 				break;
 			} else{
 				UpdateRenderStatis();
 				DrawStatus();
+				// feed buffer
 			}
-			break;
-		case WAIT_TIMEOUT:
+		} else if (dwRet == WAIT_TIMEOUT){
 			continue;
-		default:
+		} else {
 			logger(Info, "Render thread exit, error Code %x\n", GetLastError());
 			break;
 		}
@@ -109,7 +172,19 @@ DWORD D3DSoundRender::RenderLoop()
 HRESULT D3DSoundRender::UpdateRenderSurface(CSampleBuffer *&frame)
 {
 	HRESULT hr = E_FAIL;
+	LPVOID pbData = NULL;
+	LPVOID pbData2 = NULL;
+	DWORD dwLength = 0;
+	DWORD dwLength2 = 0;
 
+	if (FAILED(hr = m_pDSBuffer8->Lock(0, BUFFERNOTIFYSIZE, &pbData, &dwLength, &pbData2, &dwLength2, 0L)))
+		return hr;
+
+	// Copy the memory to it.
+	//memcpy(pbData, pbWavData, g_dwBufferBytes);
+
+	// Unlock the buffer, we don't need it anymore.
+	m_pDSBuffer8->Unlock(pbData, BUFFERNOTIFYSIZE, NULL, 0);
 	return hr;
 };
 
@@ -149,22 +224,5 @@ BOOL D3DSoundRender::PushFrame(CSampleBuffer *inframe)
 	}
 
 	return hr != S_OK;
-}
-
-BOOL D3DSoundRender::OSDText(HDC, RECT *rc, TCHAR *format, ...)
-{
-	HRESULT hr = S_OK;
-	TCHAR buf[1024] = { TEXT('\0') };
-	va_list va_alist;
-
-	va_start(va_alist, format);
-	vswprintf_s(buf, format, va_alist);
-	va_end(va_alist);
-
-	OffsetRect(rc, 0, 2);
-
-	rc->top += 20;
-
-	return hr == S_OK;
 }
 
