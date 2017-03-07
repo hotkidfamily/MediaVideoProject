@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #ifdef VIDEOCODEC_EXPORTS
 #define VIDEOCODEC_API __declspec(dllexport)
