@@ -13,14 +13,14 @@ IAduioRenderFactoryImpl::~IAduioRenderFactoryImpl()
 
 }
 
-BOOL IAduioRenderFactoryImpl::CreateRenderObj(IAudioRender *&render)
+BOOL IAduioRenderFactoryImpl::CreateAudioRenderObj(IAudioRender *&render)
 {
 	render = new D3DSoundRender();
 
 	return render != nullptr;
 }
 
-BOOL IAduioRenderFactoryImpl::DestoryRenderObj(IAudioRender *render)
+BOOL IAduioRenderFactoryImpl::DestoryAudioRenderObj(IAudioRender *render)
 {
 	if (render)
 		delete static_cast<D3DSoundRender*>(render);

@@ -41,8 +41,8 @@ protected:
 	~IAudioRenderFactory(){};
 
 public:
-	virtual BOOL CreateRenderObj(IAudioRender *&) = 0;
-	virtual BOOL DestoryRenderObj(IAudioRender *) = 0;
+	virtual BOOL CreateAudioRenderObj(IAudioRender *&) = 0;
+	virtual BOOL DestoryAudioRenderObj(IAudioRender *) = 0;
 };
 
 #ifdef __cplusplus

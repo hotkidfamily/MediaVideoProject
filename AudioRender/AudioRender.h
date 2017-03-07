@@ -9,6 +9,6 @@ public:
 	IAduioRenderFactoryImpl();
 	~IAduioRenderFactoryImpl();
 
-	BOOL CreateRenderObj(IAudioRender *&);
-	BOOL DestoryRenderObj(IAudioRender *);
+	BOOL CreateAudioRenderObj(IAudioRender *&);
+	BOOL DestoryAudioRenderObj(IAudioRender *);
 };
