@@ -2,17 +2,17 @@
 
 #define MAX_RENDER_OBJ (5)
 
-class D3D9Render : public IAudioRender, public IRenderThread
+class D3DSoundRender : public IAudioRender, public IRenderThread
 {
 public:
-	D3D9Render();
-	~D3D9Render();
+	D3DSoundRender();
+	~D3DSoundRender();
 
 	virtual BOOL InitRender(const RENDERCONFIG &);
 	virtual BOOL DeinitRender();
 
 	virtual BOOL PushFrame(CSampleBuffer *);
-	virtual const char *GetRenderDescriptor() const { return "D3D9 sprite render"; };
+	virtual const char *GetRenderDescriptor() const { return "D3D8sound render"; };
 
 	virtual DWORD RenderLoop();
 
@@ -27,30 +27,6 @@ protected:
 	BOOL UpdateRenderStatis();
 
 private:
-	HWND mhWnd;
-
-	TCHAR *m_backModeDesc;
-	TCHAR *m_mainModeDesc;
-	IDirect3D9Ex* mpD3D9OBj;
-	IDirect3DDevice9Ex* mpD3D9Device;
-	D3DDEVTYPE mD3D9DeviceType;
-	D3DCAPS9 mpD3D9DeviceCaps;
-	BOOL mbSupportConversion;
-	RENDERCONFIG mConfig;
-
-	enum SSurfaceType {
-		SUPPORT_TEXTURE,
-		SUPPORT_SURFACE
-	};
-
-	SSurfaceType mSupportSurfaceType;
-	int32_t mCurPushObjIndex;
-	int32_t mCurRenderObjIndex;
-	LPDIRECT3DTEXTURE9 mpD3D9Texture[MAX_RENDER_OBJ];
-	LPDIRECT3DSURFACE9 mpD3D9Surface[MAX_RENDER_OBJ];
-
-	LPD3DXFONT mPFont;
-
 	HANDLE mRenderEvent;
 	HANDLE mRenderThreadHandle;
 	DWORD mRenderThreadId;

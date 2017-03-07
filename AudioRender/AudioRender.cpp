@@ -2,7 +2,7 @@
 #include "AudioRender.h"
 #include "syncrender.h"
 #include "DdrawRender.h"
-#include "D3D9Render.h"
+#include "D3DSoundRender.h"
 
 IAduioRenderFactoryImpl::IAduioRenderFactoryImpl()
 {
@@ -16,7 +16,7 @@ IAduioRenderFactoryImpl::~IAduioRenderFactoryImpl()
 
 BOOL IAduioRenderFactoryImpl::CreateRenderObj(IAudioRender *&render)
 {
-	render = new D3D9Render();
+	render = new D3DSoundRender();
 
 	return render != nullptr;
 }
@@ -24,7 +24,7 @@ BOOL IAduioRenderFactoryImpl::CreateRenderObj(IAudioRender *&render)
 BOOL IAduioRenderFactoryImpl::DestoryRenderObj(IAudioRender *render)
 {
 	if (render)
-		delete static_cast<D3D9Render*>(render);
+		delete static_cast<D3DSoundRender*>(render);
 
 	return TRUE;
 }

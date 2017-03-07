@@ -87,7 +87,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="D3D9Render.h" />
+    <ClInclude Include="D3DSoundRender.h" />
     <ClInclude Include="IAduioRender.h" />
     <ClInclude Include="iRenderCommon.h" />
     <ClInclude Include="OSDInfo.h" />
@@ -98,7 +98,7 @@
     <ClInclude Include="AudioRender.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="D3D9Render.cpp" />
+    <ClCompile Include="D3DSoundRender.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>

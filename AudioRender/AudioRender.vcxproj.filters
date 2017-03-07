@@ -33,9 +33,6 @@
     <ClInclude Include="SyncRender.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="D3D9Render.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="OSDInfo.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -43,6 +40,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="IAduioRender.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="D3DSoundRender.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -59,13 +59,13 @@
     <ClCompile Include="SyncRender.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="D3D9Render.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="OSDInfo.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="AudioRender.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="D3DSoundRender.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
