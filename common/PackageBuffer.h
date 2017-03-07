@@ -23,7 +23,7 @@ enum FRAME_TYPE{
 	B_FRAME = 4
 };
 
-class CPackageBuffer
+struct CPackageBuffer
 {
 public:
 	CPackageBuffer()

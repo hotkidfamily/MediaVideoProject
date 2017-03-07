@@ -184,6 +184,7 @@ public:
 	} resShift[4];
 
 protected:
+
 	BOOL FillPixFmtDescInSampleBuffer(int32_t width, int32_t height){
 		const PIXELFORAMTDESC * info = GetPxielFormatDescByFourCC(this->pixelFormatInFourCC);
 
