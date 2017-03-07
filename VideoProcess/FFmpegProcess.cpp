@@ -45,16 +45,13 @@ BOOL FFmpegProcess::DeinitContext()
 	return TRUE;
 }
 
-BOOL FFmpegProcess::ProcessFrame(const CSampleBuffer *srcPic, CSampleBuffer *outPic)
+BOOL FFmpegProcess::ProcessFrame(const VideoSampleBuffer *srcPic, VideoSampleBuffer *outPic)
 {
 	uint8_t **sBuf = nullptr;
 	int32_t *sStride = nullptr;
 	uint8_t **dBuf = nullptr;
 	int32_t *dStride = nullptr;
 	int32_t *lineSize = nullptr;
-
-	int64_t ptss = 0 ;
-	int64_t ptse = 0 ;
 
 	sBuf = (uint8_t **)srcPic->planarPtr;
 	sStride = (int32_t*)srcPic->planarStride;
@@ -71,6 +68,13 @@ BOOL FFmpegProcess::ProcessFrame(const CSampleBuffer *srcPic, CSampleBuffer *out
 
 	outPic->ptsStart = srcPic->ptsStart;
 	outPic->ptsEnd = srcPic->ptsEnd;
+	outPic->width = srcPic->width;
+	outPic->height = srcPic->height;
+
+	outPic->ptsStart = srcPic->ptsStart;
+	outPic->ptsEnd = srcPic->ptsEnd;
+	outPic->frameStartIdx = srcPic->frameStartIdx;
+	outPic->frameEndIdx = srcPic->frameEndIdx;
 
 	return true;
 }

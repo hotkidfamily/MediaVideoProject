@@ -24,7 +24,7 @@ public:
 	bool reset(const ENCODECCFG &config);
 
 	/* step 3.x */
-	bool addFrame(const CSampleBuffer &inputFrame);
+	bool addFrame(const VideoSampleBuffer &inputFrame);
 	/* step 3.x */
 	bool getPackage(CPackageBuffer *&outputPackage);
 

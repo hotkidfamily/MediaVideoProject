@@ -10,7 +10,7 @@ public:
 	BOOL InitRender(const RENDERCONFIG &);
 	BOOL DeinitRender();
 
-	BOOL PushFrame(CSampleBuffer *);
+	BOOL PushFrame(VideoSampleBuffer *);
 
 	const char *GetRenderDescriptor() const { return "Ddraw Render"; };
 

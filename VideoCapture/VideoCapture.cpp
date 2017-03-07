@@ -77,7 +77,7 @@ HRESULT IVideoCaptureDelegate::StopCapture()
 	return hr;
 }
 
-BOOL IVideoCaptureDelegate::GetFrame(CSampleBuffer *&pSample)
+BOOL IVideoCaptureDelegate::GetFrame(VideoSampleBuffer *&pSample)
 {
 	BOOL bRet = FALSE;
 
@@ -90,7 +90,7 @@ BOOL IVideoCaptureDelegate::GetFrame(CSampleBuffer *&pSample)
 	return bRet;
 }
 
-BOOL IVideoCaptureDelegate::ReleaseFrame(CSampleBuffer *&pSample)
+BOOL IVideoCaptureDelegate::ReleaseFrame(VideoSampleBuffer *&pSample)
 {
 	BOOL bRet = FALSE;
 

@@ -11,7 +11,7 @@ public:
 	virtual BOOL InitRender(const RENDERCONFIG &);
 	virtual BOOL DeinitRender();
 
-	virtual BOOL PushFrame(CSampleBuffer *);
+	virtual BOOL PushFrame(VideoSampleBuffer *);
 	virtual const char *GetRenderDescriptor() const { return "D3D9 sprite render"; };
 
 	virtual DWORD RenderLoop();
@@ -20,10 +20,10 @@ protected:
 	HRESULT GetDeviceType(D3DDISPLAYMODE);
 	HRESULT IfSupportedFormat(D3DDISPLAYMODE , D3DFORMAT );
 	BOOL IfSupportedConversionFormat(D3DDISPLAYMODE , D3DFORMAT);
-	HRESULT UpdateRenderSurface(CSampleBuffer *&);
+	HRESULT UpdateRenderSurface(VideoSampleBuffer *&);
 	BOOL OSDText(HDC, RECT *, TCHAR *format, ...);
 	BOOL DrawStatus();
-	BOOL UpdatePushStatis(CSampleBuffer *&);
+	BOOL UpdatePushStatis(VideoSampleBuffer *&);
 	BOOL UpdateRenderStatis();
 
 private:
@@ -61,7 +61,7 @@ private:
 	IVPPFactory *mVppFactory;
 	IVPP *mVpp;
 	IVPPPARAMETER vppParams;
-	CSampleBuffer *mVppTransSampleBuffer;
+	VideoSampleBuffer *mVppTransSampleBuffer;
 
 	// statistics 
 	int64_t mLastPts;

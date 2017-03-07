@@ -28,7 +28,7 @@ public:
 	virtual BOOL InitRender(const RENDERCONFIG &) = 0;
 	virtual BOOL DeinitRender() = 0;
 
-	virtual BOOL PushFrame(CSampleBuffer *) = 0;
+	virtual BOOL PushFrame(VideoSampleBuffer *) = 0;
 	virtual const char *GetRenderDescriptor() const = 0;
 };
 

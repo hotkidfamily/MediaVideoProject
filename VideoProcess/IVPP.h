@@ -47,7 +47,7 @@ public:
 	virtual BOOL InitContext(IVPPPARAMETER) = 0;
 	virtual BOOL DeinitContext() = 0;
 
-	virtual BOOL ProcessFrame(const CSampleBuffer *, CSampleBuffer *) = 0;
+	virtual BOOL ProcessFrame(const VideoSampleBuffer *, VideoSampleBuffer *) = 0;
 };
 
 class IVPPFactory

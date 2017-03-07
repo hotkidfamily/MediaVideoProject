@@ -135,7 +135,7 @@ bool CLibx264::reset(const ENCODECCFG &config)
 	return false;
 }
 
-bool CLibx264::addFrame(const CSampleBuffer &inputFrame)
+bool CLibx264::addFrame(const VideoSampleBuffer &inputFrame)
 {
 	x264_picture_t inpic;
 	x264_picture_init(&inpic);

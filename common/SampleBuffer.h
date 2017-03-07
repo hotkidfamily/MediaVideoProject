@@ -65,9 +65,88 @@ enum ColorMatrix
 	ColorMatrix_BT2020CL
 };
 
-typedef struct tagFrameDesc{
-	// common
-	int32_t cbSize;
+struct VideoSampleBuffer
+{
+public:
+	VideoSampleBuffer() { Reset(0, 0);  };
+
+	~VideoSampleBuffer(){};
+
+	/* for constructor, should first call */
+	BOOL Reset(uint8_t *bufferPtr, int32_t capacityInBytes)
+	{
+		this->capacity = capacityInBytes;
+		this->bufferPtr = bufferPtr;
+		width = 0;
+		height = 0;
+		ptsStart = ptsEnd = 0;
+		frameStartIdx = frameEndIdx = 0;
+		pixelFormatInFourCC = PIXEL_FORMAT_NONE;
+		planarCnt = 0;
+		dataPtr = NULL;
+		validDataSize = 0;
+		ZeroMemory(resShift, sizeof(resShift));
+		ZeroMemory(planarPtr, sizeof(planarPtr));
+		ZeroMemory(planarSize, sizeof(planarSize));
+		ZeroMemory(planarStride, sizeof(planarStride));
+		colorRange = ColorRange_Full;
+		colorTransfer = ColorTransfer_Unspecified;
+		colorMatrix = ColorMatrix_Unspecified;
+		colorPrimaries = ColorPrimaries_Unspecified;
+		return TRUE;
+	}
+	
+	/* for constructor */
+	BOOL Reset(uint8_t *bufferPtr, int32_t capacityInBytes, int32_t width, int32_t height, DWORD pixelFormat)
+	{
+		Reset(bufferPtr, capacityInBytes);
+		this->pixelFormatInFourCC = pixelFormat;
+		this->width = width;
+		this->height = height;
+		this->bufferPtr = bufferPtr;
+		this->capacity = capacityInBytes;
+		this->dataPtr = bufferPtr;
+		this->validDataSize = capacityInBytes;
+		FillPixFmtDescInSampleBuffer(width, height);
+		return TRUE;
+	}
+
+	BOOL FillData(VideoSampleBuffer &desc)
+	{
+		if (desc.validDataSize > this->capacity || !desc.dataPtr){
+			return FALSE;
+		}
+
+		*this = desc;
+
+		return TRUE;
+	}
+
+	VideoSampleBuffer & operator = (VideoSampleBuffer &desc)
+	{
+		this->width = desc.width;
+		this->height = desc.height;
+
+		this->ptsStart = desc.ptsStart;
+		this->ptsEnd = desc.ptsEnd;
+		this->frameStartIdx = desc.frameStartIdx;
+		this->frameEndIdx = desc.frameEndIdx;
+
+		this->pixelFormatInFourCC = desc.pixelFormatInFourCC;
+		this->colorRange = desc.colorRange;
+		this->colorTransfer = desc.colorTransfer;
+		this->colorPrimaries = desc.colorPrimaries;
+		this->colorMatrix = desc.colorMatrix;
+
+		memcpy_s(this->bufferPtr, this->capacity, desc.dataPtr, desc.validDataSize);
+		this->validDataSize = desc.validDataSize;
+
+		FillPixFmtDescInSampleBuffer(desc.width, desc.height);
+
+		return *this;
+	}
+
+	inline uint8_t *GetDataPtr() const { return bufferPtr; };
 
 	int32_t width;
 	int32_t height;
@@ -85,94 +164,6 @@ typedef struct tagFrameDesc{
 
 	uint8_t* dataPtr;
 	uint32_t validDataSize;
-
-	tagFrameDesc(){
-		reset();
-	}
-
-	void reset(){
-		ZeroMemory(this, sizeof(struct tagFrameDesc));
-		cbSize = sizeof(struct tagFrameDesc);
-		colorRange = ColorRange_Full;
-		colorTransfer = ColorTransfer_Unspecified;
-		colorMatrix = ColorMatrix_Unspecified;
-		colorPrimaries = ColorPrimaries_Unspecified;
-	}
-}FRAME_DESC;
-
-struct CSampleBuffer : public FRAME_DESC
-{
-public:
-	CSampleBuffer(uint8_t *bufferPtr, int32_t capacityInBytes)
-	{
-		Reset(bufferPtr, capacityInBytes);
-	};
-
-	~CSampleBuffer(){};
-
-	/* for constructor, should first call */
-	BOOL Reset(uint8_t *bufferPtr, int32_t capacityInBytes)
-	{
-		reset();
-		this->capacity = capacityInBytes;
-		this->dataPtr = bufferPtr;
-		planarCnt = 0;
-		ZeroMemory(resShift, sizeof(resShift));
-		ZeroMemory(planarPtr, sizeof(planarPtr));
-		ZeroMemory(planarSize, sizeof(planarSize));
-		ZeroMemory(planarStride, sizeof(planarStride));
-		return TRUE;
-	}
-	
-	/* for constructor */
-	BOOL Reset(uint8_t *bufferPtr, int32_t capacityInBytes, int32_t width, int32_t height, DWORD pixelFormat)
-	{
-		Reset(bufferPtr, capacityInBytes);
-		this->pixelFormatInFourCC = pixelFormat;
-		this->width = width;
-		this->height = height;
-		this->dataPtr = bufferPtr;
-		this->validDataSize = capacityInBytes;
-		FillPixFmtDescInSampleBuffer(width, height);
-		return TRUE;
-	}
-
-	BOOL FillData(FRAME_DESC &desc)
-	{
-		if (desc.validDataSize > this->capacity || !desc.dataPtr){
-			return FALSE;
-		}
-
-		*this = desc;
-
-		memcpy_s(this->dataPtr, this->capacity, desc.dataPtr, desc.validDataSize);
-
-		FillPixFmtDescInSampleBuffer(desc.width, desc.height);
-
-		return TRUE;
-	}
-
-	CSampleBuffer & operator = (FRAME_DESC &desc)
-	{
-		this->width = desc.width;
-		this->height = desc.height;
-
-		this->ptsStart = desc.ptsStart;
-		this->ptsEnd = desc.ptsEnd;
-		this->frameStartIdx = desc.frameStartIdx;
-		this->frameEndIdx = desc.frameEndIdx;
-
-		this->pixelFormatInFourCC = desc.pixelFormatInFourCC;
-		this->colorRange = desc.colorRange;
-		this->colorTransfer = desc.colorTransfer;
-		this->colorPrimaries = desc.colorPrimaries;
-		this->colorMatrix = desc.colorMatrix;
-
-		this->validDataSize = desc.validDataSize;
-		return *this;
-	}
-
- 	inline uint8_t *GetDataPtr() const { return dataPtr; };
 
 	int32_t planarCnt;
 	uint8_t *planarPtr[4];
@@ -192,7 +183,7 @@ protected:
 
 		planarStride[0] = (((width * info->pixdesc.bpp + info->strideW - 1)&~(info->strideW - 1)) >> 3) >> info->pixdesc.resShift[0].widthShift;
 		planarSize[0] = planarStride[0] * (height >> info->pixdesc.resShift[0].heightShift);
-		planarPtr[0] = dataPtr;
+		planarPtr[0] = bufferPtr;
 		resShift[0].widthShift = info->pixdesc.resShift[0].widthShift;
 		resShift[0].heightShift = info->pixdesc.resShift[0].heightShift;
 		
@@ -216,6 +207,6 @@ private:
 
 	// descriptor this sample
 	uint32_t capacity; // size of buffer 
-	uint8_t *dataPtr;
+	uint8_t *bufferPtr;
 };
 

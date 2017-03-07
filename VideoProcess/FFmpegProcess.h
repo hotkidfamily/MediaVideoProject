@@ -56,7 +56,7 @@ public:
 
 	virtual BOOL DeinitContext();
 
-	virtual BOOL ProcessFrame(const CSampleBuffer *srcPic, CSampleBuffer *outPic);
+	virtual BOOL ProcessFrame(const VideoSampleBuffer *srcPic, VideoSampleBuffer *outPic);
 
 private:
 	SwsContext *mScaleCtx;

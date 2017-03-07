@@ -129,7 +129,7 @@ BOOL D3D9Render::InitRender(const RENDERCONFIG &config)
 				hr = E_FAIL;
 				goto done;
 			}
-			mVppTransSampleBuffer = AllocSampleBuffer(config.width, config.height, (CPPixelFormat)vppParams.outDesc.pixelFormat);
+			mVppTransSampleBuffer = AlloVideoSampleBuffer(config.width, config.height, (CPPixelFormat)vppParams.outDesc.pixelFormat);
 			if (mVppTransSampleBuffer){
 				mbNeedVpp = TRUE;
 			}
@@ -223,7 +223,7 @@ BOOL D3D9Render::DeinitRender()
 	}
 
 	if (mVppTransSampleBuffer){
-		DeallocSampleBuffer(mVppTransSampleBuffer);
+		DealloVideoSampleBuffer(mVppTransSampleBuffer);
 		mVppTransSampleBuffer = NULL;
 	}
 
@@ -324,75 +324,7 @@ DWORD D3D9Render::RenderLoop()
 	return 0;
 }
 
-#if 0
-DWORD D3D9Render::RenderLoop()
-{
-	HRESULT hr = S_OK;
-	DWORD dwRet = WAIT_OBJECT_0;
-	int32_t step = 0;
-	int32_t lastSurface = 0;
-	LPDIRECT3DSURFACE9 pCurSurface = NULL;
-	LPDIRECT3DTEXTURE9 pCurTexture = NULL;
-
-	while (mRenderThreadRuning){
-		hr = mpD3D9Device->WaitForVBlank(0);
-		if (FAILED(hr)){
-			dwRet = WaitForSingleObject(mRenderEvent, 10);
-		}
-
-		if (!mRenderThreadRuning)
-			break;
-
-		if (dwRet == WAIT_OBJECT_0){
-			UpdateRenderStatis(); 
-
-			if (step++ >= 1){
-
-				if (lastSurface != mCurPushObjIndex){
-					mCurRenderObjIndex = (mCurRenderObjIndex + 1) % MAX_RENDER_OBJ;
-					step = 0;
-				}
-
-				lastSurface = mCurPushObjIndex;
-			}
-
-			logger(Info, "render %d, push %d, %d \n", mCurRenderObjIndex, mCurPushObjIndex, step);
-
-			if (mSupportSurfaceType == SUPPORT_TEXTURE){
-				pCurTexture = mpD3D9Texture[mCurRenderObjIndex];
-				if (!SUCCEEDED(pCurTexture->GetSurfaceLevel(0, &pCurSurface))) {
-					continue;
-				}
-			} else{
-				pCurSurface = mpD3D9Surface[mCurRenderObjIndex];
-			}
-
-			IDirect3DSurface9 *pBackBuffer = nullptr;
-			if (SUCCEEDED(mpD3D9Device->BeginScene())) {
-				if (SUCCEEDED(mpD3D9Device->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer))) {
-					mpD3D9Device->StretchRect(pCurSurface, NULL, pBackBuffer, NULL, D3DTEXF_NONE);
-					pBackBuffer->Release();
-				}
-				mpD3D9Device->EndScene();
-			}
-
-			DrawStatus();
-
-			if ((hr = mpD3D9Device->Present(nullptr, nullptr, nullptr, nullptr)) != D3D_OK){
-				logger(Error, "%s", DXGetErrorStringA(hr));
-			}
-		} else if ( dwRet == WAIT_TIMEOUT ){
-			continue;
-		} else {
-			break;
-		}
-	}
-
-	return 0;
-}
-#endif
-
-HRESULT D3D9Render::UpdateRenderSurface(CSampleBuffer *&frame)
+HRESULT D3D9Render::UpdateRenderSurface(VideoSampleBuffer *&frame)
 {
 	HRESULT hr = E_FAIL;
 	uint8_t *dstDataPtr = nullptr;
@@ -478,7 +410,7 @@ HRESULT D3D9Render::UpdateRenderSurface(CSampleBuffer *&frame)
 	return hr;
 };
 
-BOOL D3D9Render::UpdatePushStatis(CSampleBuffer *&frame)
+BOOL D3D9Render::UpdatePushStatis(VideoSampleBuffer *&frame)
 {
 	if (mLastPts){
 		mCurPtsInterval = frame->ptsStart - mLastPts;
@@ -489,10 +421,10 @@ BOOL D3D9Render::UpdatePushStatis(CSampleBuffer *&frame)
 	return TRUE;
 }
 
-BOOL D3D9Render::PushFrame(CSampleBuffer *inframe)
+BOOL D3D9Render::PushFrame(VideoSampleBuffer *inframe)
 {
 	HRESULT hr = E_FAIL;
-	CSampleBuffer *frame = inframe;
+	VideoSampleBuffer *frame = inframe;
 	
 	if (!frame){
 		return FALSE;

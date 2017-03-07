@@ -255,7 +255,7 @@ DWORD DDrawRender::RenderLoop()
 	return 0;
 }
 
-BOOL DDrawRender::PushFrame(CSampleBuffer *frame)
+BOOL DDrawRender::PushFrame(VideoSampleBuffer *frame)
 {
 	HRESULT hr = DD_OK;
 	DDSURFACEDESC2 desc;

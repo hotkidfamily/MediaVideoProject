@@ -19,7 +19,7 @@ void log(const char *format, ...)
 	OutputDebugStringA(str);
 }
 
-std::list<CSampleBuffer*> captureList;
+std::list<VideoSampleBuffer*> captureList;
 
 BOOL StartCamCaptureWork(THIS_CONTEXT *ctx)
 {
@@ -133,7 +133,7 @@ DWORD WINAPI CaptureThread(LPVOID args)
 	THIS_CONTEXT * ctx = (THIS_CONTEXT *)args;
 
 	while (ctx->bRuning){
-		CSampleBuffer *frame = nullptr;
+		VideoSampleBuffer *frame = nullptr;
 		if (ctx->capture->GetFrame(frame)){
 			EnterCriticalSection(&ctx->listLock);
 			captureList.push_back(frame);
@@ -153,7 +153,7 @@ DWORD WINAPI RenderThread(LPVOID args)
 	encodeFile.open(TEXT("D:\\capture.h264"), std::ios::binary);
 
 	while (ctx->bRuning){
-		CSampleBuffer *frame = nullptr;
+		VideoSampleBuffer *frame = nullptr;
 		CPackageBuffer *packet = nullptr;
 
 		if (!captureList.empty()){

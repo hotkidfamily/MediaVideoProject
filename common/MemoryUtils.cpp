@@ -97,7 +97,7 @@ void DeallocMemory(uint8_t * ptr)
 }
 
 
-BOOL DeallocSampleBuffer(CSampleBuffer *sample)
+BOOL DealloVideoSampleBuffer(VideoSampleBuffer *sample)
 {
 	if (!sample){
 		goto done;
@@ -113,9 +113,9 @@ done:
 	return TRUE;
 }
 
-CSampleBuffer *AllocSampleBuffer(int32_t width, int32_t height, CPPixelFormat pixelFormat)
+VideoSampleBuffer *AlloVideoSampleBuffer(int32_t width, int32_t height, CPPixelFormat pixelFormat)
 {
-	CSampleBuffer *sample = nullptr;
+	VideoSampleBuffer *sample = nullptr;
 	BOOL bRet = FALSE;
 
 	const PIXELFORAMTDESC *bpp = GetPxielFormatDescByFourCC(pixelFormat);
@@ -130,7 +130,7 @@ CSampleBuffer *AllocSampleBuffer(int32_t width, int32_t height, CPPixelFormat pi
 		//logger(Error, "Can not alloc sample buffer.\n");
 		goto fail;
 	}
-	sample = new CSampleBuffer(bufferPtr, capability);
+	sample = new VideoSampleBuffer();
 	assert(sample);
 	sample->Reset(bufferPtr, capability, width, height, pixelFormat);
 
@@ -138,7 +138,7 @@ CSampleBuffer *AllocSampleBuffer(int32_t width, int32_t height, CPPixelFormat pi
 
 fail:
 	if (!bRet){
-		DeallocSampleBuffer(sample);
+		DealloVideoSampleBuffer(sample);
 		sample = NULL;
 	}
 	

@@ -25,8 +25,8 @@ public:
 	~FilesVideoCapture();
 
 	int32_t DecodeLoop();
-	virtual BOOL GetFrame(CSampleBuffer *&pSample);
-	virtual BOOL ReleaseFrame(CSampleBuffer *&pSample);
+	virtual BOOL GetFrame(VideoSampleBuffer *&pSample);
+	virtual BOOL ReleaseFrame(VideoSampleBuffer *&pSample);
 
 	virtual void RegisterCallback(VideoCaptureCallback *) { return; };
 	// step 1, get device list
@@ -67,6 +67,6 @@ private:
 	int64_t mLastVideoFramePts;
 	BOOL mbDecodeLoop;
 
-	CSampleBufferManager mBufferManager;
+	VideoSampleBufferManager mBufferManager;
 	CClock *mBaseClock;
 };

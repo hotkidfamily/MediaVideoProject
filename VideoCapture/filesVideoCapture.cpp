@@ -136,7 +136,7 @@ int32_t FilesVideoCapture::decodePacket(int *got_frame, AVPacket &pkt)
 	}
 
 	if (*got_frame) {
-		FRAME_DESC desc;
+		VideoSampleBuffer desc;
 		if (mbDecodeLoop){
 			mBaseClock->ResetBaseTime(mLastVideoFramePts);
 			mbDecodeLoop = FALSE;
@@ -268,7 +268,7 @@ FilesVideoCapture::~FilesVideoCapture()
 	cleanUp();
 }
 
-BOOL FilesVideoCapture::GetFrame(CSampleBuffer *&pSample)
+BOOL FilesVideoCapture::GetFrame(VideoSampleBuffer *&pSample)
 {
 	BOOL bRet = FALSE;
 	if (mBufferManager.LockFrame(pSample)){
@@ -278,7 +278,7 @@ BOOL FilesVideoCapture::GetFrame(CSampleBuffer *&pSample)
 	return bRet;
 }
 
-BOOL FilesVideoCapture::ReleaseFrame(CSampleBuffer *&pSample)
+BOOL FilesVideoCapture::ReleaseFrame(VideoSampleBuffer *&pSample)
 {
 	BOOL bRet = FALSE;
 	if (mBufferManager.UnlockFrame(pSample)){

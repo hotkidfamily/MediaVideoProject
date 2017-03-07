@@ -47,8 +47,8 @@ void DeallocMemory(uint8_t * pointerOfMemory);
 uint8_t * AllocMemory(uint32_t sizeInByte);
 bool ReallocMemory(uint8_t** buffer, uint32_t sizeInByte);
 
-BOOL DeallocSampleBuffer(CSampleBuffer *);
-CSampleBuffer *AllocSampleBuffer(int32_t, int32_t, CPPixelFormat);
+BOOL DealloVideoSampleBuffer(VideoSampleBuffer *);
+VideoSampleBuffer *AlloVideoSampleBuffer(int32_t, int32_t, CPPixelFormat);
 
 DWORD GetFourCCByPixFmt(int32_t format);
 int32_t GetPixFmtByFourCC(DWORD pfFourCC);

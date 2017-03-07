@@ -6,18 +6,18 @@ typedef enum tagQUEUE_ERROR {
 	Q_SUCCESS = 0,
 }QUEUE_RET;
 
-typedef std::list<CSampleBuffer*> BUFFLIST;
+typedef std::list<VideoSampleBuffer*> BUFFLIST;
 
-class CSampleBufferManager
+class VideoSampleBufferManager
 {
 public:
-	CSampleBufferManager();
-	~CSampleBufferManager();
+	VideoSampleBufferManager();
+	~VideoSampleBufferManager();
 	
 	BOOL Reset(int32_t resOfFrames, int32_t nbFrames);
-	BOOL LockFrame(CSampleBuffer *&);
-	BOOL UnlockFrame(CSampleBuffer *&);
-	QUEUE_RET FillFrame(FRAME_DESC &);
+	BOOL LockFrame(VideoSampleBuffer *&);
+	BOOL UnlockFrame(VideoSampleBuffer *&);
+	QUEUE_RET FillFrame(VideoSampleBuffer &);
 
 protected:
 	int32_t GetFrameSizeByRes(int32_t resOfFrames);

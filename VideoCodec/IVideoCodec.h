@@ -55,7 +55,7 @@ public:
 	virtual bool reset(const ENCODECCFG &config) = 0;
 
 	/* step 3.x */
-	virtual bool addFrame(const CSampleBuffer &inputFrame) = 0;
+	virtual bool addFrame(const VideoSampleBuffer &inputFrame) = 0;
 	/* step 3.x */
 	virtual bool getPackage(CPackageBuffer *&outputPackage) = 0;
 

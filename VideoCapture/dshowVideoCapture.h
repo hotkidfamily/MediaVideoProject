@@ -54,8 +54,8 @@ public:
 	HRESULT RegisterCallback(VideoCaptureCallback *cb);
 	HRESULT UnregisterCallback();
 	HRESULT GetDShowInterfaces();
-	BOOL GetFrame(CSampleBuffer *&pSample);
-	BOOL ReleaseFrame(CSampleBuffer *&pSample);
+	BOOL GetFrame(VideoSampleBuffer *&pSample);
+	BOOL ReleaseFrame(VideoSampleBuffer *&pSample);
 
 private:
 	HRESULT RemoveFiltersFromGraph();
@@ -94,7 +94,7 @@ private:
 	CAPTURECONFIG mWorkParams;
 	CAMERALIST mCameraList;
 	CSlidingWindowCalc mFpsStats;
-	CSampleBufferManager mBufferManager;
+	VideoSampleBufferManager mBufferManager;
 	CClock *mBaseClock;
 };
 

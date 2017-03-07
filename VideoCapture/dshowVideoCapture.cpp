@@ -209,7 +209,7 @@ HRESULT DShowVideoCapture::Stop()
 
 HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 {
-	FRAME_DESC desc;
+	VideoSampleBuffer desc;
 	HRESULT  hr = S_OK;
 
 	ASSERT(mcb != nullptr);
@@ -256,7 +256,7 @@ done:
 	return hr;
 }
 
-BOOL DShowVideoCapture::GetFrame(CSampleBuffer *&pSample)
+BOOL DShowVideoCapture::GetFrame(VideoSampleBuffer *&pSample)
 {
 	BOOL bRet = FALSE;
 	if (mBufferManager.LockFrame(pSample)){
@@ -266,7 +266,7 @@ BOOL DShowVideoCapture::GetFrame(CSampleBuffer *&pSample)
 	return bRet;
 }
 
-BOOL DShowVideoCapture::ReleaseFrame(CSampleBuffer *&pSample)
+BOOL DShowVideoCapture::ReleaseFrame(VideoSampleBuffer *&pSample)
 {
 	BOOL bRet = FALSE;
 	if (mBufferManager.UnlockFrame(pSample)){

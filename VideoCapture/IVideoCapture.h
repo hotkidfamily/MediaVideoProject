@@ -88,10 +88,10 @@ public:
 	virtual HRESULT ShowPropertyWindow(HWND parentWindowHandle) = 0;
 
 	// step 3.x other feature support: show property setting window
-	virtual BOOL GetFrame(CSampleBuffer *&pSample) = 0;
+	virtual BOOL GetFrame(VideoSampleBuffer *&pSample) = 0;
 
 	// step 3.x other feature support: show property setting window
-	virtual BOOL ReleaseFrame(CSampleBuffer *&pSample) = 0;
+	virtual BOOL ReleaseFrame(VideoSampleBuffer *&pSample) = 0;
 
 	// step 4, close capture
 	virtual HRESULT StopCapture() = 0;

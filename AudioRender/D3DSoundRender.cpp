@@ -169,7 +169,7 @@ DWORD D3DSoundRender::RenderLoop()
 	return 0;
 }
 
-HRESULT D3DSoundRender::UpdateRenderSurface(CSampleBuffer *&frame)
+HRESULT D3DSoundRender::UpdateRenderSurface(VideoSampleBuffer *&frame)
 {
 	HRESULT hr = E_FAIL;
 	LPVOID pbData = NULL;
@@ -188,7 +188,7 @@ HRESULT D3DSoundRender::UpdateRenderSurface(CSampleBuffer *&frame)
 	return hr;
 };
 
-BOOL D3DSoundRender::UpdatePushStatis(CSampleBuffer *&frame)
+BOOL D3DSoundRender::UpdatePushStatis(VideoSampleBuffer *&frame)
 {
 	if (mLastPts){
 		mCurPtsInterval = frame->ptsStart - mLastPts;
@@ -199,10 +199,10 @@ BOOL D3DSoundRender::UpdatePushStatis(CSampleBuffer *&frame)
 	return TRUE;
 }
 
-BOOL D3DSoundRender::PushFrame(CSampleBuffer *inframe)
+BOOL D3DSoundRender::PushFrame(VideoSampleBuffer *inframe)
 {
 	HRESULT hr = E_FAIL;
-	CSampleBuffer *frame = inframe;
+	VideoSampleBuffer *frame = inframe;
 	
 	if (!frame){
 		return FALSE;

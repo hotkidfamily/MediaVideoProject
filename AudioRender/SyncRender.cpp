@@ -21,7 +21,7 @@ BOOL CSyncRender::Reset()
 	return TRUE;
 }
 
-BOOL CSyncRender::PushFrame(CSampleBuffer *&frame)
+BOOL CSyncRender::PushFrame(VideoSampleBuffer *&frame)
 {
 	BOOL ret = FALSE;
 	FRAMEACTION action = FA_WAIT;

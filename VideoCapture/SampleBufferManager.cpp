@@ -2,7 +2,7 @@
 #include "SampleBufferManager.h"
 
 
-CSampleBufferManager::CSampleBufferManager()
+VideoSampleBufferManager::VideoSampleBufferManager()
 	: mBufferSize(0)
 	, mBufferPtr(nullptr)
 {
@@ -12,7 +12,7 @@ CSampleBufferManager::CSampleBufferManager()
 	InitializeCriticalSection(&mCs);
 }
 
-CSampleBufferManager::~CSampleBufferManager()
+VideoSampleBufferManager::~VideoSampleBufferManager()
 {
 	ClearWorkStatus();
 	DeallocMemory(mBufferPtr);
@@ -20,7 +20,7 @@ CSampleBufferManager::~CSampleBufferManager()
 	DeleteCriticalSection(&mCs);
 }
 
-BOOL CSampleBufferManager::Reset(int32_t res, int32_t nbFrames)
+BOOL VideoSampleBufferManager::Reset(int32_t res, int32_t nbFrames)
 {
 	BOOL bRet = FALSE;
 	int32_t index = 0;
@@ -45,7 +45,8 @@ BOOL CSampleBufferManager::Reset(int32_t res, int32_t nbFrames)
 
 	emptyList.resize(nbFrames);
 	for (it = emptyList.begin(); it != emptyList.end(); it++){
-		*it = new CSampleBuffer(mBufferPtr + index*buffSizePreFrame, buffSizePreFrame);
+		*it = new VideoSampleBuffer;
+		(*it)->Reset(mBufferPtr + index*buffSizePreFrame, buffSizePreFrame);
 	}
 
 	bRet = TRUE;
@@ -56,13 +57,13 @@ errRet:
 	return bRet;
 }
 
-QUEUE_RET CSampleBufferManager::FillFrame(FRAME_DESC &desc)
+QUEUE_RET VideoSampleBufferManager::FillFrame(VideoSampleBuffer &desc)
 {
 	QUEUE_RET ret = Q_SUCCESS;
 	CAutoLock lock(mCs);
 
 	if (!emptyList.empty()){
-		CSampleBuffer *sample = emptyList.front();
+		VideoSampleBuffer *sample = emptyList.front();
 		if (sample->FillData(desc)){
 			// FixME£º
 			emptyList.pop_front();
@@ -77,13 +78,13 @@ QUEUE_RET CSampleBufferManager::FillFrame(FRAME_DESC &desc)
 	return ret;
 }
 
-BOOL CSampleBufferManager::LockFrame(CSampleBuffer *&buf)
+BOOL VideoSampleBufferManager::LockFrame(VideoSampleBuffer *&buf)
 {
 	BOOL bRet = FALSE;
 	CAutoLock lock(mCs);
 
 	if (!readyList.empty()){
-		CSampleBuffer *sample = readyList.front();
+		VideoSampleBuffer *sample = readyList.front();
 		readyList.pop_front();
 		occupyList.push_back(sample);
 		buf = sample;
@@ -93,7 +94,7 @@ BOOL CSampleBufferManager::LockFrame(CSampleBuffer *&buf)
 	return bRet;
 }
 
-BOOL CSampleBufferManager::UnlockFrame(CSampleBuffer *&sample)
+BOOL VideoSampleBufferManager::UnlockFrame(VideoSampleBuffer *&sample)
 {
 	BOOL bRet = TRUE;
 	CAutoLock lock(mCs);
@@ -106,7 +107,7 @@ BOOL CSampleBufferManager::UnlockFrame(CSampleBuffer *&sample)
 	return bRet;
 }
 
-BOOL CSampleBufferManager::ClearWorkStatus()
+BOOL VideoSampleBufferManager::ClearWorkStatus()
 {
 	if (!readyList.empty()){
 		BUFFLIST::iterator it = readyList.begin();
@@ -136,7 +137,7 @@ BOOL CSampleBufferManager::ClearWorkStatus()
 	return TRUE;
 }
 
-int32_t CSampleBufferManager::GetFrameSizeByRes(int32_t res)
+int32_t VideoSampleBufferManager::GetFrameSizeByRes(int32_t res)
 {
 	int32_t sizePrePlanner = 0;
 	
