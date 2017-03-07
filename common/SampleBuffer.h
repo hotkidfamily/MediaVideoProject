@@ -210,3 +210,18 @@ private:
 	uint8_t *bufferPtr;
 };
 
+struct AudioSampleBuffer
+{
+public:
+	int32_t sampleRate;
+	int32_t bitsPerSample;
+	int32_t channels;
+	int64_t pts;
+	uint8_t *dataPtr;
+	int32_t validDataLen;
+	uint32_t sampleFormat;
+
+private:
+	uint32_t capacity;
+	uint8_t* bufferPtr;
+};
