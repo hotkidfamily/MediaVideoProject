@@ -150,7 +150,9 @@ DWORD WINAPI RenderThread(LPVOID args)
 {
 	THIS_CONTEXT * ctx = (THIS_CONTEXT *)args;
 	std::ofstream encodeFile;
-	encodeFile.open(TEXT("D:\\capture.h264"), std::ios::binary);
+	if (ctx->bEnableCodec){
+		encodeFile.open(TEXT("D:\\capture.h264"), std::ios::binary);
+	}
 
 	while (ctx->bRuning){
 		VideoSampleBuffer *frame = nullptr;
@@ -162,14 +164,15 @@ DWORD WINAPI RenderThread(LPVOID args)
 			captureList.pop_front();
 			LeaveCriticalSection(&ctx->listLock);
 			ctx->render->PushFrame(frame);
-			ctx->codec->addFrame(*frame);
-			if (ctx->codec->getPackage(packet)){
-				if (packet->isIDRFrame())
-					encodeFile.write((const char*)(packet->ExtraData()), packet->ExtraDataSize());
-				encodeFile.write((const char*)packet->Data(), packet->DataSize());
-				ctx->codec->releasePackage(packet);
-			}
-
+			if (ctx->bEnableCodec){
+				ctx->codec->addFrame(*frame);
+				if (ctx->codec->getPackage(packet)){
+					if (packet->isIDRFrame())
+						encodeFile.write((const char*)(packet->ExtraData()), packet->ExtraDataSize());
+					encodeFile.write((const char*)packet->Data(), packet->DataSize());
+					ctx->codec->releasePackage(packet);
+				}
+			}			
 			ctx->capture->ReleaseFrame(frame);
 		}
 
@@ -268,7 +271,10 @@ void StopStream(THIS_CONTEXT *ctx)
 	DestoryWorkThread(ctx);
 	StopCaptureWork(ctx);
 	StopRenderWork(ctx);
-	StopEncodeWork(ctx);
+	if (ctx->bEnableCodec){
+		StopEncodeWork(ctx);
+	}
+	ctx->bEnableCodec = FALSE;
 }
 
 BOOL SetupStream(THIS_CONTEXT *ctx, BOOL bCam)
@@ -282,7 +288,9 @@ BOOL SetupStream(THIS_CONTEXT *ctx, BOOL bCam)
 	if (bSuccess){
 		ResizeWindow(ctx);		
 		StartRenderWork(ctx);
-		SetupEncodeWork(ctx);
+		if (ctx->bEnableCodec){
+			SetupEncodeWork(ctx);
+		}
 		CreateWorkThread(ctx);
 	}
 

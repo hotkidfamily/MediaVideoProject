@@ -27,6 +27,7 @@ typedef struct tagProgramContext{
 	CVideoCallback *callBack;
 
 	/* codec */
+	BOOL bEnableCodec;
 	ICodecFactory *encFactory;
 	ICodec *codec;
 	ENCODECCFG encoderCfg;
