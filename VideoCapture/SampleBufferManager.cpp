@@ -143,5 +143,5 @@ int32_t VideoSampleBufferManager::GetFrameSizeByRes(int32_t res)
 	
 	sizePrePlanner = GetFrameSizePrePlannerByRes((E_RES)res);
 
-	return sizePrePlanner * 3;
+	return sizePrePlanner * 4; /*ALLOC MEMORY IN MAX PLANNER CURRENT MAX PLANNER = 4*/
 }

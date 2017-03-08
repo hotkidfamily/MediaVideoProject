@@ -33,7 +33,7 @@ BOOL StartCamCaptureWork(THIS_CONTEXT *ctx)
 
 		ctx->capture->RegisterCallback(ctx->callBack);
 		ctx->captureCfg.parentWindow = ctx->hMainWnd;
-		ctx->captureCfg.fps = { 30, 0 };
+		ctx->captureCfg.fps = { 30, 1 };
 		ctx->captureCfg.width = 1280;
 		ctx->captureCfg.height = 720;
 		hr = ctx->capture->StartCaptureWithParam(ctx->captureCfg);
