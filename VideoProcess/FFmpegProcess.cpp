@@ -59,10 +59,10 @@ BOOL FFmpegProcess::ProcessFrame(const VideoSampleBuffer *srcPic, VideoSampleBuf
 	dStride = outPic->planarStride;
 	lineSize = (int32_t*)srcPic->planarStride;
 
-	if (srcPic->pixelFormatInFourCC == PIXEL_FORMAT_RGB24 || srcPic->pixelFormatInFourCC == PIXEL_FORMAT_RGB32){
-		sBuf[0] = sBuf[0] + sStride[0] + lineSize[0] * (srcPic->height - 1);
-		sStride[0] = -sStride[0];
-	}
+ 	if (srcPic->pixelFormatInFourCC == PIXEL_FORMAT_RGB24 || srcPic->pixelFormatInFourCC == PIXEL_FORMAT_RGB32){
+ 		sBuf[0] = sBuf[0] + sStride[0] + lineSize[0] * (srcPic->height - 1);
+ 		sStride[0] = -sStride[0];
+ 	}
 
 	int oheight = FFmpegWrapper::sws_scale(mScaleCtx, sBuf, sStride, 0, mParams.vppParams.inDesc.Height(), dBuf, dStride);
 
