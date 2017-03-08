@@ -279,8 +279,8 @@ BOOL SetupStream(THIS_CONTEXT *ctx, BOOL bCam)
 	} else{
 		bSuccess = StartFileCaptureWork(ctx);
 	}
-	ResizeWindow(ctx);
 	if (bSuccess){
+		ResizeWindow(ctx);		
 		StartRenderWork(ctx);
 		SetupEncodeWork(ctx);
 		CreateWorkThread(ctx);
