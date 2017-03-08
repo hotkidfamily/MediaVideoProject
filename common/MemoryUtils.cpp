@@ -121,9 +121,7 @@ VideoSampleBuffer *AlloVideoSampleBuffer(int32_t width, int32_t height, CPPixelF
 	const PIXELFORAMTDESC *bpp = GetPxielFormatDescByFourCC(pixelFormat);
 
 	/* calculate buffer size */
-	int32_t rWidth = WIDTHALIGN(width);
-	int32_t rHeight = WIDTHALIGN(height);
-	int32_t capability = rWidth * rHeight * bpp->pixdesc.bpp >> 3;
+	int32_t capability = width * height * bpp->pixdesc.bpp >> 3;
 	uint8_t *bufferPtr = AllocMemory(capability);
 
 	if (!bufferPtr){

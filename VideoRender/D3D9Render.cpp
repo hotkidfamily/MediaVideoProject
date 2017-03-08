@@ -121,9 +121,13 @@ BOOL D3D9Render::InitRender(const RENDERCONFIG &config)
 			vppParams.inDesc.width = config.width;
 			vppParams.inDesc.height = config.height;
 			vppParams.inDesc.pixelFormat = config.pixelFormat;
+			vppParams.inDesc.colorRange = 1;
+			vppParams.inDesc.colorSpace = 5;
 			vppParams.outDesc.width = config.width;
 			vppParams.outDesc.height = config.height;
 			vppParams.outDesc.pixelFormat = GetFourCCByD3D9PixelFmt(mode.Format);
+			vppParams.outDesc.colorRange = 1;
+			vppParams.outDesc.colorSpace = 5;
 			vppParams.flags = 0x10;
 			if (!mVpp->InitContext(vppParams)){
 				hr = E_FAIL;
@@ -402,7 +406,7 @@ HRESULT D3D9Render::UpdateRenderSurface(VideoSampleBuffer *&frame)
 	IDirect3DSurface9 *pBackBuffer = nullptr;
 	if (SUCCEEDED(mpD3D9Device->BeginScene())) {
 		if (SUCCEEDED(mpD3D9Device->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer))) {
-			mpD3D9Device->StretchRect(pCurSurface, NULL, pBackBuffer, NULL, D3DTEXF_NONE);
+			hr = mpD3D9Device->StretchRect(pCurSurface, NULL, pBackBuffer, NULL, D3DTEXF_NONE);
 			pBackBuffer->Release();
 		}
 		mpD3D9Device->EndScene();

@@ -6,44 +6,30 @@
 #include "common\utils.h"
 #include "VppUtils.h"
 
-typedef struct tagFrameDescInFFmpeg : public FRAMECOLORDESC{
-
-	AVPixelFormat PixelFormatInFFmpeg;
-
-	tagFrameDescInFFmpeg& operator = (FRAMECOLORDESC &desc){
-		width = desc.width;
-		height = desc.height;
-		colorSpace = desc.colorSpace;
-		colorRange = desc.colorRange;
-		pixelFormat = desc.pixelFormat;
-		PixelFormatInFFmpeg = (AVPixelFormat)GetPixFmtByFourCC(desc.pixelFormat);
-		return *this;
-	}
-
-	bool operator == (FRAMECOLORDESC &desc){
-		return ((FRAMECOLORDESC)*this == desc);
-	}
-}FrameDescInFFmpeg;
-
 struct FFmpegScaleParams
 {
 	FFmpegScaleParams(){}
 
 	FFmpegScaleParams(IVPPPARAMETER &params){
-		inFrame = params.inDesc;
-		outFrame = params.outDesc;
-		flags = params.flags;
+		vppParams = params;
+		inFramePixFmt = (AVPixelFormat)GetPixFmtByFourCC(params.inDesc.pixelFormat);
+		outFramePixFmt = (AVPixelFormat)GetPixFmtByFourCC(params.outDesc.pixelFormat);
+	}
+
+	FFmpegScaleParams &operator = (IVPPPARAMETER &params){
+		vppParams = params;
+		inFramePixFmt = (AVPixelFormat)GetPixFmtByFourCC(params.inDesc.pixelFormat);
+		outFramePixFmt = (AVPixelFormat)GetPixFmtByFourCC(params.outDesc.pixelFormat);
+		return *this;
 	}
 
 	bool operator == (IVPPPARAMETER &params){
-		return (params.inDesc == inFrame)
-			&& (params.outDesc == outFrame)
-			&& (flags == params.flags);
+		return (vppParams == params);
 	}
 
-	FrameDescInFFmpeg inFrame;
-	FrameDescInFFmpeg outFrame;
-	int32_t flags;
+	IVPPPARAMETER vppParams;
+	AVPixelFormat inFramePixFmt;
+	AVPixelFormat outFramePixFmt;
 };
 
 class FFmpegProcess : public IVPP

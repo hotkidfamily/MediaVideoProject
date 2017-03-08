@@ -13,7 +13,8 @@ typedef struct tagframedesc{
 	int colorSpace;
 	int colorRange;
 
-	tagframedesc(){
+	tagframedesc()
+	{
 		width = 0;
 		height = 0;
 		pixelFormat = 0;
@@ -24,7 +25,8 @@ typedef struct tagframedesc{
 	inline int Width() { return abs(width); }
 	inline int Height() { return abs(height); }
 
-	bool operator == (struct tagframedesc &in_desc){
+	bool operator == (struct tagframedesc &in_desc)
+	{
 		return ((width == in_desc.width)
 			&& (height == in_desc.height)
 			&& (pixelFormat == in_desc.pixelFormat)
@@ -34,6 +36,14 @@ typedef struct tagframedesc{
 }FRAMECOLORDESC;
 
 typedef struct IVPPContext{
+
+	bool operator == (struct IVPPContext& inArg)
+	{
+		return ((inDesc == inArg.inDesc)
+			&& (outDesc == inArg.outDesc)
+			&& flags == inArg.flags);
+	};
+
 	FRAMECOLORDESC inDesc;
 	FRAMECOLORDESC outDesc;
 	int32_t flags;

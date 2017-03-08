@@ -22,15 +22,15 @@ BOOL FFmpegProcess::InitContext(IVPPPARAMETER params)
 
 	mParams = params;
 		
-	mScaleCtx = FFmpegWrapper::sws_getContext(mParams.inFrame.Width(), mParams.inFrame.Height(), mParams.inFrame.PixelFormatInFFmpeg,
-		mParams.outFrame.Width(), mParams.outFrame.Height(), mParams.outFrame.PixelFormatInFFmpeg, mParams.flags, 0, 0, 0);
+	mScaleCtx = FFmpegWrapper::sws_getContext(mParams.vppParams.inDesc.Width(), mParams.vppParams.inDesc.Height(), mParams.inFramePixFmt,
+		mParams.vppParams.outDesc.Width(), mParams.vppParams.outDesc.Height(), mParams.outFramePixFmt, mParams.vppParams.flags, 0, 0, 0);
 
 	if (!mScaleCtx){
 		return false;
 	}
 
-	int ret = FFmpegWrapper::sws_setColorspaceDetails(mScaleCtx, FFmpegWrapper::sws_getCoefficients(mParams.inFrame.colorSpace), mParams.inFrame.colorRange,
-		FFmpegWrapper::sws_getCoefficients(mParams.outFrame.colorSpace), mParams.outFrame.colorSpace, 0, 0, 0);
+ 	int ret = FFmpegWrapper::sws_setColorspaceDetails(mScaleCtx, FFmpegWrapper::sws_getCoefficients(mParams.vppParams.inDesc.colorSpace), mParams.vppParams.inDesc.colorRange,
+ 		FFmpegWrapper::sws_getCoefficients(mParams.vppParams.outDesc.colorSpace), mParams.vppParams.outDesc.colorRange, 0, 1<<16, 1<<16);
 
 	return ret == 0;
 }
@@ -64,7 +64,7 @@ BOOL FFmpegProcess::ProcessFrame(const VideoSampleBuffer *srcPic, VideoSampleBuf
 		sStride[0] = -sStride[0];
 	}
 
-	int oheight = FFmpegWrapper::sws_scale(mScaleCtx, sBuf, sStride, 0, mParams.inFrame.Height(), dBuf, dStride);
+	int oheight = FFmpegWrapper::sws_scale(mScaleCtx, sBuf, sStride, 0, mParams.vppParams.inDesc.Height(), dBuf, dStride);
 
 	outPic->ptsStart = srcPic->ptsStart;
 	outPic->ptsEnd = srcPic->ptsEnd;
