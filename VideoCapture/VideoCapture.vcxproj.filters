@@ -72,6 +72,9 @@
     <ClCompile Include="WMFVideoCapture.cpp">
       <Filter>Source Files\mediafoundationinterface</Filter>
     </ClCompile>
+    <ClCompile Include="AudioSampleBufferManager.cpp">
+      <Filter>Source Files\buffermanager</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IVideoCapture.h">
@@ -109,6 +112,9 @@
     </ClInclude>
     <ClInclude Include="WMFVideoCapture.h">
       <Filter>Header Files\mediafoundationinterface</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioSampleBufferManager.h">
+      <Filter>Header Files\buffermanager</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

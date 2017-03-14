@@ -218,10 +218,54 @@ public:
 	int32_t channels;
 	int64_t pts;
 	uint8_t *dataPtr;
-	int32_t validDataLen;
+	int32_t validDataSize;
 	uint32_t sampleFormat;
 
+	AudioSampleBuffer() { Reset(0, 0); };
+
+	~AudioSampleBuffer(){};
+
+	/* for constructor, should first call */
+	BOOL Reset(uint8_t *bufferPtr, int32_t capacityInBytes)
+	{
+		this->capacity = capacityInBytes;
+		this->bufferPtr = bufferPtr;
+		sampleRate = 44100;
+		bitsPerSample = 16;
+		channels = 2;
+		pts = 0;
+		dataPtr = NULL;
+		validDataSize = 0;
+		sampleFormat = 0;
+		return TRUE;
+	}
+
+	BOOL FillData(AudioSampleBuffer &desc)
+	{
+		if (desc.validDataSize > this->capacity || !desc.dataPtr){
+			return FALSE;
+		}
+
+		*this = desc;
+
+		return TRUE;
+	}
+
+	AudioSampleBuffer & operator = (AudioSampleBuffer &desc)
+	{
+		this->sampleRate = desc.sampleRate;
+		this->bitsPerSample = desc.bitsPerSample;
+		this->channels = desc.channels;
+		this->pts = desc.pts;
+		this->dataPtr = this->bufferPtr;
+		this->sampleFormat = desc.sampleFormat;
+		memcpy_s(this->bufferPtr, this->capacity, desc.dataPtr, desc.validDataSize);
+		this->validDataSize = desc.validDataSize;
+
+		return *this;
+	}
+
 private:
-	uint32_t capacity;
+	int32_t capacity;
 	uint8_t* bufferPtr;
 };

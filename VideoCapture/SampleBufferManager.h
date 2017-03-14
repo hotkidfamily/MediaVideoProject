@@ -1,11 +1,5 @@
 #pragma once
 
-typedef enum tagQUEUE_ERROR {
-	Q_NOMEMORY = -2,
-	Q_FULL = -1,
-	Q_SUCCESS = 0,
-}QUEUE_RET;
-
 typedef std::list<VideoSampleBuffer*> BUFFLIST;
 #define MAX_FRAME_SIZE (20)
 

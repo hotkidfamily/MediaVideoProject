@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AudioSampleBufferManager.h"
 #include "SampleBufferManager.h"
 #include "IVideoCapture.h"
 
@@ -43,23 +44,31 @@ public:
 	virtual HRESULT UnRegisterCallback() { return E_NOTIMPL; };
 
 protected:
-	BOOL initVideoContext(const char *filename);
-	int32_t decodePacket(int *got_frame, AVPacket &);
+	BOOL initFileParse(const char *filename);
+	BOOL initVideoCodec();
+	BOOL initAudioCodec();
+	int32_t decodeVideoPacket(int *got_frame, AVPacket &);
+	int32_t decodeAudioPacket(int *got_frame, AVPacket &);
 	void cleanUp();
 
 
 private:
 	AVFormatContext *mFileCtx;
+
 	AVCodecContext *mVideoDecodeCtx;
-	AVFrame* mDecDestFrame;
+	AVFrame* mVideoDecDestFrame;
 	AVStream *mVideoStream;
+	int32_t mVideoStreamIndex;
 	uint8_t* mDecDestCopiedBuffer;
 	int32_t mDecDestCopiedBufferSize;
 	int64_t mFrameIndex;
-	int32_t mVideoStreamIndex;
-
-	RATE_DESC mFrameRate;
+	RATE_DESC mVideoFrameRate;
 	int64_t mVideStreamPtsStep;
+
+	AVFrame* mAudioDecDestFrame;
+	AVStream *mAudioStream;
+	AVCodecContext *mAudioDecodeCtx;
+	int32_t mAudioStreamIndex;
 
 	HANDLE mDecodeThreadHandle;
 	DWORD mDecodeThreadID;
@@ -67,6 +76,7 @@ private:
 	int64_t mLastVideoFramePts;
 	BOOL mbDecodeLoop;
 
-	VideoSampleBufferManager mBufferManager;
+	VideoSampleBufferManager mVideoSampleBufferManager;
+	AudioSampleBufferManager mAudioSampleBufferManager;
 	CClock *mBaseClock;
 };

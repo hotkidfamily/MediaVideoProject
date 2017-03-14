@@ -34,3 +34,9 @@
 #ifndef SAFE_DELETE
 #define SAFE_DELETE(x)  {if(x) delete (x); (x)= nullptr;}
 #endif
+
+typedef enum tagQUEUE_ERROR {
+	Q_NOMEMORY = -2,
+	Q_FULL = -1,
+	Q_SUCCESS = 0,
+}QUEUE_RET;
