@@ -158,7 +158,7 @@ bool CLibx264::addFrame(const VideoSampleBuffer &inputFrame)
 		inpic.img.i_stride[1] = inputFrame.planarStride[1];
 		inpic.img.i_stride[2] = inputFrame.planarStride[2];
 		break;
-	case PIXEL_FORMAT_RGB32:
+	case PIXEL_FORMAT_RGB32: 
 		inpic.img.i_csp = X264_CSP_BGRA;
 		inpic.img.i_plane = 1;
 		inpic.img.plane[0] = inputFrame.planarPtr[0];

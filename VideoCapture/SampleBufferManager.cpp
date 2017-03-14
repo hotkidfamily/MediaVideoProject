@@ -4,56 +4,51 @@
 
 VideoSampleBufferManager::VideoSampleBufferManager()
 	: mBufferSize(0)
-	, mBufferPtr(nullptr)
 {
 	readyList.clear();
 	emptyList.clear();
 	occupyList.clear();
+	ZeroMemory(mBufferPtr, sizeof(mBufferPtr));
 	InitializeCriticalSection(&mCs);
 }
 
 VideoSampleBufferManager::~VideoSampleBufferManager()
 {
 	ClearWorkStatus();
-	DeallocMemory(mBufferPtr);
-	mBufferPtr = nullptr;
+
+	for (int i = 0; i < mNbBuffers; i++){
+		DeallocMemory(mBufferPtr[i]);
+		mBufferPtr[i] = nullptr;
+	}
+
 	DeleteCriticalSection(&mCs);
 }
 
 BOOL VideoSampleBufferManager::Reset(int32_t res, int32_t nbFrames)
 {
-	BOOL bRet = FALSE;
+	BOOL bRet = TRUE;
 	int32_t index = 0;
 	int32_t buffSizePreFrame = GetFrameSizeByRes(res);
-	int32_t buffSize = buffSizePreFrame * nbFrames;
 	BUFFLIST::iterator it;
 
 	ClearWorkStatus();
 
-	// low than current buffer
-	if (buffSizePreFrame * nbFrames > mBufferSize){
-
-		bRet = ReallocMemory(&mBufferPtr, buffSize);
-
-		if (!bRet){
-			// out of memory
-			goto errRet;
+	emptyList.resize(nbFrames);
+	int i = 0;
+	for (it = emptyList.begin(); it != emptyList.end(); it++){
+		*it = new VideoSampleBuffer;
+		bRet = ReallocMemory(&(mBufferPtr[i]), buffSizePreFrame);
+		if (bRet){
+			(*it)->Reset(mBufferPtr[i++] + index*buffSizePreFrame, buffSizePreFrame);
+			mNbBuffers = i;
 		} else{
-			mBufferSize = buffSize;
+			bRet = FALSE;
+			break;
 		}
 	}
 
-	emptyList.resize(nbFrames);
-	for (it = emptyList.begin(); it != emptyList.end(); it++){
-		*it = new VideoSampleBuffer;
-		(*it)->Reset(mBufferPtr + index*buffSizePreFrame, buffSizePreFrame);
-	}
-
-	bRet = TRUE;
 	logger(Info, "Create %d frames queue.\n", nbFrames);
-	mNbBuffers = nbFrames;
 
-errRet:
 	return bRet;
 }
 

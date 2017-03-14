@@ -1,5 +1,6 @@
 #pragma once
 
+D3DFORMAT GetPrefD3D9PixelFmtByFourCC(DWORD pfFourCC);
 D3DFORMAT GetD3D9PixelFmtByFourCC(DWORD);
 TCHAR *GetD3D9PixelFmtDescByD3D9Fmt(D3DFORMAT);
 TCHAR *GetD3D9PixelFmtDescByFourCC(DWORD);

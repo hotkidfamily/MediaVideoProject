@@ -7,6 +7,7 @@ typedef enum tagQUEUE_ERROR {
 }QUEUE_RET;
 
 typedef std::list<VideoSampleBuffer*> BUFFLIST;
+#define MAX_FRAME_SIZE (20)
 
 class VideoSampleBufferManager
 {
@@ -30,8 +31,8 @@ private:
 
 	int32_t mNbBuffers;
 
-	uint8_t *mBufferPtr;
-	int64_t mBufferSize;
+	uint8_t *mBufferPtr[MAX_FRAME_SIZE];
+	int32_t mBufferSize;
 
 	CRITICAL_SECTION mCs;
 };

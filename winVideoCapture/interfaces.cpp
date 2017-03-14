@@ -258,12 +258,18 @@ void ResizeWindow(THIS_CONTEXT *ctx)
 {
 	RECT rect = { 0 };
 	RECT rectClient = { 0 };
+	int width = 0, height = 0;
 	GetWindowRect(ctx->hMainWnd, &rect);
 	GetClientRect(ctx->hMainWnd, &rectClient);
-	int32_t width = rect.right - rect.left - rectClient.right;
-	int32_t height = rect.bottom - rect.top - rectClient.bottom;
+	int32_t mwidth = rect.right - rect.left - rectClient.right;
+	int32_t mheight = rect.bottom - rect.top - rectClient.bottom;
+	int swidth = GetSystemMetrics(SM_CXSCREEN);
+	int sheight = GetSystemMetrics(SM_CYSCREEN);
 
-	MoveWindow(ctx->hMainWnd, rect.left, rect.top, ctx->captureCfg.width + width, ctx->captureCfg.height + height, TRUE);
+	width = ctx->captureCfg.width > swidth? swidth:ctx->captureCfg.width;
+	height = ctx->captureCfg.height > sheight ? sheight : ctx->captureCfg.height;
+	
+	MoveWindow(ctx->hMainWnd, rect.left, rect.top, width + mwidth, height + mheight, TRUE);
 }
 
 void StopStream(THIS_CONTEXT *ctx) 
