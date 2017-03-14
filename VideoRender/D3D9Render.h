@@ -18,13 +18,14 @@ public:
 
 protected:
 	HRESULT GetDeviceType(D3DDISPLAYMODE);
-	HRESULT IfSupportedFormat(D3DDISPLAYMODE , D3DFORMAT );
-	BOOL IfSupportedConversionFormat(D3DDISPLAYMODE , D3DFORMAT);
+	HRESULT IfHALSupportedFormat(D3DDISPLAYMODE , D3DFORMAT );
+	BOOL IfSWSupportedFormat(D3DDISPLAYMODE , D3DFORMAT);
 	HRESULT UpdateRenderSurface(VideoSampleBuffer *&);
 	BOOL OSDText(HDC, RECT *, TCHAR *format, ...);
 	BOOL DrawStatus();
 	BOOL UpdatePushStatis(VideoSampleBuffer *&);
 	BOOL UpdateRenderStatis();
+	BOOL initVPP(DWORD inPixFmt, DWORD outPixFmt);
 
 private:
 	HWND mhWnd;
@@ -58,6 +59,7 @@ private:
 
 	// VPP 
 	BOOL mbNeedVpp;
+	BOOL mbI420toYV12;
 	IVPPFactory *mVppFactory;
 	IVPP *mVpp;
 	IVPPPARAMETER vppParams;

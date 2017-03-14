@@ -23,6 +23,7 @@ D3D9Render::D3D9Render()
 	, mVpp(nullptr)
 	, mVppTransSampleBuffer(NULL)
 	, mbNeedVpp(FALSE)
+	, mbI420toYV12(FALSE)
 
 	, mCurRenderInterval(0)
 	, mCurPtsInterval(0)
@@ -57,31 +58,72 @@ HRESULT D3D9Render::GetDeviceType(D3DDISPLAYMODE mode)
 	return hr;
 }
 
-BOOL D3D9Render::IfSupportedConversionFormat(D3DDISPLAYMODE mode, D3DFORMAT pixelFormat)
+BOOL D3D9Render::IfSWSupportedFormat(D3DDISPLAYMODE mode, D3DFORMAT pixelFormat)
 {
 	HRESULT hr = E_FAIL;
-	mD3D9DeviceType = D3DDEVTYPE_HAL;
-	hr = mpD3D9OBj->CheckDeviceFormatConversion(D3DADAPTER_DEFAULT, mD3D9DeviceType, pixelFormat, mode.Format);
+	D3DDEVTYPE type = D3DDEVTYPE_SW;
+	hr = mpD3D9OBj->CheckDeviceType(D3DADAPTER_DEFAULT, type, mode.Format, pixelFormat, TRUE);
 	if (FAILED(hr)){
-		mD3D9DeviceType = D3DDEVTYPE_SW;
-		hr = mpD3D9OBj->CheckDeviceFormatConversion(D3DADAPTER_DEFAULT, mD3D9DeviceType, pixelFormat, mode.Format);
+		hr = mpD3D9OBj->CheckDeviceFormatConversion(D3DADAPTER_DEFAULT, type, pixelFormat, mode.Format);
+	}
+
+	if (hr == S_OK){
+		mD3D9DeviceType = type;
 	}
 
 	return hr == S_OK;
 }
 
-HRESULT D3D9Render::IfSupportedFormat(D3DDISPLAYMODE mode, D3DFORMAT pixelFormat)
+HRESULT D3D9Render::IfHALSupportedFormat(D3DDISPLAYMODE mode, D3DFORMAT pixelFormat)
 {
 	HRESULT hr = S_OK;
 
-	mD3D9DeviceType = D3DDEVTYPE_HAL;
-	hr = mpD3D9OBj->CheckDeviceType(D3DADAPTER_DEFAULT, mD3D9DeviceType, mode.Format, pixelFormat, TRUE);
+	D3DDEVTYPE type = D3DDEVTYPE_HAL;
+	hr = mpD3D9OBj->CheckDeviceType(D3DADAPTER_DEFAULT, type, mode.Format, pixelFormat, TRUE);
 	if (FAILED(hr)){
-		mD3D9DeviceType = D3DDEVTYPE_SW;
-		hr = mpD3D9OBj->CheckDeviceType(D3DADAPTER_DEFAULT, mD3D9DeviceType, mode.Format, pixelFormat, TRUE);
+		hr = mpD3D9OBj->CheckDeviceFormatConversion(D3DADAPTER_DEFAULT, type, pixelFormat, mode.Format);
+	}
+
+	if (hr == S_OK){
+		mD3D9DeviceType = type;
 	}
 
 	return hr == S_OK;
+}
+
+BOOL D3D9Render::initVPP(DWORD inPixFmt, DWORD outPixFmt)
+{
+	BOOL bRet = FALSE;
+	int32_t width = mConfig.width;
+	int32_t height = mConfig.height;
+	if (GetVPPFactoryObj(mVppFactory)) {
+		mVppFactory->CreateVPPObj(mVpp);
+	}
+	if (!mVppFactory || !mVpp){
+		goto done;
+	}
+	vppParams.inDesc.width = width;
+	vppParams.inDesc.height = height;
+	vppParams.inDesc.pixelFormat = inPixFmt;
+	vppParams.inDesc.colorRange = 0;
+	vppParams.inDesc.colorSpace = 5;
+	vppParams.outDesc.width = width;
+	vppParams.outDesc.height = height;
+	vppParams.outDesc.pixelFormat = outPixFmt;
+	vppParams.outDesc.colorRange = 0;
+	vppParams.outDesc.colorSpace = 5;
+	vppParams.flags = 0x10;
+	if (!mVpp->InitContext(vppParams)){
+		goto done;
+	}
+	mVppTransSampleBuffer = AlloVideoSampleBuffer(width, height, (CPPixelFormat)outPixFmt);
+	if (mVppTransSampleBuffer){
+		mbNeedVpp = TRUE;
+		bRet = TRUE;
+	} 
+
+done:
+	return bRet;
 }
 
 BOOL D3D9Render::InitRender(const RENDERCONFIG &config)
@@ -89,18 +131,22 @@ BOOL D3D9Render::InitRender(const RENDERCONFIG &config)
 	HRESULT hr = S_OK;
 	RECT rect = { 0 };
 	D3DDISPLAYMODE mode;
-	D3DPRESENT_PARAMETERS d3dpp; //the presentation parameters that will be used when we will create the device
+	D3DPRESENT_PARAMETERS d3dpp; 
+	D3DFORMAT format = GetD3D9PixelFmtByFourCC(config.pixelFormat);
+	D3DFORMAT prefFormat = GetPrefD3D9PixelFmtByFourCC(config.pixelFormat);
+	D3DFORMAT surfaceFormat = D3DFMT_X8R8G8B8;
 
+	mbNeedVpp = FALSE;
 	mConfig = config;
 	mhWnd = config.hWnd;
 
+	mD3D9DeviceType = D3DDEVTYPE_HAL;
 	ZeroMemory(&d3dpp, sizeof(d3dpp)); //to be sure d3dpp is empty
 	d3dpp.Windowed = TRUE; //use our global windowed variable to tell if the program is windowed or not
 	d3dpp.hDeviceWindow = mhWnd; //give the window handle of the window we created above
 	d3dpp.BackBufferCount = 1; //set it to only use 1 back buffer
 	d3dpp.BackBufferWidth = config.width; //set the buffer to our window width
 	d3dpp.BackBufferHeight = config.height; //set the buffer to out window height
-	d3dpp.BackBufferFormat = GetD3D9PixelFmtByFourCC(config.pixelFormat);
 	d3dpp.SwapEffect = D3DSWAPEFFECT_FLIP; //SwapEffect
 	d3dpp.Flags |= D3DPRESENTFLAG_VIDEO;
 	d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE; // wait for VSync
@@ -108,43 +154,34 @@ BOOL D3D9Render::InitRender(const RENDERCONFIG &config)
 
 	CHECK_HR((hr = Direct3DCreate9Ex(D3D_SDK_VERSION, &mpD3D9OBj))); //Create the presentation parameters
 	CHECK_HR((hr = mpD3D9OBj->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &mode)));
-
-	if (!IfSupportedFormat(mode, d3dpp.BackBufferFormat)){
-		if (!IfSupportedConversionFormat(mode, d3dpp.BackBufferFormat)){
+	
+	if (!IfHALSupportedFormat(mode, format)
+		&& !IfSWSupportedFormat(mode, format)){
+			mbNeedVpp = TRUE;
 			d3dpp.BackBufferFormat = mode.Format;
-			if (GetVPPFactoryObj(mVppFactory)) {
-				mVppFactory->CreateVPPObj(mVpp);
+			if (!IfHALSupportedFormat(mode, prefFormat)
+				&& !IfSWSupportedFormat(mode, prefFormat)){
+			} else{
+				surfaceFormat = prefFormat;
 			}
-			if (!mVppFactory || !mVpp){
-				goto done;
-			}
-			vppParams.inDesc.width = config.width;
-			vppParams.inDesc.height = config.height;
-			vppParams.inDesc.pixelFormat = config.pixelFormat;
-			vppParams.inDesc.colorRange = 0;
-			vppParams.inDesc.colorSpace = 5;
-			vppParams.outDesc.width = config.width;
-			vppParams.outDesc.height = config.height;
-			vppParams.outDesc.pixelFormat = GetFourCCByD3D9PixelFmt(mode.Format);
-			vppParams.outDesc.colorRange = 0;
-			vppParams.outDesc.colorSpace = 5;
-			vppParams.flags = 0x10;
-			if (!mVpp->InitContext(vppParams)){
+	} else {
+		d3dpp.BackBufferFormat = format;
+		surfaceFormat = format;
+	}
+
+	if (mbNeedVpp){
+		if ((config.pixelFormat == PIXEL_FORMAT_I420)
+			&& (prefFormat == PIXEL_FORMAT_YV12)){
+			mbI420toYV12 = TRUE;
+			mbNeedVpp = FALSE;
+		} else{
+			if(!initVPP(config.pixelFormat, GetFourCCByD3D9PixelFmt(d3dpp.BackBufferFormat))){
 				hr = E_FAIL;
 				goto done;
-			}
-			mVppTransSampleBuffer = AlloVideoSampleBuffer(config.width, config.height, (CPPixelFormat)vppParams.outDesc.pixelFormat);
-			if (mVppTransSampleBuffer){
-				mbNeedVpp = TRUE;
-			}
-			
-			CHECK_HR(hr = GetDeviceType(mode));
-		} else {
-			mbSupportConversion = TRUE;
-			d3dpp.BackBufferFormat = mode.Format;
+			}		
 		}
 	}
-	
+
 	mpD3D9OBj->GetDeviceCaps(D3DADAPTER_DEFAULT, mD3D9DeviceType, &mpD3D9DeviceCaps);
 
 	DWORD devBehaviorFlags = D3DCREATE_MULTITHREADED;
@@ -152,25 +189,22 @@ BOOL D3D9Render::InitRender(const RENDERCONFIG &config)
 		devBehaviorFlags |= D3DCREATE_HARDWARE_VERTEXPROCESSING;
 	else
 		devBehaviorFlags |= D3DCREATE_SOFTWARE_VERTEXPROCESSING;
-
-	CHECK_HR(hr = mpD3D9OBj->CreateDeviceEx(D3DADAPTER_DEFAULT, mD3D9DeviceType, mhWnd, devBehaviorFlags, &d3dpp, FALSE, &mpD3D9Device));
-
-	if (mbSupportConversion)
-		d3dpp.BackBufferFormat = GetD3D9PixelFmtByFourCC(config.pixelFormat);
+	
+	CHECK_HR(hr = mpD3D9OBj->CreateDeviceEx(D3DADAPTER_DEFAULT, mD3D9DeviceType, mhWnd, devBehaviorFlags, &d3dpp, NULL, &mpD3D9Device));
 
 	mSupportSurfaceType = SUPPORT_TEXTURE; /* texture */
-	if (FAILED(hr = mpD3D9Device->CreateTexture(config.width, config.height, 0, 0, d3dpp.BackBufferFormat, D3DPOOL_MANAGED, &mpD3D9Texture[0], NULL))) {
-		if (FAILED(hr = mpD3D9Device->CreateOffscreenPlainSurface(config.width, config.height, d3dpp.BackBufferFormat, D3DPOOL_DEFAULT, &mpD3D9Surface[0], NULL))) {
+	if (FAILED(hr = mpD3D9Device->CreateTexture(config.width, config.height, 0, 0, surfaceFormat, D3DPOOL_MANAGED, &mpD3D9Texture[0], NULL))) {
+		if (FAILED(hr = mpD3D9Device->CreateOffscreenPlainSurface(config.width, config.height, surfaceFormat, D3DPOOL_DEFAULT, &mpD3D9Surface[0], NULL))) {
 			goto done;
 		} else{
 			for (int i = 1; i < MAX_RENDER_OBJ; i++){
-				hr = mpD3D9Device->CreateOffscreenPlainSurface(config.width, config.height, d3dpp.BackBufferFormat, D3DPOOL_DEFAULT, &mpD3D9Surface[i], NULL);
+				hr = mpD3D9Device->CreateOffscreenPlainSurface(config.width, config.height, surfaceFormat, D3DPOOL_DEFAULT, &mpD3D9Surface[i], NULL);
 			}
 			mSupportSurfaceType = SUPPORT_SURFACE; /* surface */
 		}
 	} else{
 		for (int i = 1; i < MAX_RENDER_OBJ; i++){
-			hr = mpD3D9Device->CreateTexture(config.width, config.height, 0, 0, d3dpp.BackBufferFormat, D3DPOOL_MANAGED, &mpD3D9Texture[i], NULL);
+			hr = mpD3D9Device->CreateTexture(config.width, config.height, 0, 0, surfaceFormat, D3DPOOL_MANAGED, &mpD3D9Texture[i], NULL);
 		}
 	}
 
@@ -344,15 +378,35 @@ HRESULT D3D9Render::UpdateRenderSurface(VideoSampleBuffer *&frame)
 				memcpy(dstDataPtr, frame->planarPtr[0], frame->validDataSize);
 			} else{
 				uint8_t* dstPlannerPtr = dstDataPtr;
-				for (int i = 0; i < frame->planarCnt; i++) {
-					int32_t dstPitch = dstRect.Pitch >> frame->resShift[i].widthShift;
-					int32_t dstHeight = frame->height >> frame->resShift[i].heightShift;
-					for (int j = 0; j < dstHeight; j++){
-						uint8_t *dstlineBuffer = (uint8_t*)(dstPlannerPtr + j*dstPitch);
-						uint8_t* srcLineBuffer = frame->planarPtr[i] + frame->planarStride[i] * j;
-						memcpy_s(dstlineBuffer, dstPitch, srcLineBuffer, frame->planarStride[i]);
+				if (mbI420toYV12){
+					for (int i = 0; i < frame->planarCnt; i++) {
+						int tempi = i;
+						if (i == 1){
+							tempi = 2;
+						} else if (i == 2){
+							tempi = 1;
+						}
+						int32_t dstPitch = dstRect.Pitch >> frame->resShift[tempi].widthShift;
+						int32_t dstHeight = frame->height >> frame->resShift[tempi].heightShift;
+
+						for (int j = 0; j < dstHeight; j++){
+							uint8_t *dstlineBuffer = (uint8_t*)(dstPlannerPtr + j*dstPitch);
+							uint8_t* srcLineBuffer = frame->planarPtr[tempi] + frame->planarStride[tempi] * j;
+							memcpy_s(dstlineBuffer, dstPitch, srcLineBuffer, frame->planarStride[tempi]);
+						}
+						dstPlannerPtr = dstPlannerPtr + dstPitch * dstHeight;
 					}
-					dstPlannerPtr = dstDataPtr + dstPitch * dstHeight;
+				} else{
+					for (int i = 0; i < frame->planarCnt; i++) {
+						int32_t dstPitch = dstRect.Pitch >> frame->resShift[i].widthShift;
+						int32_t dstHeight = frame->height >> frame->resShift[i].heightShift;
+						for (int j = 0; j < dstHeight; j++){
+							uint8_t *dstlineBuffer = (uint8_t*)(dstPlannerPtr + j*dstPitch);
+							uint8_t* srcLineBuffer = frame->planarPtr[i] + frame->planarStride[i] * j;
+							memcpy_s(dstlineBuffer, dstPitch, srcLineBuffer, frame->planarStride[i]);
+						}
+						dstPlannerPtr = dstPlannerPtr + dstPitch * dstHeight;
+					}
 				}
 			}
 			pCurTexture->UnlockRect(0);
@@ -370,15 +424,35 @@ HRESULT D3D9Render::UpdateRenderSurface(VideoSampleBuffer *&frame)
 				memcpy(dstDataPtr, frame->planarPtr[0], frame->validDataSize);
 			} else{
 				uint8_t* dstPlannerPtr = dstDataPtr;
-				for (int i = 0; i < frame->planarCnt; i++) {
-					int32_t dstPitch = dstRect.Pitch >> frame->resShift[i].widthShift;
-					int32_t dstHeight = frame->height >> frame->resShift[i].heightShift;
-					for (int j = 0; j < dstHeight; j++){
-						uint8_t *dstlineBuffer = (uint8_t*)(dstPlannerPtr + j*dstPitch);
-						uint8_t* srcLineBuffer = frame->planarPtr[i] + frame->planarStride[i] * j;
-						memcpy_s(dstlineBuffer, dstPitch, srcLineBuffer, frame->planarStride[i]);
+				if (mbI420toYV12){
+					for (int i = 0; i < frame->planarCnt; i++) {
+						int tempi = i;
+						if (i == 1){
+							tempi = 2;
+						} else if (i == 2){
+							tempi = 1;
+						}
+						int32_t dstPitch = dstRect.Pitch >> frame->resShift[tempi].widthShift;
+						int32_t dstHeight = frame->height >> frame->resShift[tempi].heightShift;
+
+						for (int j = 0; j < dstHeight; j++){
+							uint8_t *dstlineBuffer = (uint8_t*)(dstPlannerPtr + j*dstPitch);
+							uint8_t* srcLineBuffer = frame->planarPtr[tempi] + frame->planarStride[tempi] * j;
+							memcpy_s(dstlineBuffer, dstPitch, srcLineBuffer, frame->planarStride[tempi]);
+						}
+						dstPlannerPtr = dstPlannerPtr + dstPitch * dstHeight;
 					}
-					dstPlannerPtr = dstPlannerPtr + dstPitch * dstHeight;
+				} else{
+					for (int i = 0; i < frame->planarCnt; i++) {
+						int32_t dstPitch = dstRect.Pitch >> frame->resShift[i].widthShift;
+						int32_t dstHeight = frame->height >> frame->resShift[i].heightShift;
+						for (int j = 0; j < dstHeight; j++){
+							uint8_t *dstlineBuffer = (uint8_t*)(dstPlannerPtr + j*dstPitch);
+							uint8_t* srcLineBuffer = frame->planarPtr[i] + frame->planarStride[i] * j;
+							memcpy_s(dstlineBuffer, dstPitch, srcLineBuffer, frame->planarStride[i]);
+						}
+						dstPlannerPtr = dstPlannerPtr + dstPitch * dstHeight;
+					}
 				}
 			}
 			pCurSurface->UnlockRect();
@@ -386,11 +460,7 @@ HRESULT D3D9Render::UpdateRenderSurface(VideoSampleBuffer *&frame)
 	}
 
 	mCurRenderObjIndex = mCurPushObjIndex;
-
-	//logger(Info, "push %d\n", mCurPushObjIndex);
 	mCurPushObjIndex = (mCurPushObjIndex + 1) % MAX_RENDER_OBJ;
-
-	//mCurRenderObjIndex = (mCurPushObjIndex + MAX_RENDER_OBJ - 1) % MAX_RENDER_OBJ;
 
 	if (mSupportSurfaceType == SUPPORT_TEXTURE){
 		pCurTexture = mpD3D9Texture[mCurRenderObjIndex];
