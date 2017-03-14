@@ -372,91 +372,43 @@ HRESULT D3D9Render::UpdateRenderSurface(VideoSampleBuffer *&frame)
 
 	if (mSupportSurfaceType == SUPPORT_TEXTURE){
 		pCurTexture = mpD3D9Texture[mCurPushObjIndex];
-		if (SUCCEEDED(hr = pCurTexture->LockRect(0, &dstRect, NULL, 0))){
-			dstDataPtr = (uint8_t*)dstRect.pBits;
-			if (dstRect.Pitch == frame->planarStride[0]){
-				memcpy(dstDataPtr, frame->planarPtr[0], frame->validDataSize);
-			} else{
-				uint8_t* dstPlannerPtr = dstDataPtr;
-				if (mbI420toYV12){
-					for (int i = 0; i < frame->planarCnt; i++) {
-						int tempi = i;
-						if (i == 1){
-							tempi = 2;
-						} else if (i == 2){
-							tempi = 1;
-						}
-						int32_t dstPitch = dstRect.Pitch >> frame->resShift[tempi].widthShift;
-						int32_t dstHeight = frame->height >> frame->resShift[tempi].heightShift;
-
-						for (int j = 0; j < dstHeight; j++){
-							uint8_t *dstlineBuffer = (uint8_t*)(dstPlannerPtr + j*dstPitch);
-							uint8_t* srcLineBuffer = frame->planarPtr[tempi] + frame->planarStride[tempi] * j;
-							memcpy_s(dstlineBuffer, dstPitch, srcLineBuffer, frame->planarStride[tempi]);
-						}
-						dstPlannerPtr = dstPlannerPtr + dstPitch * dstHeight;
-					}
-				} else{
-					for (int i = 0; i < frame->planarCnt; i++) {
-						int32_t dstPitch = dstRect.Pitch >> frame->resShift[i].widthShift;
-						int32_t dstHeight = frame->height >> frame->resShift[i].heightShift;
-						for (int j = 0; j < dstHeight; j++){
-							uint8_t *dstlineBuffer = (uint8_t*)(dstPlannerPtr + j*dstPitch);
-							uint8_t* srcLineBuffer = frame->planarPtr[i] + frame->planarStride[i] * j;
-							memcpy_s(dstlineBuffer, dstPitch, srcLineBuffer, frame->planarStride[i]);
-						}
-						dstPlannerPtr = dstPlannerPtr + dstPitch * dstHeight;
-					}
-				}
-			}
-			pCurTexture->UnlockRect(0);
+		if (!SUCCEEDED(hr = pCurTexture->GetSurfaceLevel(0, &pCurSurface))) {
+			//continue;
+			logger(Error, "%s", DXGetErrorStringA(hr));
+			return hr;
 		}
 	} else{
 		pCurSurface = mpD3D9Surface[mCurPushObjIndex];
-#ifdef _DEBUG
-		D3DSURFACE_DESC desc;
-		ZeroMemory(&desc, sizeof(D3DSURFACE_DESC));
-		pCurSurface->GetDesc(&desc);
-#endif
-		if (SUCCEEDED(hr = pCurSurface->LockRect(&dstRect, NULL, 0))){
-			dstDataPtr = (uint8_t*)dstRect.pBits;
-			if (dstRect.Pitch == frame->planarStride[0]){
-				memcpy(dstDataPtr, frame->planarPtr[0], frame->validDataSize);
-			} else{
-				uint8_t* dstPlannerPtr = dstDataPtr;
-				if (mbI420toYV12){
-					for (int i = 0; i < frame->planarCnt; i++) {
-						int tempi = i;
-						if (i == 1){
-							tempi = 2;
-						} else if (i == 2){
-							tempi = 1;
-						}
-						int32_t dstPitch = dstRect.Pitch >> frame->resShift[tempi].widthShift;
-						int32_t dstHeight = frame->height >> frame->resShift[tempi].heightShift;
+	}
 
-						for (int j = 0; j < dstHeight; j++){
-							uint8_t *dstlineBuffer = (uint8_t*)(dstPlannerPtr + j*dstPitch);
-							uint8_t* srcLineBuffer = frame->planarPtr[tempi] + frame->planarStride[tempi] * j;
-							memcpy_s(dstlineBuffer, dstPitch, srcLineBuffer, frame->planarStride[tempi]);
-						}
-						dstPlannerPtr = dstPlannerPtr + dstPitch * dstHeight;
-					}
-				} else{
-					for (int i = 0; i < frame->planarCnt; i++) {
-						int32_t dstPitch = dstRect.Pitch >> frame->resShift[i].widthShift;
-						int32_t dstHeight = frame->height >> frame->resShift[i].heightShift;
-						for (int j = 0; j < dstHeight; j++){
-							uint8_t *dstlineBuffer = (uint8_t*)(dstPlannerPtr + j*dstPitch);
-							uint8_t* srcLineBuffer = frame->planarPtr[i] + frame->planarStride[i] * j;
-							memcpy_s(dstlineBuffer, dstPitch, srcLineBuffer, frame->planarStride[i]);
-						}
-						dstPlannerPtr = dstPlannerPtr + dstPitch * dstHeight;
-					}
+#ifdef _DEBUG
+	D3DSURFACE_DESC desc;
+	ZeroMemory(&desc, sizeof(D3DSURFACE_DESC));
+	pCurSurface->GetDesc(&desc);
+#endif
+	if (SUCCEEDED(hr = pCurSurface->LockRect(&dstRect, NULL, 0))){
+		dstDataPtr = (uint8_t*)dstRect.pBits;
+		if (dstRect.Pitch == frame->planarStride[0]){
+			memcpy(dstDataPtr, frame->planarPtr[0], frame->validDataSize);
+		} else{
+			uint8_t* dstPlannerPtr = dstDataPtr;
+			for (int i = 0; i < frame->planarCnt; i++) {
+				int32_t dstPitch = dstRect.Pitch >> frame->resShift[i].widthShift;
+				int32_t dstHeight = frame->height >> frame->resShift[i].heightShift;
+				int tempi = i;
+				if (mbI420toYV12){
+					if (i == 1) tempi = 2;
+					if (i == 2) tempi = 1;
 				}
+				for (int j = 0; j < dstHeight; j++){
+					uint8_t *dstlineBuffer = (uint8_t*)(dstPlannerPtr + j*dstPitch);
+					uint8_t* srcLineBuffer = frame->planarPtr[tempi] + frame->planarStride[tempi] * j;
+					memcpy_s(dstlineBuffer, dstPitch, srcLineBuffer, frame->planarStride[tempi]);
+				}
+				dstPlannerPtr = dstPlannerPtr + dstPitch * dstHeight;
 			}
-			pCurSurface->UnlockRect();
 		}
+		pCurSurface->UnlockRect();
 	}
 
 	mCurRenderObjIndex = mCurPushObjIndex;
@@ -464,7 +416,7 @@ HRESULT D3D9Render::UpdateRenderSurface(VideoSampleBuffer *&frame)
 
 	if (mSupportSurfaceType == SUPPORT_TEXTURE){
 		pCurTexture = mpD3D9Texture[mCurRenderObjIndex];
-		if (!SUCCEEDED(pCurTexture->GetSurfaceLevel(0, &pCurSurface))) {
+		if (!SUCCEEDED(hr = pCurTexture->GetSurfaceLevel(0, &pCurSurface))) {
 			//continue;
 			logger(Error, "%s", DXGetErrorStringA(hr));
 			return hr;

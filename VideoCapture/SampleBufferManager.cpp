@@ -33,7 +33,8 @@ BOOL VideoSampleBufferManager::Reset(int32_t res, int32_t nbFrames)
 
 	ClearWorkStatus();
 
-	emptyList.resize(nbFrames);
+	emptyList.resize(nbFrames > MAX_FRAME_SIZE?MAX_FRAME_SIZE:nbFrames);
+	
 	int i = 0;
 	for (it = emptyList.begin(); it != emptyList.end(); it++){
 		*it = new VideoSampleBuffer;
