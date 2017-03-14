@@ -3,7 +3,7 @@
 
 #include "stdafx.h"
 #include "assert.h"
-#include "winVideoCapture.h"
+#include "showPlayer.h"
 #include "OpenFile.h"
 #include "OpenStream.h"
 #include <windowsx.h>

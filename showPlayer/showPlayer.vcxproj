@@ -12,7 +12,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E582C3AB-1338-4D44-B03E-D0F9BA30A101}</ProjectGuid>
-    <RootNamespace>winVideoCapture</RootNamespace>
+    <RootNamespace>showPlayer</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -123,14 +123,14 @@ xcopy ..\libx264\*.dll ..\Release\  /Y </Command>
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="VideoCallback.h" />
-    <ClInclude Include="winVideoCapture.h" />
+    <ClInclude Include="showPlayer.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="small.ico" />
-    <Image Include="winVideoCapture.ico" />
+    <Image Include="showPlayer.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="winVideoCapture.rc" />
+    <ResourceCompile Include="showPlayer.rc" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />

@@ -107,7 +107,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 283, 80
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "About winVideoCapture"
+CAPTION "About showPlayer"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,7,31,21,20
@@ -143,7 +143,7 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_WINVIDEOCAPTURE     ICON                    "winVideoCapture.ico"
+IDI_WINVIDEOCAPTURE     ICON                    "showPlayer.ico"
 IDI_SMALL               ICON                    "small.ico"
 
 /////////////////////////////////////////////////////////////////////////////
@@ -229,8 +229,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE           "winVideoCapture"
-    IDC_WINVIDEOCAPTURE     "WINVIDEOCAPTURE"
+    IDS_APP_TITLE           "showPlayer"
+    IDC_WINVIDEOCAPTURE     "showPlayer"
 END
 
 #endif    // Ó¢Óï(ÃÀ¹ú) resources

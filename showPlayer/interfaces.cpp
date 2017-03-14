@@ -1,6 +1,6 @@
 
 #include "stdafx.h"
-#include "winVideoCapture.h"
+#include "showPlayer.h"
 #include <assert.h>
 #include <fstream>
 #include <stdio.h>
