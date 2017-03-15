@@ -162,7 +162,7 @@ void FilesVideoCapture::cleanUp()
 
 	if (mAudioDecodeCtx){
 		avcodec_close(mAudioDecodeCtx);
-		mVideoDecodeCtx = NULL;
+		mAudioDecodeCtx = NULL;
 	}
 
 	if (mFileCtx){
@@ -272,7 +272,7 @@ int32_t FilesVideoCapture::decodeAudioPacket(int *got_frame, AVPacket &pkt)
 	*got_frame = 0;
 
 	/* decode video frame */
-	ret = avcodec_decode_audio4(mVideoDecodeCtx, mAudioDecDestFrame, got_frame, &pkt);
+	ret = avcodec_decode_audio4(mAudioDecodeCtx, mAudioDecDestFrame, got_frame, &pkt);
 	if (ret < 0) {
 		char erro[AV_ERROR_MAX_STRING_SIZE] = { 0 };
 		av_make_error_string(erro, AV_ERROR_MAX_STRING_SIZE, ret);
