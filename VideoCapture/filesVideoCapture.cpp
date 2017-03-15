@@ -438,6 +438,26 @@ BOOL FilesVideoCapture::ReleaseFrame(VideoSampleBuffer *&pSample)
 	return bRet;
 }
 
+BOOL FilesVideoCapture::GetAudioFrame(AudioSampleBuffer *&pSample)
+{
+	BOOL bRet = FALSE;
+	if (mAudioSampleBufferManager.LockFrame(pSample)){
+		bRet = TRUE;
+	}
+
+	return bRet;
+}
+
+BOOL FilesVideoCapture::ReleaseAudioFrame(AudioSampleBuffer *&pSample)
+{
+	BOOL bRet = FALSE;
+	if (mAudioSampleBufferManager.UnlockFrame(pSample)){
+		bRet = TRUE;
+	}
+
+	return bRet;
+}
+
 HRESULT FilesVideoCapture::StartCaptureWithParam(CAPTURECONFIG& params)
 {
 	BOOL bRet = FALSE;

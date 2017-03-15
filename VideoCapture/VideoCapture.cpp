@@ -103,6 +103,28 @@ BOOL IVideoCaptureDelegate::ReleaseFrame(VideoSampleBuffer *&pSample)
 	return bRet;
 }
 
+BOOL IVideoCaptureDelegate::GetAudioFrame(AudioSampleBuffer *&pSample)
+{
+	BOOL bRet = FALSE;
+
+	if (mDevice == CAP_DEV_FILE){
+		bRet = mFilesCapture->GetAudioFrame(pSample);
+	}
+
+	return bRet;
+}
+
+BOOL IVideoCaptureDelegate::ReleaseAudioFrame(AudioSampleBuffer *&pSample)
+{
+	BOOL bRet = FALSE;
+
+	if (mDevice == CAP_DEV_FILE){
+		bRet = mFilesCapture->ReleaseAudioFrame(pSample);
+	}
+
+	return bRet;
+}
+
 HRESULT IVideoCaptureDelegate::ShowPropertyWindow(HWND parentWindowHandle)
 {
 	HRESULT hr = S_OK;

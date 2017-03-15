@@ -28,6 +28,8 @@ public:
 	int32_t DecodeLoop();
 	virtual BOOL GetFrame(VideoSampleBuffer *&pSample);
 	virtual BOOL ReleaseFrame(VideoSampleBuffer *&pSample);
+	virtual BOOL GetAudioFrame(AudioSampleBuffer *&pSample);
+	virtual BOOL ReleaseAudioFrame(AudioSampleBuffer *&pSample);
 
 	virtual void RegisterCallback(VideoCaptureCallback *) { return; };
 	// step 1, get device list

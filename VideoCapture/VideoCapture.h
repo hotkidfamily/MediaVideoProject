@@ -51,6 +51,8 @@ public:
 	virtual HRESULT StartCaptureWithParam(CAPTURECONFIG &);
 	virtual BOOL GetFrame(VideoSampleBuffer *&pSample);
 	virtual BOOL ReleaseFrame(VideoSampleBuffer *&pSample);
+	virtual BOOL GetAudioFrame(AudioSampleBuffer *&pSample);
+	virtual BOOL ReleaseAudioFrame(AudioSampleBuffer *&pSample);
 	virtual HRESULT StopCapture();
 	virtual HRESULT ShowPropertyWindow(HWND parentWindowHandle);
 	virtual HRESULT UnRegisterCallback();

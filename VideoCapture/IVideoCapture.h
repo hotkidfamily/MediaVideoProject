@@ -93,6 +93,12 @@ public:
 	// step 3.x other feature support: show property setting window
 	virtual BOOL ReleaseFrame(VideoSampleBuffer *&pSample) = 0;
 
+	// step 3.x other feature support: show property setting window
+	virtual BOOL GetAudioFrame(AudioSampleBuffer *&pSample) = 0;
+
+	// step 3.x other feature support: show property setting window
+	virtual BOOL ReleaseAudioFrame(AudioSampleBuffer *&pSample) = 0;
+
 	// step 4, close capture
 	virtual HRESULT StopCapture() = 0;
 	// step 5, release callback
