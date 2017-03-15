@@ -28,6 +28,8 @@ struct CAPTURECONFIG
 	HWND parentWindow;
 	HWND attachWindow;
 	DWORD pixelFormat;
+	int32_t bNoVideo;
+	int32_t bNoAudio;
 	STRING deviceName;
 	STRING filePath;
 
@@ -35,6 +37,8 @@ struct CAPTURECONFIG
 	{
 		index = 0;
 		width = height = 0;
+		bNoAudio = 0;
+		bNoVideo = 0;
 		fps.num = 0;
 		fps.den = 1;
 		parentWindow = NULL;

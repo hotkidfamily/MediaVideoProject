@@ -18,8 +18,10 @@ typedef struct tagProgramContext{
 	BOOL bRuning;
 	HANDLE hCaptureThread;
 	DWORD dwCaptureThreadID;
-	HANDLE hRenderThread;
-	DWORD dwRenderThreadID;
+	HANDLE hVideoRenderThread;
+	DWORD dwVideoRenderThreadID;
+	HANDLE hAudioRenderThread;
+	DWORD dwAudioRenderThreadID;
 
 	/* capture */
 	CAPTURECONFIG captureCfg;
@@ -33,9 +35,16 @@ typedef struct tagProgramContext{
 	ENCODECCFG encoderCfg;
 
 	/* render */
-	IRenderFactory *renderFactory;
-	IRender *render;
-	RENDERCONFIG renderCfg;
+	BOOL bVideoRender;
+	IRenderFactory *videoRenderFactory;
+	IRender *videoRender;
+	RENDERCONFIG vRenderCfg;
+
+	// audio render
+	BOOL bAudioRender;
+	IAudioRenderFactory *audioRenderFactory;
+	IAudioRender *audioRender;
+	AudioRenderConfig aRenderCfg;
 
 	CRITICAL_SECTION listLock;
 	

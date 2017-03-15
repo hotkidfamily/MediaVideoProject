@@ -14,7 +14,7 @@ public:
 	~CSyncRender();
 
 	// placeholder
-	BOOL PushFrame(VideoSampleBuffer *&frame);
+	BOOL PushFrame(AudioSampleBuffer *&frame);
 	BOOL GetFrame();
 
 	// new render object, reset base time

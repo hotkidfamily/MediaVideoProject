@@ -12,15 +12,15 @@ public:
 	virtual BOOL InitRender(const AudioRenderConfig &);
 	virtual BOOL DeinitRender();
 
-	virtual BOOL PushFrame(VideoSampleBuffer *);
+	virtual BOOL PushFrame(AudioSampleBuffer *);
 	virtual const char *GetRenderDescriptor() const { return "D3D8sound render"; };
 
 	virtual DWORD RenderLoop();
 
 protected:
-	HRESULT UpdateRenderSurface(VideoSampleBuffer *&);
+	HRESULT UpdateRenderSurface(AudioSampleBuffer *&);
 	BOOL DrawStatus();
-	BOOL UpdatePushStatis(VideoSampleBuffer *&);
+	BOOL UpdatePushStatis(AudioSampleBuffer *&);
 	BOOL UpdateRenderStatis();
 
 private:

@@ -46,7 +46,7 @@ public:
 	virtual HRESULT UnRegisterCallback() { return E_NOTIMPL; };
 
 protected:
-	BOOL initFileParse(const char *filename);
+	BOOL initFileParse(CAPTURECONFIG& params);
 	BOOL initVideoCodec();
 	BOOL initAudioCodec();
 	int32_t decodeVideoPacket(int *got_frame, AVPacket &);

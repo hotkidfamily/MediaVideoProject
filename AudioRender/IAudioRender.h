@@ -27,7 +27,7 @@ public:
 	virtual BOOL InitRender(const AudioRenderConfig &) = 0;
 	virtual BOOL DeinitRender() = 0;
 
-	virtual BOOL PushFrame(VideoSampleBuffer *) = 0;
+	virtual BOOL PushFrame(AudioSampleBuffer *) = 0;
 	virtual const char *GetRenderDescriptor() const = 0;
 };
 

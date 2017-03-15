@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "IAduioRender.h"
+#include "IAudioRender.h"
 #include "SyncRender.h"
 #include "D3DSoundRender.h"
 
@@ -84,7 +84,7 @@ BOOL D3DSoundRender::InitRender(const AudioRenderConfig &config)
 	m_pDSBuffer8->Play(0, 0, DSBPLAY_LOOPING);
 
 fail:
-	return hr;
+	return SUCCEEDED(hr);
 }
 
 BOOL D3DSoundRender::DeinitRender()
@@ -169,7 +169,7 @@ DWORD D3DSoundRender::RenderLoop()
 	return 0;
 }
 
-HRESULT D3DSoundRender::UpdateRenderSurface(VideoSampleBuffer *&frame)
+HRESULT D3DSoundRender::UpdateRenderSurface(AudioSampleBuffer *&frame)
 {
 	HRESULT hr = E_FAIL;
 	LPVOID pbData = NULL;
@@ -188,21 +188,21 @@ HRESULT D3DSoundRender::UpdateRenderSurface(VideoSampleBuffer *&frame)
 	return hr;
 };
 
-BOOL D3DSoundRender::UpdatePushStatis(VideoSampleBuffer *&frame)
+BOOL D3DSoundRender::UpdatePushStatis(AudioSampleBuffer *&frame)
 {
 	if (mLastPts){
-		mCurPtsInterval = frame->ptsStart - mLastPts;
+		mCurPtsInterval = frame->pts - mLastPts;
 		mInputStatis.AppendSample((int32_t)mCurPtsInterval);
 	}
-	mLastPts = frame->ptsStart;
+	mLastPts = frame->pts;
 
 	return TRUE;
 }
 
-BOOL D3DSoundRender::PushFrame(VideoSampleBuffer *inframe)
+BOOL D3DSoundRender::PushFrame(AudioSampleBuffer *inframe)
 {
 	HRESULT hr = E_FAIL;
-	VideoSampleBuffer *frame = inframe;
+	AudioSampleBuffer *frame = inframe;
 	
 	if (!frame){
 		return FALSE;

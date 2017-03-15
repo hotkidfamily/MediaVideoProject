@@ -103,13 +103,15 @@ fail:
 	return bRet;
 }
 
-BOOL FilesVideoCapture::initFileParse(const char *filename)
+BOOL FilesVideoCapture::initFileParse(CAPTURECONFIG& params)
 {
 	BOOL bRet = FALSE;
+	W2S wchar2char;
+	std::string filename = wchar2char.to_bytes(params.filePath.c_str());
 
 	mFrameIndex = 0;
 
-	if (avformat_open_input(&mFileCtx, filename, NULL, NULL) < 0) {
+	if (avformat_open_input(&mFileCtx, filename.c_str(), NULL, NULL) < 0) {
 		logger(Error, "Could not open source file %s\n", filename);
 		goto fail;
 	}
@@ -120,11 +122,11 @@ BOOL FilesVideoCapture::initFileParse(const char *filename)
 	}
 
 	if (!initVideoCodec()){
-		goto fail;
+		params.bNoVideo = 1;
 	}
 
 	if (!initAudioCodec()){
-		goto fail;
+		params.bNoAudio = 1;
 	}
 
 	mDecodeThreadQuit = FALSE;
@@ -461,10 +463,8 @@ BOOL FilesVideoCapture::ReleaseAudioFrame(AudioSampleBuffer *&pSample)
 HRESULT FilesVideoCapture::StartCaptureWithParam(CAPTURECONFIG& params)
 {
 	BOOL bRet = FALSE;
-	W2S wchar2char;
-	std::string filename = wchar2char.to_bytes(params.filePath.c_str());
 
-	bRet = initFileParse(filename.c_str());
+	bRet = initFileParse(params);
 	if (bRet){
 		params.width = mVideoDecodeCtx->width;
 		params.height = mVideoDecodeCtx->height;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IAduioRender.h"
+#include "IAudioRender.h"
 
 class IAduioRenderFactoryImpl :
 	public IAudioRenderFactory

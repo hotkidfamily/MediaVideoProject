@@ -19,7 +19,8 @@ void log(const char *format, ...)
 	OutputDebugStringA(str);
 }
 
-std::list<VideoSampleBuffer*> captureList;
+std::list<VideoSampleBuffer*> videoCaptureList;
+std::list<AudioSampleBuffer*> AudioCaptureList;
 
 BOOL StartCamCaptureWork(THIS_CONTEXT *ctx)
 {
@@ -29,7 +30,7 @@ BOOL StartCamCaptureWork(THIS_CONTEXT *ctx)
 		if (!ctx->callBack)
 			ctx->callBack = new CVideoCallback;
 		assert(ctx->callBack);
-		captureList.clear();
+		videoCaptureList.clear();
 
 		ctx->capture->RegisterCallback(ctx->callBack);
 		ctx->captureCfg.parentWindow = ctx->hMainWnd;
@@ -53,7 +54,8 @@ BOOL StartFileCaptureWork(THIS_CONTEXT *ctx)
 	HRESULT hr = E_FAIL;
 
 	if (!ctx->bRuning){
-		captureList.clear();
+		videoCaptureList.clear();
+		AudioCaptureList.clear();
 		ctx->capture = GetVideoCaptureObj();
 		assert(ctx->capture);
 		ctx->captureCfg.parentWindow = ctx->hMainWnd;
@@ -66,7 +68,7 @@ BOOL StartFileCaptureWork(THIS_CONTEXT *ctx)
 
 BOOL StopCaptureWork(THIS_CONTEXT *ctx)
 {
-	captureList.clear();
+	videoCaptureList.clear();
 	if (ctx->capture){
 		ctx->capture->StopCapture();
 		ctx->capture->UnRegisterCallback();
@@ -77,7 +79,7 @@ BOOL StopCaptureWork(THIS_CONTEXT *ctx)
 	return TRUE;
 }
 
-BOOL StopEncodeWork(THIS_CONTEXT *ctx)
+BOOL DestroyEncodeWork(THIS_CONTEXT *ctx)
 {
 	if (ctx->codec){
 		ctx->codec->close();
@@ -123,9 +125,9 @@ BOOL SetupEncodeWork(THIS_CONTEXT *ctx)
 	}
 
 	if (!bRet){
-		StopEncodeWork(ctx);
+		DestroyEncodeWork(ctx);
 	}
-	return FALSE;
+	return bRet;
 }
 
 DWORD WINAPI CaptureThread(LPVOID args)
@@ -134,9 +136,16 @@ DWORD WINAPI CaptureThread(LPVOID args)
 
 	while (ctx->bRuning){
 		VideoSampleBuffer *frame = nullptr;
+		AudioSampleBuffer *aframe = nullptr;
 		if (ctx->capture->GetFrame(frame)){
 			EnterCriticalSection(&ctx->listLock);
-			captureList.push_back(frame);
+			videoCaptureList.push_back(frame);
+			LeaveCriticalSection(&ctx->listLock);
+		}
+
+		if (ctx->capture->GetAudioFrame(aframe)){
+			EnterCriticalSection(&ctx->listLock);
+			AudioCaptureList.push_back(aframe);
 			LeaveCriticalSection(&ctx->listLock);
 		}
 
@@ -146,7 +155,7 @@ DWORD WINAPI CaptureThread(LPVOID args)
 	return TRUE;
 }
 
-DWORD WINAPI RenderThread(LPVOID args)
+DWORD WINAPI VideoRenderThread(LPVOID args)
 {
 	THIS_CONTEXT * ctx = (THIS_CONTEXT *)args;
 	std::ofstream encodeFile;
@@ -158,12 +167,12 @@ DWORD WINAPI RenderThread(LPVOID args)
 		VideoSampleBuffer *frame = nullptr;
 		CPackageBuffer *packet = nullptr;
 
-		if (!captureList.empty()){
+		if (!videoCaptureList.empty()){
 			EnterCriticalSection(&ctx->listLock);
-			frame = captureList.front();
-			captureList.pop_front();
+			frame = videoCaptureList.front();
+			videoCaptureList.pop_front();
 			LeaveCriticalSection(&ctx->listLock);
-			ctx->render->PushFrame(frame);
+			ctx->videoRender->PushFrame(frame);
 			if (ctx->bEnableCodec){
 				ctx->codec->addFrame(*frame);
 				if (ctx->codec->getPackage(packet)){
@@ -182,10 +191,41 @@ DWORD WINAPI RenderThread(LPVOID args)
 	return TRUE;
 }
 
+DWORD WINAPI AudioRenderThread(LPVOID args)
+{
+	THIS_CONTEXT * ctx = (THIS_CONTEXT *)args;
+	std::ofstream encodeFile;
+
+	while (ctx->bRuning){
+		AudioSampleBuffer *frame = nullptr;
+
+		if (!AudioCaptureList.empty()){
+			EnterCriticalSection(&ctx->listLock);
+			frame = AudioCaptureList.front();
+			AudioCaptureList.pop_front();
+			LeaveCriticalSection(&ctx->listLock);
+			if(ctx->bAudioRender)
+				ctx->audioRender->PushFrame(frame);
+
+			ctx->capture->ReleaseAudioFrame(frame);
+		}
+
+		Sleep(1);
+	}
+
+	return TRUE;
+}
+
 BOOL CreateWorkThread(THIS_CONTEXT *ctx)
 {
 	ctx->hCaptureThread = CreateThread(nullptr, 0, CaptureThread, ctx, 0, &(ctx->dwCaptureThreadID));
-	ctx->hRenderThread = CreateThread(nullptr, 0, RenderThread, ctx, 0, &(ctx->dwRenderThreadID));
+
+	if (!ctx->captureCfg.bNoVideo)
+		ctx->hVideoRenderThread = CreateThread(nullptr, 0, VideoRenderThread, ctx, 0, &(ctx->dwVideoRenderThreadID));
+
+	if (!ctx->captureCfg.bNoAudio)
+		ctx->hAudioRenderThread = CreateThread(nullptr, 0, AudioRenderThread, ctx, 0, &(ctx->dwAudioRenderThreadID));
+
 	return TRUE;
 }
 
@@ -200,58 +240,107 @@ BOOL DestoryWorkThread(THIS_CONTEXT *ctx)
 	}
 	log("capture thread end.\n");
 
-	if (ctx->hRenderThread){
-		if (WAIT_OBJECT_0 != WaitForSingleObject(ctx->hRenderThread, INFINITE)){
-			TerminateThread(ctx->hRenderThread, -1);
-			ctx->hRenderThread = NULL;
+	if (ctx->hAudioRenderThread){
+		if (WAIT_OBJECT_0 != WaitForSingleObject(ctx->hAudioRenderThread, INFINITE)){
+			TerminateThread(ctx->hAudioRenderThread, -1);
+			ctx->hAudioRenderThread = NULL;
 		}
 	}
-	log("render thread end.\n");
+	log("audio render thread end.\n");
+
+	if (ctx->hVideoRenderThread){
+		if (WAIT_OBJECT_0 != WaitForSingleObject(ctx->hVideoRenderThread, INFINITE)){
+			TerminateThread(ctx->hVideoRenderThread, -1);
+			ctx->hVideoRenderThread = NULL;
+		}
+	}
+	log("video render thread end.\n");
 
 	return TRUE;
 }
 
-BOOL StopRenderWork(THIS_CONTEXT *ctx)
+BOOL DestroyVideoRenderWork(THIS_CONTEXT *ctx)
 {
 	if (ctx){
-		if (ctx->render){
-			ctx->render->DeinitRender();
-			ctx->renderFactory->DestoryRenderObj(ctx->render);
-			ctx->render = NULL;
+		if (ctx->videoRender){
+			ctx->videoRender->DeinitRender();
+			ctx->videoRenderFactory->DestoryRenderObj(ctx->videoRender);
+			ctx->videoRender = NULL;
 		}
 
-		ReleaseRenderFactoryObj(ctx->renderFactory);
-		ctx->renderFactory = NULL;
+		ReleaseRenderFactoryObj(ctx->videoRenderFactory);
+		ctx->videoRenderFactory = NULL;
 	}
 
 	return TRUE;
 }
 
-BOOL StartRenderWork(THIS_CONTEXT *ctx)
+BOOL SetupVideoRenderWork(THIS_CONTEXT *ctx)
 {
 	BOOL bRet = TRUE;
-	bRet = GetRenderFactoryObj(ctx->renderFactory);
+	bRet = GetRenderFactoryObj(ctx->videoRenderFactory);
 	if (bRet){
-		bRet = ctx->renderFactory->CreateRenderObj(ctx->render);
+		bRet = ctx->videoRenderFactory->CreateRenderObj(ctx->videoRender);
 	}
 
-	ctx->renderCfg.bWaitVSync = TRUE;
-	ctx->renderCfg.hWnd = ctx->hMainWnd;
-	ctx->renderCfg.width = ctx->captureCfg.width;
-	ctx->renderCfg.height = ctx->captureCfg.height;
-	ctx->renderCfg.pixelFormat = ctx->captureCfg.pixelFormat;
-	ctx->renderCfg.fps.num = ctx->captureCfg.fps.num;
-	ctx->renderCfg.fps.den = ctx->captureCfg.fps.den;
+	ctx->vRenderCfg.bWaitVSync = TRUE;
+	ctx->vRenderCfg.hWnd = ctx->hMainWnd;
+	ctx->vRenderCfg.width = ctx->captureCfg.width;
+	ctx->vRenderCfg.height = ctx->captureCfg.height;
+	ctx->vRenderCfg.pixelFormat = ctx->captureCfg.pixelFormat;
+	ctx->vRenderCfg.fps.num = ctx->captureCfg.fps.num;
+	ctx->vRenderCfg.fps.den = ctx->captureCfg.fps.den;
 
 	if(bRet){
-		bRet = ctx->render->InitRender(ctx->renderCfg);
+		bRet = ctx->videoRender->InitRender(ctx->vRenderCfg);
 	}
 
 	if(!bRet){
-		StopRenderWork(ctx);
+		DestroyVideoRenderWork(ctx);
+	}
+
+	return bRet;
+}
+
+BOOL DestroyAudioRenderWork(THIS_CONTEXT *ctx)
+{
+	if (ctx){
+		if (ctx->audioRender){
+			ctx->audioRender->DeinitRender();
+			ctx->audioRenderFactory->DestoryAudioRenderObj(ctx->audioRender);
+			ctx->audioRender = NULL;
+		}
+
+		ReleaseAudioRenderFactoryObj(ctx->audioRenderFactory);
+		ctx->audioRenderFactory = NULL;
 	}
 
 	return TRUE;
+}
+
+BOOL SetupAudioRenderWork(THIS_CONTEXT *ctx)
+{
+	BOOL bRet = TRUE;
+	bRet = GetAudioRenderFactoryObj(ctx->audioRenderFactory);
+	if (bRet){
+		bRet = ctx->audioRenderFactory->CreateAudioRenderObj(ctx->audioRender);
+	}
+
+	ctx->aRenderCfg.wavFormat = TRUE;
+	ctx->aRenderCfg.hWnd = ctx->hMainWnd;
+	ctx->aRenderCfg.channels = ctx->captureCfg.width;
+	ctx->aRenderCfg.bitsPerSample = ctx->captureCfg.height;
+	ctx->aRenderCfg.sampleRate = ctx->captureCfg.pixelFormat;
+	
+	if (bRet){
+		bRet = ctx->audioRender->InitRender(ctx->aRenderCfg);
+	}
+
+	if (!bRet){
+		DestroyAudioRenderWork(ctx);
+	}
+
+	return bRet;
 }
 
 void ResizeWindow(THIS_CONTEXT *ctx)
@@ -276,9 +365,10 @@ void StopStream(THIS_CONTEXT *ctx)
 {
 	DestoryWorkThread(ctx);
 	StopCaptureWork(ctx);
-	StopRenderWork(ctx);
+	DestroyVideoRenderWork(ctx);
+	DestroyAudioRenderWork(ctx);
 	if (ctx->bEnableCodec){
-		StopEncodeWork(ctx);
+		DestroyEncodeWork(ctx);
 	}
 	ctx->bEnableCodec = FALSE;
 }
@@ -292,9 +382,22 @@ BOOL SetupStream(THIS_CONTEXT *ctx, BOOL bCam)
 		bSuccess = StartFileCaptureWork(ctx);
 	}
 	if (bSuccess){
-		ResizeWindow(ctx);		
-		StartRenderWork(ctx);
-		if (ctx->bEnableCodec){
+		ResizeWindow(ctx);
+		if (!ctx->captureCfg.bNoVideo){
+			bSuccess = SetupVideoRenderWork(ctx);
+			if (!bSuccess){
+				ctx->captureCfg.bNoVideo = 1;
+			}
+		}
+
+		if (!ctx->captureCfg.bNoAudio){
+			bSuccess = SetupAudioRenderWork(ctx);
+			if (!bSuccess){
+				ctx->bAudioRender = 0;
+			}
+		}
+
+		if (ctx->bEnableCodec  && !ctx->captureCfg.bNoVideo){
 			SetupEncodeWork(ctx);
 		}
 		CreateWorkThread(ctx);

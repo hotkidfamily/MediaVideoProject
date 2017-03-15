@@ -21,13 +21,13 @@ BOOL CSyncRender::Reset()
 	return TRUE;
 }
 
-BOOL CSyncRender::PushFrame(VideoSampleBuffer *&frame)
+BOOL CSyncRender::PushFrame(AudioSampleBuffer *&frame)
 {
 	BOOL ret = FALSE;
 	FRAMEACTION action = FA_WAIT;
 
 	while (1){ /* time out */
-		action = timeToRender(frame->ptsStart);
+		action = timeToRender(frame->pts);
 		switch (action){
 		case FA_PUSH:
 			ret = TRUE;
@@ -42,7 +42,7 @@ jump:
 		break;
 	}
 
-	mLastPushFramePtsBackup = frame->ptsStart;
+	mLastPushFramePtsBackup = frame->pts;
 	return ret;
 }
 

@@ -36,10 +36,10 @@
     <ClInclude Include="AudioRender.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="IAduioRender.h">
+    <ClInclude Include="D3DSoundRender.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="D3DSoundRender.h">
+    <ClInclude Include="IAudioRender.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

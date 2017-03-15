@@ -20,7 +20,8 @@
 #include <list>
 
 #include "common\common.h"
-#include "videocapture\IVideoCapture.h"
+#include "VideoCapture\IVideoCapture.h"
 #include "VideoProcess\IVPP.h"
-#include "videocodec\IVideoCodec.h"
-#include "videorender\IRender.h"
+#include "VideoCodec\IVideoCodec.h"
+#include "VideoRender\IRender.h"
+#include "AudioRender\IAudioRender.h"
