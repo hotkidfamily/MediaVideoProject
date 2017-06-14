@@ -40,3 +40,13 @@ LONGLONG CClock::GetCurrentTimeIn100ns() // 100 nano second
 	}
 	return 0;
 }
+
+LONGLONG CClock::MapTimeToLoacl(uint32_t timeInMS)
+{
+	LONGLONG i64Ticks100ns = 0;
+	if (!m_bMap){
+		ResetBaseTime(timeInMS * 10000);
+	}
+	i64Ticks100ns = GetCurrentTimeIn100ns();
+	return i64Ticks100ns;
+}

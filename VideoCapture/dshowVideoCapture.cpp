@@ -218,13 +218,13 @@ HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 	desc.validDataSize = pSample->GetActualDataLength();
 	hr = pSample->GetMediaTime(&desc.frameStartIdx, &desc.frameEndIdx);
 
+#if 0
 	if (!mbMapTimeToLocal){
 		int64_t current = mBaseClock->GetCurrentTimeIn100ns();
 		mBaseClock->ResetBaseTime(current);
 		mbMapTimeToLocal = TRUE;
 	}
 
-#if 0
 	hr = pSample->GetTime(&desc.ptsStart, &desc.ptsEnd);
 	if (FAILED(hr)){
 		desc.ptsStart = mBaseClock->GetCurrentTimeIn100ns(); 
@@ -239,6 +239,9 @@ HRESULT DShowVideoCapture::SampleCB(double SampleTime, IMediaSample *pSample)
 		if (hr == VFW_S_NO_STOP_TIME)
 			desc.ptsEnd = desc.ptsStart + FramesPerSecToRefTime(RATE_DESC_TO_DOUBLE(mWorkParams.fps));
 	}
+#elif 1
+	hr = pSample->GetMediaTime(&desc.ptsStart, &desc.ptsEnd);
+	desc.ptsStart = mBaseClock->MapTimeToLoacl(desc.ptsStart);
 #else
 	desc.ptsStart = mBaseClock->GetCurrentTimeIn100ns();
 	desc.ptsEnd = desc.ptsStart + FramesPerSecToRefTime(RATE_DESC_TO_DOUBLE(mWorkParams.fps));

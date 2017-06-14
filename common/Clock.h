@@ -19,10 +19,13 @@ public:
 	BOOL ResetBaseTime(LONGLONG);
 	LONGLONG GetCurrentTimeInMs();
 	LONGLONG GetCurrentTimeIn100ns();
+	LONGLONG MapTimeToLoacl(uint32_t time);
 
 private:
 	LONGLONG m_llPerfFrequency;
 	LONGLONG m_baseRefTimeIn100ns;
 	LONGLONG m_baseRefTimeDiff;
+	
+	BOOL m_bMap;
 };
 
