@@ -390,12 +390,12 @@ BOOL SetupStream(THIS_CONTEXT *ctx, BOOL bCam)
 			}
 		}
 
-		if (!ctx->captureCfg.bNoAudio){
-			bSuccess = SetupAudioRenderWork(ctx);
-			if (!bSuccess){
-				ctx->bAudioRender = 0;
-			}
-		}
+// 		if (!ctx->captureCfg.bNoAudio){
+// 			bSuccess = SetupAudioRenderWork(ctx);
+// 			if (!bSuccess){
+// 				ctx->bAudioRender = 0;
+// 			}
+// 		}
 
 		if (ctx->bEnableCodec  && !ctx->captureCfg.bNoVideo){
 			SetupEncodeWork(ctx);
@@ -403,5 +403,9 @@ BOOL SetupStream(THIS_CONTEXT *ctx, BOOL bCam)
 		CreateWorkThread(ctx);
 	}
 
+	if (!bSuccess)
+	{
+		StopStream(ctx);
+	}
 	return bSuccess;
 }
