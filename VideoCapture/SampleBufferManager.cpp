@@ -138,9 +138,11 @@ BOOL CSampleBufferManager::ClearWorkStatus()
 
 int32_t CSampleBufferManager::GetFrameSizeByRes(int32_t res)
 {
+	// TODO: 根据BPP分配内存，这里按RGB32来算
+
 	int32_t sizePrePlanner = 0;
 	
 	sizePrePlanner = GetFrameSizePrePlannerByRes((E_RES)res);
 
-	return sizePrePlanner * 3;
+	return sizePrePlanner * 4;
 }

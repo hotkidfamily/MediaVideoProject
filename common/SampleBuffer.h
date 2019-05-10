@@ -195,18 +195,26 @@ protected:
 		resShift[0].widthShift = info->pixdesc.resShift[0].widthShift;
 		resShift[0].heightShift = info->pixdesc.resShift[0].heightShift;
 		
-		planarStride[1] = (((width * info->pixdesc.bpp + info->strideW - 1)&~(info->strideW - 1)) >> 3) >> info->pixdesc.resShift[1].widthShift;
-		planarSize[1] = planarStride[1] * (height >> info->pixdesc.resShift[1].heightShift);
-		planarPtr[1] = planarPtr[0] + planarSize[0];
-		resShift[1].widthShift = info->pixdesc.resShift[1].widthShift;
-		resShift[1].heightShift = info->pixdesc.resShift[1].heightShift;
+		if (planarCnt > 1)
+		{
+			planarStride[1] = (((width * info->pixdesc.bpp + info->strideW - 1)&~(info->strideW - 1)) >> 3) >> info->pixdesc.resShift[1].widthShift;
+			planarSize[1] = planarStride[1] * (height >> info->pixdesc.resShift[1].heightShift);
+			planarPtr[1] = planarPtr[0] + planarSize[0];
 
-		planarStride[2] = (((width * info->pixdesc.bpp + info->strideW - 1)&~(info->strideW - 1)) >> 3) >> info->pixdesc.resShift[2].widthShift;
-		planarSize[2] = planarStride[2] * (height >> info->pixdesc.resShift[2].heightShift);
-		planarPtr[2] = planarPtr[1] + planarSize[1];
+			resShift[1].widthShift = info->pixdesc.resShift[1].widthShift;
+			resShift[1].heightShift = info->pixdesc.resShift[1].heightShift;
+		}
 
-		resShift[2].widthShift = info->pixdesc.resShift[2].widthShift;
-		resShift[2].heightShift = info->pixdesc.resShift[2].heightShift;
+		if (planarCnt > 2)
+		{
+			planarStride[2] = (((width * info->pixdesc.bpp + info->strideW - 1)&~(info->strideW - 1)) >> 3) >> info->pixdesc.resShift[2].widthShift;
+			planarSize[2] = planarStride[2] * (height >> info->pixdesc.resShift[2].heightShift);
+			planarPtr[2] = planarPtr[1] + planarSize[1];
+
+			resShift[2].widthShift = info->pixdesc.resShift[2].widthShift;
+			resShift[2].heightShift = info->pixdesc.resShift[2].heightShift;
+		}
+
 
 		return TRUE;
 	}

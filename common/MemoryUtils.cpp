@@ -6,7 +6,7 @@
 E_RES GetResByResolution(int32_t width, int32_t height)
 {
 	E_RES res = RES1080P;
-	int32_t resSize = width*height;
+	int32_t resSize = WIDTHALIGN(width)*HEIGHTALIGN(height);
 
 	if (resSize <= GetFrameSizePrePlannerByRes(RES720P)){
 		res = RES720P;
@@ -122,7 +122,7 @@ CSampleBuffer *AllocSampleBuffer(int32_t width, int32_t height, CPPixelFormat pi
 
 	/* calculate buffer size */
 	int32_t rWidth = WIDTHALIGN(width);
-	int32_t rHeight = WIDTHALIGN(height);
+	int32_t rHeight = HEIGHTALIGN(height);
 	int32_t capability = rWidth * rHeight * bpp->pixdesc.bpp >> 3;
 	uint8_t *bufferPtr = AllocMemory(capability);
 
