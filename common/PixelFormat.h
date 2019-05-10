@@ -6,18 +6,18 @@
 #undef FMT
 #define FMT(X,Y) PIXEL_FORMAT_##X=Y
 enum CPPixelFormat{
-	FMT(NONE, '0000'),
-	FMT(I420, '024I'), 
+	FMT(NONE, '0000'), // 0x30303030
+	FMT(I420, '024I'), // 0x30323439
 	FMT(RGB565, 0xe436eb7c),
 	FMT(RGB555, 0xe436eb7b),
 	FMT(RGB24, 0xe436eb7d),
 	FMT(RGB32, 0xe436eb7e),
 	FMT(ARGB, 0x773c9ac0),
-	FMT(YV12, '21VY'), //YVU 4:2:0 planar == YUV420p
-	FMT(NV12, '21VN'), //YUV 4:2:0, with one y plane and one packed u+v
-	FMT(IYUV, 'VYUI'),
-	FMT(MJPEG, 'GPJM'),
-	FMT(YUYV, 'VYUY'),
+	FMT(YV12, '21VY'), //YVU 4:2:0 planar == YUV420p 0x32315659
+	FMT(NV12, '21VN'), //YUV 4:2:0, with one y plane and one packed u+v 0x3231564e
+	FMT(IYUV, 'VYUI'), // 0x56595549
+	FMT(MJPEG, 'GPJM'), //0x47504a4d
+	FMT(YUYV, 'VYUY'), // 0x56595559
 	FMT(YVU9, '9UVY'),
 	FMT(Y411, '114Y'),
 	FMT(Y41P, 'P14Y'),
