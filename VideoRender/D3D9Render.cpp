@@ -405,7 +405,7 @@ HRESULT D3D9Render::UpdateRenderSurface(CSampleBuffer *&frame)
 		if (SUCCEEDED(hr = pCurTexture->LockRect(0, &dstRect, NULL, 0))){
 			dstDataPtr = (uint8_t*)dstRect.pBits;
 			if (dstRect.Pitch == frame->planarStride[0]){
-				memcpy(dstDataPtr, frame->planarPtr[0], frame->validDataSize);
+				memcpy(dstDataPtr, frame->planarPtr[0], frame->planarSize[0]);
 			} else{
 				uint8_t* dstPlannerPtr = dstDataPtr;
 				for (int i = 0; i < frame->planarCnt; i++) {
@@ -431,7 +431,7 @@ HRESULT D3D9Render::UpdateRenderSurface(CSampleBuffer *&frame)
 		if (SUCCEEDED(hr = pCurSurface->LockRect(&dstRect, NULL, 0))){
 			dstDataPtr = (uint8_t*)dstRect.pBits;
 			if (dstRect.Pitch == frame->planarStride[0]){
-				memcpy(dstDataPtr, frame->planarPtr[0], frame->validDataSize);
+				memcpy(dstDataPtr, frame->planarPtr[0], frame->planarSize[0]);
 			} else{
 				uint8_t* dstPlannerPtr = dstDataPtr;
 				for (int i = 0; i < frame->planarCnt; i++) {
