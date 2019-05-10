@@ -24,6 +24,7 @@ std::list<CSampleBuffer*> captureList;
 BOOL StartCamCaptureWork(THIS_CONTEXT *ctx)
 {
 	HRESULT hr = E_FAIL;
+	BOOL ret = FALSE;
 
 	if (!ctx->bRuning){
 		if (!ctx->callBack)
@@ -37,15 +38,17 @@ BOOL StartCamCaptureWork(THIS_CONTEXT *ctx)
 		ctx->captureCfg.width = 1280;
 		ctx->captureCfg.height = 720;
 		hr = ctx->capture->StartCaptureWithParam(ctx->captureCfg);
-		if (hr == HRESULT_FROM_WIN32(ERROR_SHARING_VIOLATION)){
-			MessageBox(ctx->hMainWnd, TEXT("Device have been occured."), TEXT("ERROR"), MB_OK);
+		if (hr == HRESULT_FROM_WIN32(ERROR_SHARING_VIOLATION)
+			|| hr == HRESULT_FROM_WIN32(ERROR_NO_SYSTEM_RESOURCES)){
+			MessageBox(ctx->hMainWnd, TEXT("设备被占用"), TEXT("ERROR"), MB_OK);
 		}
-		if (hr == S_OK){
+		ret = hr == S_OK || hr == S_FALSE;
+		if (ret){
 			ctx->bRuning = TRUE;
 		}
 	}
 
-	return hr == S_OK;
+	return ret;
 }
 
 BOOL StartFileCaptureWork(THIS_CONTEXT *ctx)
@@ -132,11 +135,12 @@ DWORD WINAPI CaptureThread(LPVOID args)
 
 	while (ctx->bRuning){
 		CSampleBuffer *frame = nullptr;
+		EnterCriticalSection(&ctx->listLock);
 		if (ctx->capture->GetFrame(frame)){
-			EnterCriticalSection(&ctx->listLock);
 			captureList.push_back(frame);
-			LeaveCriticalSection(&ctx->listLock);
 		}
+		LeaveCriticalSection(&ctx->listLock);
+
 
 		Sleep(1);
 	}
@@ -151,15 +155,14 @@ DWORD WINAPI RenderThread(LPVOID args)
 	while (ctx->bRuning){
 		CSampleBuffer *frame = nullptr;
 
+		EnterCriticalSection(&ctx->listLock);
 		if (!captureList.empty()){
-			EnterCriticalSection(&ctx->listLock);
 			frame = captureList.front();
 			ctx->render->PushFrame(frame);
 			captureList.pop_front();
-			LeaveCriticalSection(&ctx->listLock);
-
 			ctx->capture->ReleaseFrame(frame);
 		}
+		LeaveCriticalSection(&ctx->listLock);
 
 		Sleep(1);
 	}

@@ -167,7 +167,10 @@ HRESULT DShowVideoCapture::Start(CAPTURECONFIG &params)
 		if (hr == HRESULT_FROM_WIN32(ERROR_SHARING_VIOLATION)){
 			break;
 		}
-	} while (hr != S_OK);
+		if (hr == HRESULT_FROM_WIN32(ERROR_NO_SYSTEM_RESOURCES)){
+			break;
+		}
+	} while (hr != S_OK && hr != S_FALSE);
 
 	if (mDropFrameStatus){
 		mDropFrameStatus->GetNumDropped(&mDropFrames);
