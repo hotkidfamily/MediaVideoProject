@@ -30,7 +30,7 @@ BOOL FFmpegProcess::InitContext(IVPPPARAMETER params)
 	}
 
 	int ret = FFmpegWrapper::sws_setColorspaceDetails(mScaleCtx, FFmpegWrapper::sws_getCoefficients(mParams.inFrame.colorSpace), mParams.inFrame.colorRange,
-		FFmpegWrapper::sws_getCoefficients(mParams.outFrame.colorSpace), mParams.outFrame.colorSpace, 0, 0, 0);
+		FFmpegWrapper::sws_getCoefficients(mParams.outFrame.colorSpace), mParams.outFrame.colorSpace, 0, 1 << 16, 1 << 16);
 
 	return ret == 0;
 }
@@ -67,10 +67,10 @@ BOOL FFmpegProcess::ProcessFrame(const CSampleBuffer *srcPic, CSampleBuffer *out
 		sStride[0] = -sStride[0];
 	}
 
-	int oheight = FFmpegWrapper::sws_scale(mScaleCtx, sBuf, sStride, 0, mParams.inFrame.Height(), dBuf, dStride);
+	int32_t oheight = FFmpegWrapper::sws_scale(mScaleCtx, sBuf, sStride, 0, mParams.inFrame.Height(), dBuf, dStride);
 
 	outPic->ptsStart = srcPic->ptsStart;
 	outPic->ptsEnd = srcPic->ptsEnd;
 
-	return true;
+	return oheight == srcPic->height;
 }
