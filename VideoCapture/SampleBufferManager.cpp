@@ -15,7 +15,8 @@ CSampleBufferManager::CSampleBufferManager()
 CSampleBufferManager::~CSampleBufferManager()
 {
 	ClearWorkStatus();
-	DeallocMemory(mBufferPtr);
+	if (mBufferPtr)
+		DeallocMemory(mBufferPtr);
 	mBufferPtr = nullptr;
 	DeleteCriticalSection(&mCs);
 }
@@ -108,26 +109,7 @@ BOOL CSampleBufferManager::UnlockFrame(CSampleBuffer *&sample)
 
 BOOL CSampleBufferManager::ClearWorkStatus()
 {
-	if (!readyList.empty()){
-		BUFFLIST::iterator it = readyList.begin();
-		for (; it != readyList.end(); it++){
-			delete *it;
-		}
-	}
-
-	if (!emptyList.empty()){
-		BUFFLIST::iterator it = emptyList.begin();
-		for (; it != emptyList.end(); it++){
-			delete *it;
-		}
-	}
-
-	if (!occupyList.empty()){
-		BUFFLIST::iterator it = occupyList.begin();
-		for (; it != occupyList.end(); it++){
-			delete *it;
-		}
-	}
+	CAutoLock lock(mCs);
 
 	readyList.clear();
 	emptyList.clear();

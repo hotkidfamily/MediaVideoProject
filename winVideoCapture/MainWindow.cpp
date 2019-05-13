@@ -232,6 +232,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		// TODO: Add any drawing code here...
 		EndPaint(hWnd, &ps);
 		break;
+	case WM_CLOSE:
+		DestoryWorkThread(gContext);
+		StopCaptureWork(gContext);
+		StopRenderWork(gContext);
+		PostQuitMessage(0);
+		break;
 	case WM_DESTROY:
 		DestroyWindow(hWnd);
 		PostQuitMessage(0);

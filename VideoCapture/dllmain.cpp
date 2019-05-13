@@ -38,6 +38,7 @@ void ReleaseVideoCaptureObj(IVideoCapture * pCapture)
 	if (pCap){
 		pCap->UnInitContext();
 		delete pCap;
+		pCap = NULL;
 	}
 	
 	CoUninitialize();
