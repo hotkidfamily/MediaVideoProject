@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 
 #include "dshowVideoCapture.h"
 #include "dshowutil.h"
@@ -190,6 +190,8 @@ HRESULT DShowVideoCapture::Stop()
 {
 	ASSERT(mMediaControl);
 
+	HRESULT  hr = mVideoGrabber->SetCallback(NULL, 0);
+
 	if (mDropFrameStatus){
 		long capFrameCount = 0;
 		long dropFrameCount = 0;
@@ -199,7 +201,13 @@ HRESULT DShowVideoCapture::Stop()
 			dropFrameCount - mDropFrames, capFrameCount - mCapFrames);
 	}
 
-	while(FAILED(mMediaControl->Stop()));
+	mMediaControl->Stop();
+
+	OAFilterState stat;
+	do{
+		hr = mMediaControl->GetState(100, &stat);
+	}
+	while (stat != State_Stopped);
 
 	if (mGraphRegisterHandler)
 		RemoveGraphFromRot(mGraphRegisterHandler);
