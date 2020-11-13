@@ -7,11 +7,11 @@
 extern "C" {
 #endif
 
-	#include "..\ffmpeg2.7.1\include\libavformat\avio.h"
-	#include "..\ffmpeg2.7.1\include\libavformat\avformat.h"
-	#include "..\ffmpeg2.7.1\include\libavcodec\avcodec.h"
-	#include "..\ffmpeg2.7.1\include\libavutil\avutil.h"
-	#include "..\ffmpeg2.7.1\include\libavutil\imgutils.h"
+	#include "libavformat\avio.h"
+	#include "libavformat\avformat.h"
+	#include "libavcodec\avcodec.h"
+	#include "libavutil\avutil.h"
+	#include "libavutil\imgutils.h"
 
 #ifdef __cplusplus
 }
